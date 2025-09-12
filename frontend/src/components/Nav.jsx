@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { Flame } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleForm } from "../redux/actions";
+import { toggleSaveForm } from "../redux/slices/formSlice";
 
 function Nav() {
   const [message, setMessage] = useState("Start your streak!");
-  const streak = useSelector((state) => state.streak);
+  const streak = useSelector((state) => state.streak.value);
   const dispatch = useDispatch()
 
   const handlePlusClick = () => {
-    dispatch(toggleForm())
+    dispatch(toggleSaveForm())
   };
 
   return (

@@ -3,50 +3,54 @@ import Counter from "../ui/Counter";
 import { ChevronLeft, ChevronRight, Droplet } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { setDate, toggleForm } from "../redux/actions";
+import { toggleSaveForm, setDate } from "../redux/slices/formSlice";
 
 function HomeCal() {
-  const allEntries = useSelector((state) => state.entries);
-  const [bath, setBath] = useState(false);
-  const [master, setMaster] = useState(false);
+  const allEntries = useSelector((state) => state.entry.entries);
   const [items, setItems] = useState({});
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isDayEditing, setIsDayEditing] = useState(false);
   const [isYearEditing, setIsYearEditing] = useState(false);
   const [tempDayInput, setTempDayInput] = useState(currentDate.getDate());
   const [tempYearInput, setTempYearInput] = useState(currentDate.getFullYear());
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    const formattedDate = currentDate.toISOString().split("T")[0];
+    // Normalize the current date to the beginning of the day in the local timezone
+    const normalizedCurrentDate = new Date(currentDate);
+    normalizedCurrentDate.setHours(0, 0, 0, 0);
+
     const entryForDay = allEntries.find((entry) => {
-      const entryDate = new Date(entry.date ? entry.date : entry.createdAt)
-        .toISOString()
-        .split("T")[0];
-      return entryDate === formattedDate;
+      const entryDate = new Date(entry.date ? entry.date : entry.createdAt);
+
+      // Normalize the entry date to the beginning of the day in the local timezone
+      const normalizedEntryDate = new Date(entryDate);
+      normalizedEntryDate.setHours(0, 0, 0, 0);
+
+      // Compare the normalized time values
+      return normalizedEntryDate.getTime() === normalizedCurrentDate.getTime();
     });
 
     setItems(entryForDay || {});
-
-    if (entryForDay) {
-      setBath(entryForDay.didTakeBath);
-      setMaster(entryForDay.didMasturbate);
-    } else {
-      setBath(false);
-      setMaster(false);
-    }
-  }, [currentDate, allEntries, setBath, setMaster]);
+  }, [currentDate, allEntries]);
 
   const handelJournal = () => {
-    dispatch(toggleForm())
+    dispatch(toggleSaveForm());
   };
 
-  // Sync temp input values with currentDate when it changes from other controls
   useEffect(() => {
     setTempDayInput(currentDate.getDate());
     setTempYearInput(currentDate.getFullYear());
-    dispatch(setDate(currentDate))
-  }, [currentDate]);
+
+    // Dispatch the date as a YYYY-MM-DD string to maintain a timezone-agnostic state.
+    // Use local methods to get the components.
+    const year = currentDate.getFullYear();
+    const month = (currentDate.getMonth() + 1).toString().padStart(2, "0");
+    const day = currentDate.getDate().toString().padStart(2, "0");
+    const dateToDispatch = `${year}-${month}-${day}`;
+
+    dispatch(setDate(dateToDispatch));
+  }, [currentDate, dispatch]);
 
   const handlePrevDay = () => {
     const newDate = new Date(currentDate);
@@ -201,14 +205,14 @@ function HomeCal() {
             <Droplet
               size={24}
               className="text-gray-400"
-              fill={bath ? "blue" : "none"}
+              fill={items.didTakeBath ? "blue" : "none"}
             />
           </div>
           <div className="text-2xl cursor-pointer">
             <Droplet
               size={24}
               className="text-gray-400"
-              fill={master ? "none" : "white"}
+              fill={items.didMasturbate ? "blue" : "none"}
             />
           </div>
         </div>

@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import Happy from "../assets/happy.png";
 import Angry from "../assets/angry.png";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleForm } from "../redux/actions";
+import { toggleSaveForm } from "../redux/slices/formSlice";
 
-function Hero({ onModalOpen }) {
-  const allEntries = useSelector((state) => state.entries);
+function Hero() {
+  const allEntries = useSelector((state) => state.entry.entries);
   const [logged, setLogged] = useState(false);
   const [msg1, setMsg1] = useState("You haven't logged today");
   const [msg2, setMsg2] = useState("If you don't I'm gonna hunt you down");
@@ -28,7 +28,7 @@ function Hero({ onModalOpen }) {
   }, [allEntries]);
 
   const handleCreateLog = () => {
-    dispatch(toggleForm())
+    dispatch(toggleSaveForm())
   };
   return (
     <div className="flex flex-col items-center justify-center space-y-8 w-full">

@@ -2,17 +2,24 @@ import React from "react";
 import HomeCal from "./HomeCal";
 import { Pencil } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleEditForm } from "../redux/actions";
+import { toggleEditForm } from "../redux/slices/formSlice";
 
 function DashCal() {
   const dispatch = useDispatch();
-  const selDate = useSelector((state) => state.selectedDate);
-  const allEntries = useSelector((state) => state.entries);
+  const selDate = useSelector((state) => state.forms.date); 
+  const allEntries = useSelector((state) => state.entry.entries);
 
-  // Check if an entry exists for the selected date
-  const entryExists = selDate && allEntries.some(
-    (entry) => new Date(entry.date ? entry.date : entry.createdAt).toISOString().split('T')[0] === selDate.toISOString().split('T')[0]
-  );
+  const entryExists =
+    selDate &&
+    allEntries.some((entry) => {
+      const entryDate = new Date(entry.date ? entry.date : entry.createdAt);
+      const entryDateString = `${entryDate.getFullYear()}-${(
+        entryDate.getMonth() + 1
+      )
+        .toString()
+        .padStart(2, "0")}-${entryDate.getDate().toString().padStart(2, "0")}`;
+      return entryDateString === selDate;
+    });
 
   return (
     <div className="relative">

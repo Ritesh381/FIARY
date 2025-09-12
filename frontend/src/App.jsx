@@ -28,8 +28,8 @@ import JournalEditFormModal from "./components/JournalEditFormModal.jsx";
 const AppContent = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const isModalOpen = useSelector((state) => state.isFormOpen);
-  const isEditFormOpen = useSelector((state) => state.isEditFormOpen)
+  const isModalOpen = useSelector((state) => state.forms.saveForm);
+  const isEditFormOpen = useSelector((state) => state.forms.editForm)
 
   // Update the onClick handlers to use navigate
   const items = [

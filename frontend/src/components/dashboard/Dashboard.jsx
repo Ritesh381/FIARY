@@ -6,8 +6,8 @@ import { useSelector } from "react-redux";
 import DashCal from "../DashCal";
 
 function Dashboard() {
-  const allEntries = useSelector((state) => state.entries);
-  const streak = useSelector((state) => state.streak);
+  const allEntries = useSelector((state) => state.entry.entries);
+  const streak = useSelector((state) => state.streak.value);
   const [markedDates, setMarkedDates] = useState([]);
 
   useEffect(() => {

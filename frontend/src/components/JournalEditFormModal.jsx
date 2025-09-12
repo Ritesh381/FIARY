@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/axios";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleEditForm } from "../redux/actions";
+import { toggleEditForm, setDate } from "../redux/slices/formSlice"; // FIX: Added setDate
+import { editEntry } from "../redux/slices/entrySlice";
 
 // --- Journal Edit Form Modal Component ---
 const JournalEditFormModal = () => {
   // Get data from Redux store
-  const allEntries = useSelector((state) => state.entries);
-  const selDate = useSelector((state) => state.selectedDate);
+  // FIX: Corrected useSelector calls
+  const allEntries = useSelector((state) => state.entry.entries);
+  const selDate = useSelector((state) => state.forms.date);
 
   // State to hold the specific entry found for the selected date
   const [currentEntry, setCurrentEntry] = useState(null);
@@ -29,7 +31,9 @@ const JournalEditFormModal = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
-  const [date, setDate] = useState(selDate ? selDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+  
+  // FIX: Remove local date state and rely on Redux
+  // const [date, setDate] = useState(selDate ? selDate : todayString);
 
   const todayFormatted = new Date().toISOString().split("T")[0];
   const minDate = new Date("2006-12-06");
@@ -38,12 +42,15 @@ const JournalEditFormModal = () => {
   // Effect to find the entry and populate the form when the selected date or entries change
   useEffect(() => {
     if (selDate && allEntries) {
-      const selectedDateString = selDate.toISOString().split("T")[0];
-      // Find the entry that matches the selected date string
-      const foundEntry = allEntries.find((entry) => (entry.date ? entry.date : entry.createdAt).split('T')[0] === selectedDateString);
-      
+      // Use the selDate string directly for comparison
+      const foundEntry = allEntries.find(
+        (entry) =>
+          (entry.date ? new Date(entry.date) : new Date(entry.createdAt))
+            .toISOString()
+            .split("T")[0] === selDate
+      );
+
       if (foundEntry) {
-        // If an entry is found, update the state with its data
         setCurrentEntry(foundEntry);
         setFeeling(foundEntry.feeling);
         setBestMoment(foundEntry.bestMoment);
@@ -58,11 +65,8 @@ const JournalEditFormModal = () => {
         setMasturbationNotes(foundEntry.masturbationNotes);
         setDidTakeBath(foundEntry.didTakeBath);
         setDiaryEntry(foundEntry.diaryEntry);
-        // Set the date state to the YYYY-MM-DD format for the input field
-        setDate((foundEntry.date ? foundEntry.date : foundEntry.createdAt).split('T')[0]);
-        setMessage(null); // Clear any previous error messages
+        setMessage(null);
       } else {
-        // If no entry is found, clear the form and show an error message
         setCurrentEntry(null);
         setFeeling("");
         setBestMoment("");
@@ -81,11 +85,13 @@ const JournalEditFormModal = () => {
       }
     }
   }, [selDate, allEntries]); // Re-run this effect when the selected date or the entries list changes
-
+  
   // Date validation effect
+  // FIX: Use selDate from Redux instead of local state
   useEffect(() => {
-    const selectedDate = new Date(date);
-    if (selectedDate > Date.now()) {
+    if (!selDate) return;
+    const selectedDate = new Date(selDate);
+    if (selectedDate > new Date()) { // Use new Date() directly
       setMessage({ type: "error", text: "Can't set date to future" });
     } else if (selectedDate < minDate) {
       setMessage({
@@ -95,7 +101,7 @@ const JournalEditFormModal = () => {
     } else {
       setMessage(null);
     }
-  }, [date]);
+  }, [selDate]);
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -122,13 +128,16 @@ const JournalEditFormModal = () => {
       masturbationNotes,
       didTakeBath,
       diaryEntry,
-      date,
+      // FIX: Use selDate from Redux
+      date: selDate,
     };
 
     try {
       await api.updateEntry(currentEntry._id, updatedEntry);
+      // FIX: Correct payload for editEntry reducer
+      dispatch(editEntry({ id: currentEntry._id, updatedEntry }));
       setMessage({ type: "success", text: "Entry updated successfully!" });
-      alert("Edited entry saved sucessfully")
+      alert("Edited entry saved sucessfully");
       dispatch(toggleEditForm());
     } catch (error) {
       setMessage({
@@ -190,7 +199,7 @@ const JournalEditFormModal = () => {
             {message.text}
           </div>
         )}
-        
+
         {currentEntry && (
           <form onSubmit={handleFormSubmit} className="space-y-6">
             <div className="flex items-center space-x-4">
@@ -198,8 +207,9 @@ const JournalEditFormModal = () => {
                 <label className={formLabelStyle}>Date</label>
                 <input
                   type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
+                  // FIX: Use selDate from Redux and dispatch an action to change it
+                  value={selDate}
+                  onChange={(e) => dispatch(setDate(e.target.value))}
                   className={formInputStyle}
                   required
                   min="2006-12-06"
@@ -262,7 +272,9 @@ const JournalEditFormModal = () => {
               <hr className={sectionDividerStyle} />
               <div className="space-y-4">
                 <div>
-                  <label className={formLabelStyle}>Time Wasted (minutes)</label>
+                  <label className={formLabelStyle}>
+                    Time Wasted (minutes)
+                  </label>
                   <input
                     type="number"
                     value={timeWastedMinutes}

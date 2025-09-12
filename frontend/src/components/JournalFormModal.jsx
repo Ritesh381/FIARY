@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/axios";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleForm } from "../redux/actions";
+// FIX: Add setDate to the import list
+import { toggleSaveForm, setDate } from "../redux/slices/formSlice";
 
 // --- Journal Form Modal Component ---
 const JournalFormModal = () => {
@@ -20,23 +21,34 @@ const JournalFormModal = () => {
   const [diaryEntry, setDiaryEntry] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
-  const selDate = useSelector(state => state.selectedDate)
-  const [date, setDate] = useState(selDate ? selDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
-  const todayFormatted = new Date().toISOString().split('T')[0];
-  const minDate = new Date('2006-12-06');
-  const dispatch = useDispatch()
+
+  // FIX: Access the date from the Redux store.
+  const selDate = useSelector((state) => state.forms.date);
+  
+  // FIX: Remove the redundant local date state. The Redux state is the single source of truth.
+  // const [date, setDate] = useState(selDate ? selDate : todayString);
+  
+  const todayFormatted = new Date().toISOString().split("T")[0];
+  const minDate = new Date("2006-12-06");
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    const selectedDate = new Date(date);
-    if(selectedDate > Date.now()){
-      setMessage({type:"error", text:"Can't set date to future"})
+    // FIX: Use the 'selDate' from Redux for validation.
+    const selectedDate = new Date(selDate);
+    
+    // FIX: Use 'new Date()' for a proper date comparison.
+    if (selectedDate > new Date()) { 
+      setMessage({ type: "error", text: "Can't set date to future" });
+    } else if (selectedDate < minDate) {
+      setMessage({
+        type: "error",
+        text: "Bsdk tu paida hi nahi hua tha kaise log karega",
+      });
+    } else {
+      setMessage(null);
     }
-    else if(selectedDate < minDate){
-      setMessage({type:"error", text:"Bsdk tu paida hi nahi hua tha kaise log karega"})
-    }else{
-      setMessage("")
-    }
-  }, [date]);
+    // FIX: Depend on the Redux state to re-run the effect.
+  }, [selDate]);
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -57,7 +69,8 @@ const JournalFormModal = () => {
       masturbationNotes,
       didTakeBath,
       diaryEntry,
-      date,
+      // FIX: Use the 'selDate' from the Redux store.
+      date: selDate,
     };
 
     try {
@@ -76,7 +89,8 @@ const JournalFormModal = () => {
       setMasturbationNotes("");
       setDidTakeBath(false);
       setDiaryEntry("");
-      setDate(new Date().toISOString().split('T')[0]);
+      // FIX: Dispatch a Redux action to reset the date.
+      dispatch(setDate(new Date().toISOString().split("T")[0]));
     } catch (error) {
       setMessage({
         type: "error",
@@ -96,14 +110,14 @@ const JournalFormModal = () => {
   return (
     <div
       className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-hidden z-50"
-      onClick={()=>dispatch(toggleForm())}
+      onClick={() => dispatch(toggleSaveForm())}
     >
       <div
         className="relative bg-white/10 p-8 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-transform scale-100 duration-300 backdrop-blur-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          onClick={()=>dispatch(toggleForm())}
+          onClick={() => dispatch(toggleSaveForm())}
           className="absolute top-4 right-4 text-white hover:text-blue-300 transition-colors"
         >
           <svg
@@ -144,8 +158,10 @@ const JournalFormModal = () => {
               <label className={formLabelStyle}>Date</label>
               <input
                 type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
+                // FIX: Connect the input value to the Redux state.
+                value={selDate}
+                // FIX: Dispatch an action to change the date in Redux.
+                onChange={(e) => dispatch(setDate(e.target.value))}
                 className={formInputStyle}
                 required
                 min="2006-12-06"

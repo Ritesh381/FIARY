@@ -6,48 +6,37 @@ Think of it as your digital diary + productivity dashboard – a single place to
 # 🌟 Core Features
 
 ## 🔥 Streaks
-
 - Track consecutive days of logging entries
-
 - Stay motivated with visual streak progress
 
 ## 📊 Dashboard
-
 - Central hub for all your stats and insights
-
 - View trends over time and understand your lifestyle better
 
 ## 💰 Finance Tracker
-
 - Log daily expenses and categorize them
-
 - Analyze where your money goes with clear summaries
 
 ## 📸 Moments
-
 - Save special memories with photos & details
-
 - Revisit them anytime to spark joy
 
 ## ✅ Habits
-
 - Add, edit, or delete habits
-
 - Log whether you completed a habit each day
-
 - Track consistency and progress visually
 
 ## 🔄 Repetitive Activities
-
 - Plan recurring tasks (e.g., “Do 2 LeetCode questions daily”)
-
 - Build discipline through structured repetition
 
 ## 🎯 Goals
-
 - Set weekly and monthly goals
-
 - Review and analyze your progress in a dedicated goals page
+
+## 🎬 Movies 
+- Kepp what movies you have watched till now.
+- Made usign TMDB api set the movie name, date watched, poster(from tmdb)
 
 ## 📅 Daily Entries
 
