@@ -40,6 +40,17 @@ const api = {
       throw error;
     }
   },
+
+  // Function to delete a journal entry by its ID
+  deleteEntry: async (id) => {
+    try {
+      const response = await axios.delete(`${API_BASE_URL}/entry/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting entry:", error);
+      throw error;
+    }
+  },
 };
 
 export default api;

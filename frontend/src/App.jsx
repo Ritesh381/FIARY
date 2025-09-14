@@ -9,39 +9,30 @@ import {
   AiOutlineUser,
 } from "react-icons/ai";
 import { FaRupeeSign } from "react-icons/fa";
-import { Provider, useSelector } from "react-redux";
-import store from "./redux/store.js";
+import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import Dock from "./ui/Dock";
 import Nav from "./components/Nav";
-import Home from "./components/Home";
 import Dashboard from "./components/dashboard/Dashboard.jsx";
-import Calendar from "./components/Finance.jsx";
 import Moments from "./components/Moments";
+import Finance from "./components/Finance"
 import Settings from "./components/Settings";
 import Profile from "./components/Profile";
 import fetchEntries from "./api/fetchEntries.js";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import JournalEditFormModal from "./components/JournalEditFormModal.jsx";
 
-// Create a wrapper component to use useNavigate
 const AppContent = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isModalOpen = useSelector((state) => state.forms.saveForm);
   const isEditFormOpen = useSelector((state) => state.forms.editForm)
 
-  // Update the onClick handlers to use navigate
   const items = [
     {
       icon: <AiOutlineHome size={20} />,
       label: "Home",
       onClick: () => navigate("/"),
-    },
-    {
-      icon: <AiOutlineDashboard size={20} />,
-      label: "Dashboard",
-      onClick: () => navigate("/dashboard"),
     },
     {
       icon: <FaRupeeSign size={20} />,
@@ -99,9 +90,8 @@ const AppContent = () => {
 
       <div className="relative w-full z-10 mt-15">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/finance" element={<Finance/>}></Route>
           <Route path="/moments" element={<Moments />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
@@ -118,9 +108,7 @@ const App = () => {
   return (
     <div className="min-h-screen bg-black p-8 font-sans text-gray-100 flex flex-col ">
       <BrowserRouter>
-        <Provider store={store}>
           <AppContent />
-        </Provider>
       </BrowserRouter>
     </div>
   );

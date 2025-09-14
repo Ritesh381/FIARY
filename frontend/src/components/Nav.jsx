@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { toggleSaveForm } from "../redux/slices/formSlice";
 
 function Nav() {
-  const [message, setMessage] = useState("Start your streak!");
+  const message = useSelector((state) => state.streak.message)
   const streak = useSelector((state) => state.streak.value);
   const dispatch = useDispatch()
 

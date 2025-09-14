@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import Counter from "../ui/Counter";
-import { ChevronLeft, ChevronRight, Droplet } from "lucide-react";
+import { ChevronLeft, ChevronRight, Droplet, Pencil } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleSaveForm, setDate } from "../redux/slices/formSlice";
+import {
+  toggleSaveForm,
+  setDate,
+  toggleEditForm,
+} from "../redux/slices/formSlice";
 
 function HomeCal() {
   const allEntries = useSelector((state) => state.entry.entries);
@@ -131,11 +135,23 @@ function HomeCal() {
   };
 
   return (
-    <div className="p-8 text-white font-sans w-full">
+    <div className="relative p-8 text-white font-sans w-full">
+      {/* Edit button appears if an entry for the selected date exists */}
+      {Object.keys(items).length > 0 && (
+        <button
+          className="absolute top-11 left-12 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-colors duration-300 z-10"
+          onClick={() => {
+            dispatch(toggleEditForm());
+          }}
+        >
+          <Pencil size={24} />
+        </button>
+      )}
+
       <nav className="flex items-center justify-between p-4 bg-gray-900 bg-opacity-50 rounded-lg shadow-lg">
-        <div className="text-2xl cursor-pointer transition-transform duration-300 hover:scale-110">
-          😀
-        </div>
+        {/* Placeholder to keep the date centered after removing the emoji */}
+        <div className="w-14" />
+
         <div className="flex items-center space-x-4">
           <button
             onClick={handlePrevDay}
@@ -212,7 +228,7 @@ function HomeCal() {
             <Droplet
               size={24}
               className="text-gray-400"
-              fill={items.didMasturbate ? "blue" : "none"}
+              fill={items.didMasturbate ? "white" : "none"}
             />
           </div>
         </div>
@@ -259,8 +275,15 @@ function HomeCal() {
               transition={{ delay: 0.5 }}
               className="bg-gray-800 p-4 rounded-md shadow-inner"
             >
-              <h3 className="font-bold text-gray-400">Goal Progress</h3>
-              <p className="mt-1">{truncateString(items.goalProgress, 200)}</p>
+              <h3 className="font-bold text-gray-400">
+                Achievement of the Day
+              </h3>
+              <p className="mt-1">
+                {truncateString(
+                  items.achievement,
+                  200
+                )}
+              </p>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: -20 }}

@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/axios";
 import { useDispatch, useSelector } from "react-redux";
-// FIX: Add setDate to the import list
 import { toggleSaveForm, setDate } from "../redux/slices/formSlice";
+import { addEntry } from "../redux/slices/entrySlice";
 
-// --- Journal Form Modal Component ---
 const JournalFormModal = () => {
   const [feeling, setFeeling] = useState("");
   const [bestMoment, setBestMoment] = useState("");
   const [worstMoment, setWorstMoment] = useState("");
-  const [goalProgress, setGoalProgress] = useState("");
+  const [achievement, setAchievement] = useState("");
   const [timeWastedMinutes, setTimeWastedMinutes] = useState(0);
   const [timeWastedNotes, setTimeWastedNotes] = useState("");
   const [sleepHours, setSleepHours] = useState(0);
@@ -22,12 +21,7 @@ const JournalFormModal = () => {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
 
-  // FIX: Access the date from the Redux store.
   const selDate = useSelector((state) => state.forms.date);
-  
-  // FIX: Remove the redundant local date state. The Redux state is the single source of truth.
-  // const [date, setDate] = useState(selDate ? selDate : todayString);
-  
   const todayFormatted = new Date().toISOString().split("T")[0];
   const minDate = new Date("2006-12-06");
   const dispatch = useDispatch();
@@ -35,9 +29,9 @@ const JournalFormModal = () => {
   useEffect(() => {
     // FIX: Use the 'selDate' from Redux for validation.
     const selectedDate = new Date(selDate);
-    
+
     // FIX: Use 'new Date()' for a proper date comparison.
-    if (selectedDate > new Date()) { 
+    if (selectedDate > new Date()) {
       setMessage({ type: "error", text: "Can't set date to future" });
     } else if (selectedDate < minDate) {
       setMessage({
@@ -59,7 +53,7 @@ const JournalFormModal = () => {
       feeling,
       bestMoment,
       worstMoment,
-      goalProgress,
+      achievement,
       timeWastedMinutes,
       timeWastedNotes,
       sleepHours,
@@ -75,11 +69,12 @@ const JournalFormModal = () => {
 
     try {
       await api.saveEntry(newEntry);
+      dispatch(addEntry(newEntry));
       setMessage({ type: "success", text: "Entry saved successfully!" });
       setFeeling("");
       setBestMoment("");
       setWorstMoment("");
-      setGoalProgress("");
+      setAchievement("");
       setTimeWastedMinutes(0);
       setTimeWastedNotes("");
       setSleepHours(0);
@@ -89,7 +84,6 @@ const JournalFormModal = () => {
       setMasturbationNotes("");
       setDidTakeBath(false);
       setDiaryEntry("");
-      // FIX: Dispatch a Redux action to reset the date.
       dispatch(setDate(new Date().toISOString().split("T")[0]));
     } catch (error) {
       setMessage({
@@ -192,7 +186,6 @@ const JournalFormModal = () => {
                   className={formInputStyle}
                   rows="3"
                   placeholder="What was the best part of your day?"
-                  required
                 />
               </div>
               <div>
@@ -203,18 +196,16 @@ const JournalFormModal = () => {
                   className={formInputStyle}
                   rows="3"
                   placeholder="What was the worst part of your day?"
-                  required
                 />
               </div>
               <div>
-                <label className={formLabelStyle}>Goal Progress</label>
+                <label className={formLabelStyle}>Achievement of the Day</label>
                 <textarea
-                  value={goalProgress}
-                  onChange={(e) => setGoalProgress(e.target.value)}
+                  value={achievement}
+                  onChange={(e) => setAchievement(e.target.value)}
                   className={formInputStyle}
                   rows="3"
-                  placeholder="How did you progress on your goals?"
-                  required
+                  placeholder="What you did today that made you very happy ?"
                 />
               </div>
             </div>
@@ -250,8 +241,10 @@ const JournalFormModal = () => {
                 <label className={formLabelStyle}>Sleep (hours)</label>
                 <input
                   type="number"
+                  step="any"
+                  min="0"
                   value={sleepHours}
-                  onChange={(e) => setSleepHours(parseInt(e.target.value))}
+                  onChange={(e) => setSleepHours(parseFloat(e.target.value))}
                   className={formInputStyle}
                   required
                 />
@@ -274,7 +267,6 @@ const JournalFormModal = () => {
                   onChange={(e) => setPhysicalActivity(e.target.value)}
                   className={formInputStyle}
                   placeholder="e.g., Gym, Run, Yoga"
-                  required
                 />
               </div>
 

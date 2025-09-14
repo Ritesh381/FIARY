@@ -46,7 +46,7 @@ const EntrySchema = new mongoose.Schema(
     worstMoment: { type: String },
 
     // --- Goal & Productivity ---
-    goalProgress: { type: String },
+    achievement: { type: String },
     timeWastedMinutes: { type: Number },
     timeWastedNotes: { type: String }, // What you wasted time on
 
