@@ -11,7 +11,11 @@ const fetchEntries = () => async (dispatch) => {
 
     if (entries.length === 0) {
       dispatch(setStreak(0));
-      dispatch(setMessage("Log your first entry to start a streak!"));
+      dispatch(
+        setMessage(
+          'Log your <span class="font-bold text-green-400">first entry</span> to start a streak!'
+        )
+      );
       return;
     }
 
@@ -19,8 +23,9 @@ const fetchEntries = () => async (dispatch) => {
     const sortedDates = entries
       .map((entry) => new Date(entry.date || entry.createdAt))
       .sort((a, b) => a - b);
-    
-    const normalizeDate = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+    const normalizeDate = (date) =>
+      new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
     const oneDayInMs = 1000 * 60 * 60 * 24;
     const twoDaysInMs = oneDayInMs * 2;
@@ -48,19 +53,38 @@ const fetchEntries = () => async (dispatch) => {
     if (diffFromToday <= oneDayInMs) {
       // Case 1: Streak is active (logged today or yesterday)
       dispatch(setStreak(currentActiveStreak));
-      dispatch(setMessage(`You're on a roll with a ${currentActiveStreak}-day streak!`));
-
+      dispatch(
+        setMessage(
+          `You're on a roll with a <span class="font-bold text-orange-400">${currentActiveStreak}-day</span> streak!`
+        )
+      );
     } else if (diffFromToday === twoDaysInMs) {
       // Case 2: Streak is AT RISK (missed one day)
       dispatch(setStreak(currentActiveStreak));
-      dispatch(setMessage(`Log today to continue your ${currentActiveStreak}-day streak!`));
 
+      // Create and format the date for the message
+      const nextDay = new Date(lastEntryDate);
+      nextDay.setDate(lastEntryDate.getDate() + 1);
+
+      const month = nextDay.toLocaleString("default", { month: "short" });
+      const day = nextDay.getDate();
+      const year = nextDay.getFullYear();
+      const formattedNextDay = `${month} ${day} ${year}`;
+
+      dispatch(
+        setMessage(
+          `Log <span class="font-bold text-red-300">${formattedNextDay}</span> to continue your <span class="font-bold text-orange-400">${currentActiveStreak}-day</span> streak!`
+        )
+      );
     } else {
       // Case 3: Streak is BROKEN (missed more than one day)
       dispatch(setStreak(0));
-      dispatch(setMessage("You lost your streak. Start a new one today!"));
+      dispatch(
+        setMessage(
+          'You <span class="font-bold text-red-500">lost your streak</span>. Start a new one today!'
+        )
+      );
     }
-
   } catch (error) {
     console.error("Failed to fetch entries:", error);
     dispatch(setStreak(0));
@@ -69,3 +93,4 @@ const fetchEntries = () => async (dispatch) => {
 };
 
 export default fetchEntries;
+

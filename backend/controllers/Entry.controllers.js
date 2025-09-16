@@ -23,12 +23,12 @@ const saveEntry = async (req, res) => {
     if (
       !date ||
       !feeling ||
-      !timeWastedMinutes ||
-      !sleepHours ||
+      timeWastedMinutes === undefined || // Check for undefined specifically
+      sleepHours === undefined || // Check for undefined specifically
       !diaryEntry
     ) {
       console.warn("Save failed: Required fields missing.");
-      return res.status(401).json({
+      return res.status(400).json({ // Use 400 for bad request
         message:
           "date, feeling, timeWastedMinutes, sleepHours, diaryEntry are required",
       });
@@ -57,6 +57,10 @@ const saveEntry = async (req, res) => {
       .json({ message: "Entry saved successfully", entry: createdEntry });
   } catch (error) {
     console.error("Error saving entry:", error);
+    // Check for Mongoose validation error
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: "Validation error", details: error.message });
+    }
     res.status(500).json({ message: "Server error while saving entry" });
   }
 };
@@ -73,21 +77,30 @@ const getAllEntries = async (req, res) => {
   }
 };
 
+// --- MODIFIED FUNCTION ---
 const editEntry = async (req, res) => {
   const { id } = req.params;
-  console.log(`Received request to edit entry with ID: ${id}`);
-  try {
-    const updateData = req.body;
-    if (!id || Object.keys(updateData).length === 0) {
-      console.warn(`Edit failed: Invalid request for ID: ${id}`);
-      return res
-        .status(400)
-        .json({ message: "Entry ID and update data are required" });
-    }
+  const updateData = req.body;
 
+  // **Step 1: Log incoming data for debugging**
+  console.log(`Received request to edit entry with ID: ${id}`);
+
+  // **Step 2: Add robust checks for invalid input**
+  if (!id || id === 'undefined' || id === 'null') {
+      console.warn(`Edit failed: Invalid ID provided: ${id}`);
+      return res.status(400).json({ message: "A valid Entry ID must be provided." });
+  }
+
+  if (!updateData || Object.keys(updateData).length === 0) {
+    console.warn(`Edit failed: No update data provided for ID: ${id}`);
+    return res.status(400).json({ message: "Update data cannot be empty." });
+  }
+
+  try {
+    // **Step 3: Find and update the document**
     const updatedEntry = await Entry.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
+      new: true, // Return the modified document
+      runValidators: true, // IMPORTANT: This ensures the update follows your schema rules
     });
 
     if (!updatedEntry) {
@@ -100,14 +113,34 @@ const editEntry = async (req, res) => {
       .status(200)
       .json({ message: "Entry updated successfully", entry: updatedEntry });
   } catch (error) {
+    // **Step 4: Provide specific error messages**
     console.error(`Error editing entry with ID: ${id}`, error);
+
+    // Specific check for CastError (invalid ID format)
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: "Invalid ID format.", details: error.message });
+    }
+    // Specific check for Mongoose validation errors
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: "Validation failed.", details: error.message });
+    }
+
+    // Generic server error for everything else
     res.status(500).json({ message: "Server error while editing entry" });
   }
 };
 
+
 const deleteEntry = async (req, res) => {
   const { id } = req.params;
   console.log(`Received request to delete entry with ID: ${id}`);
+
+  // Add check for invalid ID
+  if (!id || id === 'undefined' || id === 'null') {
+      console.warn(`Delete failed: Invalid ID provided: ${id}`);
+      return res.status(400).json({ message: "A valid Entry ID must be provided." });
+  }
+
   try {
     const deletedEntry = await Entry.findByIdAndDelete(id);
 
@@ -120,6 +153,9 @@ const deleteEntry = async (req, res) => {
     res.status(200).json({ message: "Entry deleted successfully" });
   } catch (error) {
     console.error(`Error deleting entry with ID: ${id}`, error);
+     if (error.name === 'CastError') {
+      return res.status(400).json({ message: "Invalid ID format.", details: error.message });
+    }
     res.status(500).json({ message: "Server error while deleting entry" });
   }
 };

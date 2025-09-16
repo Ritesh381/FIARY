@@ -9,29 +9,52 @@ import {
   toggleEditForm,
 } from "../redux/slices/formSlice";
 
-function HomeCal() {
+function DescriptiveCal() {
   const allEntries = useSelector((state) => state.entry.entries);
+  const dispatch = useDispatch();
+
+  // Set the initial date based on whether today's entry exists
+  const [currentDate, setCurrentDate] = useState(() => {
+    const today = new Date();
+    const todayNormalized = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+
+    const hasTodayEntry = allEntries.some((entry) => {
+      const entryDate = new Date(entry.date || entry.createdAt);
+      const normalizedEntryDate = new Date(
+        entryDate.getFullYear(),
+        entryDate.getMonth(),
+        entryDate.getDate()
+      );
+      return normalizedEntryDate.getTime() === todayNormalized.getTime();
+    });
+
+    if (hasTodayEntry) {
+      return today; // Default to today if an entry exists
+    } else {
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+      return yesterday; // Default to yesterday if no entry for today
+    }
+  });
+
   const [items, setItems] = useState({});
-  const [currentDate, setCurrentDate] = useState(new Date());
   const [isDayEditing, setIsDayEditing] = useState(false);
   const [isYearEditing, setIsYearEditing] = useState(false);
   const [tempDayInput, setTempDayInput] = useState(currentDate.getDate());
   const [tempYearInput, setTempYearInput] = useState(currentDate.getFullYear());
-  const dispatch = useDispatch();
 
   useEffect(() => {
-    // Normalize the current date to the beginning of the day in the local timezone
     const normalizedCurrentDate = new Date(currentDate);
     normalizedCurrentDate.setHours(0, 0, 0, 0);
 
     const entryForDay = allEntries.find((entry) => {
-      const entryDate = new Date(entry.date ? entry.date : entry.createdAt);
-
-      // Normalize the entry date to the beginning of the day in the local timezone
+      const entryDate = new Date(entry.date || entry.createdAt);
       const normalizedEntryDate = new Date(entryDate);
       normalizedEntryDate.setHours(0, 0, 0, 0);
-
-      // Compare the normalized time values
       return normalizedEntryDate.getTime() === normalizedCurrentDate.getTime();
     });
 
@@ -46,8 +69,6 @@ function HomeCal() {
     setTempDayInput(currentDate.getDate());
     setTempYearInput(currentDate.getFullYear());
 
-    // Dispatch the date as a YYYY-MM-DD string to maintain a timezone-agnostic state.
-    // Use local methods to get the components.
     const year = currentDate.getFullYear();
     const month = (currentDate.getMonth() + 1).toString().padStart(2, "0");
     const day = currentDate.getDate().toString().padStart(2, "0");
@@ -96,7 +117,6 @@ function HomeCal() {
       newDate.setDate(newDay);
       setCurrentDate(newDate);
     }
-    // Hide the input field
     setIsDayEditing(false);
   };
 
@@ -108,7 +128,6 @@ function HomeCal() {
       newDate.setFullYear(newYear);
       setCurrentDate(newDate);
     }
-    // Hide the input field
     setIsYearEditing(false);
   };
 
@@ -126,8 +145,11 @@ function HomeCal() {
     }
   };
 
-  // Utility function to truncate strings
+  // Safer utility function to truncate strings
   const truncateString = (str, num) => {
+    if (typeof str !== "string" || !str) {
+      return "";
+    }
     if (str.length > num) {
       return str.slice(0, num) + "...";
     }
@@ -135,23 +157,26 @@ function HomeCal() {
   };
 
   return (
-    <div className="relative p-8 text-white font-sans w-full">
-      {/* Edit button appears if an entry for the selected date exists */}
-      {Object.keys(items).length > 0 && (
-        <button
-          className="absolute top-11 left-12 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-colors duration-300 z-10"
-          onClick={() => {
-            dispatch(toggleEditForm());
-          }}
-        >
-          <Pencil size={24} />
-        </button>
-      )}
-
+    <div className="relative p-8 text-white font-urbane w-full">
       <nav className="flex items-center justify-between p-4 bg-gray-900 bg-opacity-50 rounded-lg shadow-lg">
-        {/* Placeholder to keep the date centered after removing the emoji */}
-        <div className="w-14" />
-
+        <div>
+          <button
+            disabled={Object.keys(items).length === 0}
+            className={`p-3 rounded-full shadow-lg transition-colors duration-300 z-10 text-white
+    ${
+      Object.keys(items).length > 0
+        ? "bg-blue-600 hover:bg-blue-700 cursor-pointer"
+        : "bg-gray-300 cursor-not-allowed"
+    }`}
+            onClick={() => {
+              if (Object.keys(items).length > 0) {
+                dispatch(toggleEditForm());
+              }
+            }}
+          >
+            <Pencil size={24} />
+          </button>
+        </div>
         <div className="flex items-center space-x-4">
           <button
             onClick={handlePrevDay}
@@ -159,7 +184,6 @@ function HomeCal() {
           >
             <ChevronLeft size={24} />
           </button>
-
           {isDayEditing ? (
             <input
               type="number"
@@ -175,7 +199,6 @@ function HomeCal() {
               <Counter value={currentDate.getDate()} places={[10, 1]} />
             </div>
           )}
-
           <select
             name="month"
             id="month"
@@ -189,7 +212,6 @@ function HomeCal() {
               </option>
             ))}
           </select>
-
           {isYearEditing ? (
             <input
               type="number"
@@ -208,7 +230,6 @@ function HomeCal() {
               />
             </div>
           )}
-
           <button
             onClick={handleNextDay}
             className="text-gray-400 hover:text-white transition-colors"
@@ -233,7 +254,6 @@ function HomeCal() {
           </div>
         </div>
       </nav>
-      {/* Details */}
       {Object.keys(items).length > 0 ? (
         <div className="flex flex-col md:flex-row justify-around mt-8 space-y-8 md:space-y-0 md:space-x-8">
           <motion.div
@@ -278,12 +298,7 @@ function HomeCal() {
               <h3 className="font-bold text-gray-400">
                 Achievement of the Day
               </h3>
-              <p className="mt-1">
-                {truncateString(
-                  items.achievement,
-                  200
-                )}
-              </p>
+              <p className="mt-1">{truncateString(items.achievement, 200)}</p>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -349,4 +364,4 @@ function HomeCal() {
   );
 }
 
-export default HomeCal;
+export default DescriptiveCal;

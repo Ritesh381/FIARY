@@ -1,7 +1,7 @@
-import Calendar from "./Calendar";
+import Calendar from "../components/Calendar";
 import { useSelector } from "react-redux";
-import HomeCal from "../HomeCal";
-import Hero from "./Hero";
+import DescriptiveCal from "../components/DescriptiveCal";
+import Hero from "../components/Hero";
 
 function Dashboard() {
   const allEntries = useSelector((state) => state.entry.entries);
@@ -51,7 +51,7 @@ function Dashboard() {
       <Hero/>
 
       <div className="w-full">
-        <HomeCal />
+        <DescriptiveCal />
       </div>
 
       <div className="mt-12 w-full max-w-5xl flex flex-col md:flex-row justify-between space-y-8 md:space-y-0 md:space-x-8">
@@ -71,7 +71,7 @@ function Dashboard() {
           </h2>
           <Calendar markedDates={bathingData.dates} markedColor="#2196F3" />
         </div>
-        <div className="flex flex-col items-center">
+        {/* <div className="flex flex-col items-center">
           <h2 className="text-white text-lg font-semibold mb-4">
             Masturbation Calendar{" "}
             <span className="ml-20 text-gray-200">
@@ -82,7 +82,7 @@ function Dashboard() {
             markedDates={masturbationData.dates}
             markedColor="#E91E63"
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -70,7 +70,6 @@ const JournalFormModal = () => {
     try {
       await api.saveEntry(newEntry);
       dispatch(addEntry(newEntry));
-      setMessage({ type: "success", text: "Entry saved successfully!" });
       setFeeling("");
       setBestMoment("");
       setWorstMoment("");
@@ -85,6 +84,9 @@ const JournalFormModal = () => {
       setDidTakeBath(false);
       setDiaryEntry("");
       dispatch(setDate(new Date().toISOString().split("T")[0]));
+
+      alert("Entry saved successfully!")
+      dispatch(toggleSaveForm())
     } catch (error) {
       setMessage({
         type: "error",
@@ -270,7 +272,7 @@ const JournalFormModal = () => {
                 />
               </div>
 
-              <div className="flex items-center space-x-4">
+              {/* <div className="flex items-center space-x-4">
                 <div className="flex items-center">
                   <input
                     type="checkbox"
@@ -294,7 +296,7 @@ const JournalFormModal = () => {
                     />
                   </div>
                 )}
-              </div>
+              </div> */}
 
               <div className="flex items-center">
                 <input

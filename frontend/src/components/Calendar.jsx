@@ -77,7 +77,7 @@ const Calendar = ({
   const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   return (
-    <div className="p-4 bg-gray-900 text-white rounded-lg shadow-xl font-sans">
+    <div className="p-4 bg-gray-900 text-white rounded-lg shadow-xl font-urbane">
       {/* Month and Year Selectors */}
       <div className="flex justify-between items-center mb-4">
         <select

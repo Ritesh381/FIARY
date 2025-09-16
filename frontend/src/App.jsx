@@ -3,30 +3,32 @@ import LightRays from "./ui/LightRays";
 import JournalFormModal from "./components/JournalFormModal";
 import {
   AiOutlineHome,
-  AiOutlineDashboard,
   AiOutlineStar,
   AiOutlineSetting,
   AiOutlineUser,
 } from "react-icons/ai";
+import { BiCameraMovie } from "react-icons/bi";
 import { FaRupeeSign } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import Dock from "./ui/Dock";
 import Nav from "./components/Nav";
-import Dashboard from "./components/dashboard/Dashboard.jsx";
-import Moments from "./components/Moments";
-import Finance from "./components/Finance"
-import Settings from "./components/Settings";
-import Profile from "./components/Profile";
+import Dashboard from "./pages/Dashboard.jsx";
+import Moments from "./pages/Moments";
+import Finance from "./pages/Finance";
+import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
+import Movies from "./pages/Movies.jsx";
 import fetchEntries from "./api/fetchEntries.js";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import JournalEditFormModal from "./components/JournalEditFormModal.jsx";
+import LandingPage from "./pages/Landing.jsx";
 
 const AppContent = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isModalOpen = useSelector((state) => state.forms.saveForm);
-  const isEditFormOpen = useSelector((state) => state.forms.editForm)
+  const isEditFormOpen = useSelector((state) => state.forms.editForm);
 
   const items = [
     {
@@ -43,6 +45,11 @@ const AppContent = () => {
       icon: <AiOutlineStar size={20} />,
       label: "Moments",
       onClick: () => navigate("/moments"),
+    },
+    {
+      icon: <BiCameraMovie size={20} />,
+      label: "Movies",
+      onClick: () => navigate("/movies"),
     },
     {
       icon: <AiOutlineSetting size={20} />,
@@ -73,10 +80,10 @@ const AppContent = () => {
           mouseInfluence={0.1}
           noiseAmount={0.1}
           distortion={0.05}
-          className="custom-rays"
+          className="custom-rays bg-black"
         />
       </div>
-      <div className="bottom-0 right-[50%] fixed z-11">
+      <div className="bottom-0 right-[50%] fixed z-11 max-w-[80%]">
         <Dock
           items={items}
           panelHeight={68}
@@ -91,10 +98,12 @@ const AppContent = () => {
       <div className="relative w-full z-10 mt-15">
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/finance" element={<Finance/>}></Route>
+          <Route path="/finance" element={<Finance />}></Route>
           <Route path="/moments" element={<Moments />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/movies" element={<Movies />} />
+          <Route path="/landing" element={<LandingPage />} />
         </Routes>
       </div>
 
@@ -106,9 +115,9 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <div className="min-h-screen bg-black p-8 font-sans text-gray-100 flex flex-col ">
+    <div className="min-h-screen p-8 font-urbane text-gray-100 flex flex-col ">
       <BrowserRouter>
-          <AppContent />
+        <AppContent />
       </BrowserRouter>
     </div>
   );
