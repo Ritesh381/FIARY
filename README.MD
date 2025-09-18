@@ -50,7 +50,6 @@ Every day, you can log:
 6. Sleep + Notes (quality, duration, and thoughts)
 7. Physical Activity
 8. Did you take a bath? 🚿
-9. Did you masturbate? (for personal tracking, optional)
 10. Full Diary Entry (free-form writing & reflection)
 
 ## 🔮 Future Additions:

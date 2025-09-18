@@ -1,16 +1,48 @@
-import React, { useState } from "react";
-import { Flame } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Flame, UserCircle } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleSaveForm } from "../redux/slices/formSlice";
+import { useNavigate } from "react-router-dom";
+import api from "../api/AuthCalls";
 
 function Nav() {
   const message = useSelector((state) => state.streak.message);
   const streak = useSelector((state) => state.streak.value);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const handlePlusClick = () => {
     dispatch(toggleSaveForm());
   };
+
+  const handleProfileClick = () => {
+    navigate("/profile");
+    setIsDropdownOpen(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await api.signOut(dispatch);
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setIsDropdownOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
   <div className="flex justify-between items-center py-3 px-2 sm:py-4 sm:px-4 w-full "
@@ -50,39 +82,45 @@ function Nav() {
       <span className="w-full" dangerouslySetInnerHTML={{ __html: message }} />
     </div>
 
-    {/* Plus Button Pill */}
-    <button
-      onClick={handlePlusClick}
-      className="
-        flex items-center justify-center
-        rounded-xl border border-white border-opacity-20
-        text-white font-semibold
-        focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50
-        transition-all duration-200
-        hover:bg-white hover:bg-opacity-10 active:scale-95 hover:text-black
-        shrink-1 grow max-w-[30%] min-w-0
-        py-[2vw] px-[2vw] sm:py-3 sm:px-4
-        ml-[2vw] sm:ml-4
-        bg-opacity-10 backdrop-blur-sm
-        max-w-[50px]
-      "
-      style={{ fontSize: 'clamp(10px, 3vw, 15px)' }}
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-[5vw] w-[5vw] min-h-[22px] min-w-[22px] max-h-[28px] max-w-[28px]"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
+    {/* Profile Menu */}
+    <div className="relative">
+      <button
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        className="
+          flex items-center justify-center
+          rounded-full border border-white border-opacity-20
+          text-white
+          focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50
+          transition-all duration-200
+          hover:bg-white hover:bg-opacity-10 active:scale-95
+          shrink-0 h-[48px] w-[48px]
+          bg-opacity-10 backdrop-blur-sm
+          ml-[2vw] sm:ml-4
+        "
       >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-        />
-      </svg>
-    </button>
+        <UserCircle size={28} />
+      </button>
+
+      {isDropdownOpen && (
+        <div
+          ref={dropdownRef}
+          className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-xl shadow-lg border border-white border-opacity-20 z-20 overflow-hidden backdrop-blur-md"
+        >
+          <button
+            onClick={handleProfileClick}
+            className="w-full px-4 py-3 text-left text-sm text-gray-200 hover:bg-gray-700 transition-colors duration-200"
+          >
+            Profile
+          </button>
+          <button
+            onClick={handleLogout}
+            className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-gray-700 transition-colors duration-200"
+          >
+            Logout
+          </button>
+        </div>
+      )}
+    </div>
   </div>
 );
 

@@ -40,6 +40,11 @@ const mongoose = require("mongoose");
 const EntrySchema = new mongoose.Schema(
   {
     date: {type: Date},
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
     // --- Daily Reflection ---
     feeling: { type: String }, // e.g., "Productive", "Anxious"
     bestMoment: { type: String },

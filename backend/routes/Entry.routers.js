@@ -3,14 +3,15 @@ const {
   saveEntry,
   getAllEntries,
   editEntry,
-  deleteEntry
+  deleteEntry,
 } = require("../controllers/Entry.controllers.js");
+const isAuth = require("../middleware/isAuth");
 
 const entryRouter = express.Router();
 
-entryRouter.post("/save", saveEntry);
-entryRouter.get("/", getAllEntries);
-entryRouter.post("/edit/:id", editEntry)
-entryRouter.delete("/:id", deleteEntry)
+entryRouter.post("/save", isAuth, saveEntry);
+entryRouter.get("/", isAuth, getAllEntries);
+entryRouter.post("/edit/:id", isAuth, editEntry);
+entryRouter.delete("/:id", isAuth, deleteEntry);
 
 module.exports = entryRouter;

@@ -1,4 +1,8 @@
 import axios from "axios";
+
+// This is the crucial line. It tells Axios to send cookies with all requests.
+axios.defaults.withCredentials = true;
+
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const api = {
@@ -51,6 +55,15 @@ const api = {
       throw error;
     }
   },
+  dailyInsights: async (id) => {
+    try{
+      const response = await axios.post(`${API_BASE_URL}/ai/one/${id}`)
+      return response.data;
+    }catch (error){
+      console.error("Error generating daily ai insight:", error);
+      throw error;
+    }
+  }
 };
 
 export default api;

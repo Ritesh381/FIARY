@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import api from "../api/axios";
+import api from "../api/EntryCalls";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleSaveForm, setDate } from "../redux/slices/formSlice";
 import { addEntry } from "../redux/slices/entrySlice";

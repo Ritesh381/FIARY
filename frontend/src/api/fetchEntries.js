@@ -1,4 +1,4 @@
-import api from "../api/axios";
+import api from "./EntryCalls";
 import { setEntries } from "../redux/slices/entrySlice";
 import { setStreak, setMessage } from "../redux/slices/streakSlice";
 

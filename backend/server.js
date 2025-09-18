@@ -4,6 +4,8 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const connectDB = require("./config/db.js");
 const entryRouter = require("./routes/Entry.routers.js");
+const aiRouter = require("./routes/AI.routes.js");
+const authRouter = require("./routes/Auth.routers.js")
 
 const PORT = 8080;
 const app = express();
@@ -14,10 +16,15 @@ connectDB();
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+}));
 
 // Routes
 app.use("/api/entry", entryRouter);
+app.use("/api/ai", aiRouter)
+app.use("/api/auth", authRouter)
 
 // Start server
 app.listen(PORT, () =>
