@@ -63,7 +63,16 @@ const api = {
       console.error("Error generating daily ai insight:", error);
       throw error;
     }
-  }
+  },
+  weeklyInsights: async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/ai/week`);
+      return response.data;
+    } catch (error) {
+      console.error("Error generating weekly ai insights:", error);
+      throw error;
+    }
+  },
 };
 
 export default api;

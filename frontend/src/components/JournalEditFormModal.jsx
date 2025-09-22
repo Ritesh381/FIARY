@@ -10,6 +10,7 @@ const JournalEditFormModal = () => {
   // FIX: Corrected useSelector calls
   const allEntries = useSelector((state) => state.entry.entries);
   const selDate = useSelector((state) => state.forms.date);
+  const user = useSelector((state) => state.user.user)
 
   // State to hold the specific entry found for the selected date
   const [currentEntry, setCurrentEntry] = useState(null);
@@ -115,7 +116,8 @@ const JournalEditFormModal = () => {
     setMessage(null);
 
     const updatedEntry = {
-      ...currentEntry, // Use spread operator to maintain original data
+      ...currentEntry,
+      user,
       feeling,
       bestMoment,
       worstMoment,
@@ -129,7 +131,6 @@ const JournalEditFormModal = () => {
       masturbationNotes,
       didTakeBath,
       diaryEntry,
-      // FIX: Use selDate from Redux
       date: selDate,
     };
 
@@ -349,7 +350,7 @@ setShowDeleteConfirm(true);
               <div className="space-y-4">
                 <div>
                   <label className={formLabelStyle}>
-                    Time Wasted (minutes)
+                    Time Not Utilized (minutes)
                   </label>
                   <input
                     type="number"
@@ -362,7 +363,7 @@ setShowDeleteConfirm(true);
                   />
                 </div>
                 <div>
-                  <label className={formLabelStyle}>Time Wasted Notes</label>
+                  <label className={formLabelStyle}>Time Not Utilized Notes</label>
                   <textarea
                     value={timeWastedNotes}
                     onChange={(e) => setTimeWastedNotes(e.target.value)}

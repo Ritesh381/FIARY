@@ -4,6 +4,7 @@ const saveEntry = async (req, res) => {
   console.log("Received request to save new entry...");
   try {
     const {
+      user,
       date,
       feeling,
       bestMoment = "",
@@ -35,6 +36,7 @@ const saveEntry = async (req, res) => {
     }
 
     const newEntry = {
+      user,
       feeling,
       bestMoment,
       worstMoment,

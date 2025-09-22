@@ -10,7 +10,13 @@ import {
 import { BiCameraMovie } from "react-icons/bi";
 import { FaRupeeSign } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate, useLocation, Routes, Route, Navigate } from "react-router-dom";
+import {
+  useNavigate,
+  useLocation,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Dock from "./ui/Dock";
 import Nav from "./components/Nav";
 import Dashboard from "./pages/Dashboard.jsx";
@@ -24,7 +30,7 @@ import JournalEditFormModal from "./components/JournalEditFormModal.jsx";
 import LandingPage from "./pages/Landing.jsx";
 import SignIn from "./pages/SignIn.jsx";
 import SignUp from "./pages/SignUp.jsx";
-
+import api from "./api/UserCalls.js";
 
 const AppContent = () => {
   const dispatch = useDispatch();
@@ -37,7 +43,7 @@ const AppContent = () => {
     {
       icon: <AiOutlineHome size={20} />,
       label: "Home",
-      onClick: () => navigate("/home"),
+      onClick: () => navigate("/"),
     },
     {
       icon: <FaRupeeSign size={20} />,
@@ -66,7 +72,11 @@ const AppContent = () => {
     },
   ];
 
-  const showNavAndDock = location.pathname !== "/" && location.pathname !== "/signup" && location.pathname !== "/signin";
+  const showNavAndDock =
+    localStorage.getItem("userId") &&
+    location.pathname !== "/signup" &&
+    location.pathname !== "/signin";
+
   const pageContainerClass = showNavAndDock ? "mt-15" : "";
 
   useEffect(() => {
@@ -74,6 +84,11 @@ const AppContent = () => {
       dispatch(fetchEntries());
     }
   }, [dispatch, showNavAndDock]);
+
+  useEffect(() => {
+    const id = localStorage.getItem("userId");
+    api.getUserById(id, dispatch);
+  });
 
   return (
     <>
@@ -110,10 +125,14 @@ const AppContent = () => {
 
       <div className={`relative w-full z-10 ${pageContainerClass}`}>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route
+            path="/"
+            element={
+              localStorage.getItem("userId") ? <Dashboard /> : <LandingPage />
+            }
+          />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/home" element={<Dashboard />} />
           <Route path="/finance" element={<Finance />} />
           <Route path="/moments" element={<Moments />} />
           <Route path="/settings" element={<Settings />} />

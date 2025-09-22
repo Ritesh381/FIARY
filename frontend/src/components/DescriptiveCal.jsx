@@ -420,6 +420,17 @@ function DescriptiveCal() {
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+                className="bg-gray-800 p-4 rounded-md shadow-inner"
+              >
+                <h3 className="font-bold text-gray-400">
+                  Achievement of the Day
+                </h3>
+                <p className="mt-1">{truncateString(items.achievement, 200)}</p>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
                 className="bg-gray-800 p-4 rounded-md shadow-inner"
               >
@@ -436,23 +447,12 @@ function DescriptiveCal() {
                 <p className="mt-1">{truncateString(items.worstMoment, 200)}</p>
               </motion.div>
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
-                className="bg-gray-800 p-4 rounded-md shadow-inner"
-              >
-                <h3 className="font-bold text-gray-400">
-                  Achievement of the Day
-                </h3>
-                <p className="mt-1">{truncateString(items.achievement, 200)}</p>
-              </motion.div>
-              <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.6 }}
                 className="bg-gray-800 p-4 rounded-md shadow-inner"
               >
-                <h3 className="font-bold text-gray-400">Time Wasted</h3>
+                <h3 className="font-bold text-gray-400">Time Not Utilized</h3>
                 <p className="mt-1">
                   {Math.floor(items.timeWastedMinutes / 60)}h{" "}
                   {items.timeWastedMinutes % 60}m
@@ -469,7 +469,7 @@ function DescriptiveCal() {
               </motion.div>
             </div>
             <div className="md:w-1/2 p-6 bg-gray-900 bg-opacity-50 rounded-lg shadow-lg">
-              <h1 className="text-2xl font-bold mb-4">Diary Entry</h1>
+              <h1 className="text-2xl font-bold mb-4">Journal Entry</h1>
               <p className="text-gray-300">{items.diaryEntry}</p>
             </div>
           </motion.div>

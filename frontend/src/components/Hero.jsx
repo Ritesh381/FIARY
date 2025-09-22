@@ -206,7 +206,7 @@ function Hero() {
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-400">Avg. Time Wasted</span>
+            <span className="text-gray-400">Avg Fun Time</span>
             <span className="font-semibold text-amber-400 bg-amber-900/50 px-3 py-1 rounded-full">
               {avgTimeHours}h {avgTimeMinutes}m
             </span>
@@ -223,7 +223,7 @@ function Hero() {
             className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg p-2"
           >
             <option value="sleep">Sleep</option>
-            <option value="timeWasted">Time Wasted</option>
+            <option value="timeWasted">Time Not Utilized</option>
           </select>
           <div className="text-center">
             <span className="text-gray-400 text-sm">Average</span>
@@ -259,7 +259,7 @@ function Hero() {
                 type="monotone"
                 dataKey="value"
                 name={
-                  graphDataType === "sleep" ? "Sleep (hrs)" : "Wasted (hrs)"
+                  graphDataType === "sleep" ? "Sleep (hrs)" : "Time Not Utilized (hrs)"
                 }
                 stroke={graphDataType === "sleep" ? "#38B2AC" : "#F6E05E"}
                 strokeWidth={2}

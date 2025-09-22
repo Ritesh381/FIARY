@@ -22,6 +22,7 @@ const JournalFormModal = () => {
   const [message, setMessage] = useState(null);
 
   const selDate = useSelector((state) => state.forms.date);
+  const user = useSelector((state) => state.user.user);
   const todayFormatted = new Date().toISOString().split("T")[0];
   const minDate = new Date("2006-12-06");
   const dispatch = useDispatch();
@@ -50,6 +51,7 @@ const JournalFormModal = () => {
     setMessage(null);
 
     const newEntry = {
+      user: user._id,
       feeling,
       bestMoment,
       worstMoment,
@@ -63,7 +65,6 @@ const JournalFormModal = () => {
       masturbationNotes,
       didTakeBath,
       diaryEntry,
-      // FIX: Use the 'selDate' from the Redux store.
       date: selDate,
     };
 
@@ -85,8 +86,8 @@ const JournalFormModal = () => {
       setDiaryEntry("");
       dispatch(setDate(new Date().toISOString().split("T")[0]));
 
-      alert("Entry saved successfully!")
-      dispatch(toggleSaveForm())
+      alert("Entry saved successfully!");
+      dispatch(toggleSaveForm());
     } catch (error) {
       setMessage({
         type: "error",
@@ -218,7 +219,7 @@ const JournalFormModal = () => {
             <hr className={sectionDividerStyle} />
             <div className="space-y-4">
               <div>
-                <label className={formLabelStyle}>Time Wasted (minutes)</label>
+                <label className={formLabelStyle}>Time Not Utilized (minutes)</label>
                 <input
                   type="number"
                   value={timeWastedMinutes}
@@ -230,7 +231,7 @@ const JournalFormModal = () => {
                 />
               </div>
               <div>
-                <label className={formLabelStyle}>Time Wasted Notes</label>
+                <label className={formLabelStyle}>Time Not Utilized Notes</label>
                 <textarea
                   value={timeWastedNotes}
                   onChange={(e) => setTimeWastedNotes(e.target.value)}
@@ -272,7 +273,7 @@ const JournalFormModal = () => {
                 />
               </div>
 
-              {/* <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-4">
                 <div className="flex items-center">
                   <input
                     type="checkbox"
@@ -296,7 +297,7 @@ const JournalFormModal = () => {
                     />
                   </div>
                 )}
-              </div> */}
+              </div>
 
               <div className="flex items-center">
                 <input

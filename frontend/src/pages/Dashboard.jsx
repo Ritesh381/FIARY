@@ -1,11 +1,12 @@
 import Calendar from "../components/Calendar";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import DescriptiveCal from "../components/DescriptiveCal";
 import Hero from "../components/Hero";
+import WeeklyInsights from "../components/WeeklyInsights";
 
 function Dashboard() {
   const allEntries = useSelector((state) => state.entry.entries);
-  
+
   const getMoodData = () => {
     const moodColors = {
       Anxious: "#D32F2F", // Red
@@ -48,7 +49,7 @@ function Dashboard() {
 
   return (
     <div className="flex flex-col items-center p-8 space-y-8">
-      <Hero/>
+      <Hero />
 
       <div className="w-full">
         <DescriptiveCal />
@@ -66,14 +67,14 @@ function Dashboard() {
         </div>
         <div className="flex flex-col items-center">
           <h2 className="text-white text-lg font-semibold mb-4">
-            Bathing Calendar{" "}
+            Bathing Calendar {" "}
             <span className="ml-30 text-gray-200">{bathingData.count}</span>
           </h2>
           <Calendar markedDates={bathingData.dates} markedColor="#2196F3" />
         </div>
-        {/* <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center">
           <h2 className="text-white text-lg font-semibold mb-4">
-            Masturbation Calendar{" "}
+            Pleasure Calendar {" "}
             <span className="ml-20 text-gray-200">
               {masturbationData.count}
             </span>
@@ -82,7 +83,11 @@ function Dashboard() {
             markedDates={masturbationData.dates}
             markedColor="#E91E63"
           />
-        </div> */}
+        </div>
+      </div>
+
+      <div className="flex flex-col items-center space-y-4 w-full max-w-3xl mb-20">
+        <WeeklyInsights />
       </div>
     </div>
   );
