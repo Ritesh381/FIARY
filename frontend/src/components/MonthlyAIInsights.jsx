@@ -4,7 +4,7 @@ import { Volume2, VolumeX } from "lucide-react";
 import api from "../api/EntryCalls";
 import { speakText, stopSpeaking } from "../config/speech";
 
-export default function WeeklyInsights() {
+export default function MonthlyAIInsights() {
   const [status, setStatus] = useState("idle");
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -18,22 +18,20 @@ export default function WeeklyInsights() {
     setError(null);
 
     try {
-      const data = await api.weeklyInsights();
+      const data = await api.monthlyInsights();
       setResult(data);
       setStatus("done");
     } catch (err) {
-      console.error("WeeklyInsights fetch error:", err);
-      setError(err.message || "Failed to fetch weekly insights");
+      console.error("MonthlyInsights fetch error:", err);
+      setError(err.message || "Failed to fetch monthly insights");
       setStatus("error");
     }
   };
 
-  
-
   const renderLoading = () => (
     <div className="w-full max-w-2xl mx-auto p-6 bg-gray-900 bg-opacity-60 rounded-2xl shadow-lg flex flex-col items-center justify-center space-y-4">
       <RiSparklingLine className="w-12 h-12 animate-spin text-white" />
-      <p className="text-gray-300 text-lg">Generating weekly insights…</p>
+      <p className="text-gray-300 text-lg">Generating monthly insights…</p>
     </div>
   );
 
@@ -103,10 +101,10 @@ export default function WeeklyInsights() {
         <div className="flex justify-center">
           <button
             onClick={handleGenerate}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg hover:scale-[1.02] transform transition"
-            aria-label="Generate Weekly AI Insights"
+            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full shadow-lg hover:scale-[1.02] transform transition"
+            aria-label="Generate Monthly AI Insights"
           >
-            Generate Weekly AI Insights
+            Generate Monthly AI Insights
           </button>
         </div>
       )}

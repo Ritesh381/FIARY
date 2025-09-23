@@ -42,7 +42,8 @@ const EntrySchema = new mongoose.Schema(
     date: {type: Date},
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     // --- Daily Reflection ---
-    feeling: { type: String }, // e.g., "Productive", "Anxious"
+    feelingScore: { type: Number, min: 1, max: 10, required: true },
+    feeling: { type: String },
     bestMoment: { type: String },
     worstMoment: { type: String },
 

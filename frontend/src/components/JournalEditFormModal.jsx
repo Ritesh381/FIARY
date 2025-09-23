@@ -1,34 +1,33 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/EntryCalls";
 import { useDispatch, useSelector } from "react-redux";
-import { toggleEditForm, setDate } from "../redux/slices/formSlice"; // FIX: Added setDate
+import { toggleEditForm, setDate } from "../redux/slices/formSlice";
 import { editEntry, deleteEntry } from "../redux/slices/entrySlice";
+import MoodSelector from "./MoodSelector";
 
 // --- Journal Edit Form Modal Component ---
 const JournalEditFormModal = () => {
-  // Get data from Redux store
-  // FIX: Corrected useSelector calls
   const allEntries = useSelector((state) => state.entry.entries);
   const selDate = useSelector((state) => state.forms.date);
-  const user = useSelector((state) => state.user.user)
+  const user = useSelector((state) => state.user.user);
 
-  // State to hold the specific entry found for the selected date
   const [currentEntry, setCurrentEntry] = useState(null);
-
-  // State to manage form inputs, initialized with empty values
-  const [feeling, setFeeling] = useState("");
-  const [bestMoment, setBestMoment] = useState("");
-  const [worstMoment, setWorstMoment] = useState("");
-  const [achievement, setAchievement] = useState("");
-  const [timeWastedMinutes, setTimeWastedMinutes] = useState(0);
-  const [timeWastedNotes, setTimeWastedNotes] = useState("");
-  const [sleepHours, setSleepHours] = useState(0.0);
-  const [sleepNotes, setSleepNotes] = useState("");
-  const [physicalActivity, setPhysicalActivity] = useState("");
-  const [didMasturbate, setDidMasturbate] = useState(false);
-  const [masturbationNotes, setMasturbationNotes] = useState("");
-  const [didTakeBath, setDidTakeBath] = useState(false);
-  const [diaryEntry, setDiaryEntry] = useState("");
+  const [formData, setFormData] = useState({
+    mood: "",
+    feelingScore: null,
+    bestMoment: "",
+    worstMoment: "",
+    achievement: "",
+    timeWastedMinutes: 0,
+    timeWastedNotes: "",
+    sleepHours: 0,
+    sleepNotes: "",
+    physicalActivity: "",
+    didMasturbate: false,
+    masturbationNotes: "",
+    didTakeBath: false,
+    diaryEntry: "",
+  });
 
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
@@ -43,7 +42,6 @@ const JournalEditFormModal = () => {
   // Effect to find the entry and populate the form when the selected date or entries change
   useEffect(() => {
     if (selDate && allEntries) {
-      // Use the selDate string directly for comparison
       const foundEntry = allEntries.find(
         (entry) =>
           (entry.date ? new Date(entry.date) : new Date(entry.createdAt))
@@ -53,47 +51,51 @@ const JournalEditFormModal = () => {
 
       if (foundEntry) {
         setCurrentEntry(foundEntry);
-        setFeeling(foundEntry.feeling);
-        setBestMoment(foundEntry.bestMoment);
-        setWorstMoment(foundEntry.worstMoment);
-        setAchievement(foundEntry.achievement);
-        setTimeWastedMinutes(foundEntry.timeWastedMinutes);
-        setTimeWastedNotes(foundEntry.timeWastedNotes);
-        setSleepHours(foundEntry.sleepHours);
-        setSleepNotes(foundEntry.sleepNotes);
-        setPhysicalActivity(foundEntry.physicalActivity);
-        setDidMasturbate(foundEntry.didMasturbate);
-        setMasturbationNotes(foundEntry.masturbationNotes);
-        setDidTakeBath(foundEntry.didTakeBath);
-        setDiaryEntry(foundEntry.diaryEntry);
+        setFormData({
+          mood: foundEntry.feeling,
+          feelingScore: foundEntry.feelingScore,
+          bestMoment: foundEntry.bestMoment,
+          worstMoment: foundEntry.worstMoment,
+          achievement: foundEntry.achievement,
+          timeWastedMinutes: foundEntry.timeWastedMinutes,
+          timeWastedNotes: foundEntry.timeWastedNotes,
+          sleepHours: foundEntry.sleepHours,
+          sleepNotes: foundEntry.sleepNotes,
+          physicalActivity: foundEntry.physicalActivity,
+          didMasturbate: foundEntry.didMasturbate,
+          masturbationNotes: foundEntry.masturbationNotes,
+          didTakeBath: foundEntry.didTakeBath,
+          diaryEntry: foundEntry.diaryEntry,
+        });
         setMessage(null);
       } else {
         setCurrentEntry(null);
-        setFeeling("");
-        setBestMoment("");
-        setWorstMoment("");
-        setAchievement("");
-        setTimeWastedMinutes(0);
-        setTimeWastedNotes("");
-        setSleepHours(0);
-        setSleepNotes("");
-        setPhysicalActivity("");
-        setDidMasturbate(false);
-        setMasturbationNotes("");
-        setDidTakeBath(false);
-        setDiaryEntry("");
+        setFormData({
+          mood: "",
+          feelingScore: null,
+          bestMoment: "",
+          worstMoment: "",
+          achievement: "",
+          timeWastedMinutes: 0,
+          timeWastedNotes: "",
+          sleepHours: 0,
+          sleepNotes: "",
+          physicalActivity: "",
+          didMasturbate: false,
+          masturbationNotes: "",
+          didTakeBath: false,
+          diaryEntry: "",
+        });
         setMessage({ type: "error", text: "No entry found for this date." });
       }
     }
-  }, [selDate, allEntries]); // Re-run this effect when the selected date or the entries list changes
+  }, [selDate, allEntries]);
 
   // Date validation effect
-  // FIX: Use selDate from Redux instead of local state
   useEffect(() => {
     if (!selDate) return;
     const selectedDate = new Date(selDate);
     if (selectedDate > new Date()) {
-      // Use new Date() directly
       setMessage({ type: "error", text: "Can't set date to future" });
     } else if (selectedDate < minDate) {
       setMessage({
@@ -104,6 +106,14 @@ const JournalEditFormModal = () => {
       setMessage(null);
     }
   }, [selDate]);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -117,26 +127,13 @@ const JournalEditFormModal = () => {
 
     const updatedEntry = {
       ...currentEntry,
+      ...formData,
       user,
-      feeling,
-      bestMoment,
-      worstMoment,
-      achievement,
-      timeWastedMinutes,
-      timeWastedNotes,
-      sleepHours,
-      sleepNotes,
-      physicalActivity,
-      didMasturbate,
-      masturbationNotes,
-      didTakeBath,
-      diaryEntry,
       date: selDate,
     };
 
     try {
       await api.updateEntry(currentEntry._id, updatedEntry);
-      // FIX: Correct payload for editEntry reducer
       dispatch(editEntry({ id: currentEntry._id, updatedEntry }));
       setMessage({ type: "success", text: "Entry updated successfully!" });
       alert("Edited entry saved sucessfully");
@@ -152,9 +149,8 @@ const JournalEditFormModal = () => {
   };
 
   const handleDelete = () => {
-setShowDeleteConfirm(true);
+    setShowDeleteConfirm(true);
   };
-
 
   const handleConfirmDelete = async () => {
     if (deleteConfirmInput === confirmationSignature && currentEntry) {
@@ -164,23 +160,24 @@ setShowDeleteConfirm(true);
         alert("Entry deleted successfully.");
         dispatch(toggleEditForm());
       } catch (error) {
-        setMessage({ type: 'error', text: 'Failed to delete entry.' });
-        setShowDeleteConfirm(false); // Close confirmation on error
+        setMessage({ type: "error", text: "Failed to delete entry." });
+        setShowDeleteConfirm(false);
       }
     }
   };
 
   const getFormattedDateForSignature = (dateString) => {
     if (!dateString) return "";
-    // Use 'T00:00:00' to avoid timezone issues with `new Date()`
-    const date = new Date(dateString + 'T00:00:00');
+    const date = new Date(dateString + "T00:00:00");
     const day = date.getDate();
     const month = date.toLocaleString("en-US", { month: "long" });
     const year = date.getFullYear();
     return `${day}${month}${year}`;
   };
 
-  const confirmationSignature = `Delete Entry for ${getFormattedDateForSignature(selDate)}`;
+  const confirmationSignature = `Delete Entry for ${getFormattedDateForSignature(
+    selDate
+  )}`;
 
   const formInputStyle =
     "w-full p-2 rounded-md bg-transparent text-white focus:outline-none focus:ring-1 focus:ring-white placeholder-gray-400 border border-gray-500 color-white";
@@ -193,49 +190,53 @@ setShowDeleteConfirm(true);
       className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-hidden z-50"
       onClick={() => dispatch(toggleEditForm())}
     >
-
-{/* --- Delete Confirmation Modal --- */}
-        {showDeleteConfirm && (
-          <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50 rounded-2xl"  onClick={(e) => e.stopPropagation()}>
-              <div className="bg-gray-900 border border-red-500 rounded-lg p-8 m-4 max-w-md w-full">
-                  <h3 className="text-xl font-bold text-red-500">Confirm Deletion</h3>
-                  <p className="text-gray-300 my-4">
-                      This action cannot be undone. The entry for{" "}
-                      <strong>{new Date(selDate + 'T00:00:00').toLocaleDateString('en-US', { dateStyle: 'long' })}</strong>{" "}
-                      will be gone forever.
-                  </p>
-                  <p className="text-gray-400 text-sm mb-2">
-                      To confirm, please type the following exactly:
-                      <br />
-                      <code className="text-amber-400 font-mono bg-gray-700 p-1 rounded block mt-1">
-                          {confirmationSignature}
-                      </code>
-                  </p>
-                  <input
-                      type="text"
-                      value={deleteConfirmInput}
-                      onChange={(e) => setDeleteConfirmInput(e.target.value)}
-                      className="w-full p-2 rounded-md bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-1 focus:ring-red-500"
-                  />
-                  <div className="flex justify-end space-x-4 mt-6">
-                      <button
-                          onClick={() => setShowDeleteConfirm(false)}
-                          className="py-2 px-4 rounded-md text-white font-semibold transition duration-300 bg-gray-600 hover:bg-gray-700"
-                      >
-                          Cancel
-                      </button>
-                      <button
-                          onClick={handleConfirmDelete}
-                          disabled={deleteConfirmInput !== confirmationSignature}
-                          className="py-2 px-4 rounded-md text-white font-bold transition duration-300 bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:cursor-not-allowed"
-                      >
-                          Confirm Delete
-                      </button>
-                  </div>
-              </div>
+      {showDeleteConfirm && (
+        <div
+          className="absolute inset-0 bg-black/80 flex items-center justify-center z-50 rounded-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="bg-gray-900 border border-red-500 rounded-lg p-8 m-4 max-w-md w-full">
+            <h3 className="text-xl font-bold text-red-500">Confirm Deletion</h3>
+            <p className="text-gray-300 my-4">
+              This action cannot be undone. The entry for{" "}
+              <strong>
+                {new Date(selDate + "T00:00:00").toLocaleDateString("en-US", {
+                  dateStyle: "long",
+                })}
+              </strong>{" "}
+              will be gone forever.
+            </p>
+            <p className="text-gray-400 text-sm mb-2">
+              To confirm, please type the following exactly:
+              <br />
+              <code className="text-amber-400 font-mono bg-gray-700 p-1 rounded block mt-1">
+                {confirmationSignature}
+              </code>
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmInput}
+              onChange={(e) => setDeleteConfirmInput(e.target.value)}
+              className="w-full p-2 rounded-md bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-1 focus:ring-red-500"
+            />
+            <div className="flex justify-end space-x-4 mt-6">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="py-2 px-4 rounded-md text-white font-semibold transition duration-300 bg-gray-600 hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={deleteConfirmInput !== confirmationSignature}
+                className="py-2 px-4 rounded-md text-white font-bold transition duration-300 bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:cursor-not-allowed"
+              >
+                Confirm Delete
+              </button>
+            </div>
           </div>
-        )}
-
+        </div>
+      )}
 
       <div
         className="relative bg-white/10 p-8 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-transform scale-100 duration-300 backdrop-blur-xl"
@@ -284,7 +285,6 @@ setShowDeleteConfirm(true);
                 <label className={formLabelStyle}>Date</label>
                 <input
                   type="date"
-                  // FIX: Use selDate from Redux and dispatch an action to change it
                   value={selDate}
                   onChange={(e) => dispatch(setDate(e.target.value))}
                   className={formInputStyle}
@@ -297,13 +297,26 @@ setShowDeleteConfirm(true);
             <div>
               <h3 className={sectionTitleStyle}>Daily Summary</h3>
               <hr className={sectionDividerStyle} />
+              <div>
+                <label className={formLabelStyle}>Mood Score (1 - 10)</label>
+                <div>
+                  <MoodSelector
+                    selectedMood={formData.feelingScore}
+                    setSelectedMood={(score) =>
+                      setFormData((prev) => ({ ...prev, feelingScore: score }))
+                    }
+                  />
+                </div>
+              </div>
+
               <div className="space-y-4">
                 <div>
-                  <label className={formLabelStyle}>Feeling</label>
+                  <label className={formLabelStyle}>Mood Description</label>
                   <input
                     type="text"
-                    value={feeling}
-                    onChange={(e) => setFeeling(e.target.value)}
+                    name="mood"
+                    value={formData.mood}
+                    onChange={handleChange}
                     className={formInputStyle}
                     placeholder="e.g., Happy, Stressed, Motivated"
                     required
@@ -312,8 +325,9 @@ setShowDeleteConfirm(true);
                 <div>
                   <label className={formLabelStyle}>Best Moment</label>
                   <textarea
-                    value={bestMoment}
-                    onChange={(e) => setBestMoment(e.target.value)}
+                    name="bestMoment"
+                    value={formData.bestMoment}
+                    onChange={handleChange}
                     className={formInputStyle}
                     rows="3"
                     placeholder="What was the best part of your day?"
@@ -322,8 +336,9 @@ setShowDeleteConfirm(true);
                 <div>
                   <label className={formLabelStyle}>Worst Moment</label>
                   <textarea
-                    value={worstMoment}
-                    onChange={(e) => setWorstMoment(e.target.value)}
+                    name="worstMoment"
+                    value={formData.worstMoment}
+                    onChange={handleChange}
                     className={formInputStyle}
                     rows="3"
                     placeholder="What was the worst part of your day?"
@@ -334,8 +349,9 @@ setShowDeleteConfirm(true);
                     Achievement of the Day
                   </label>
                   <textarea
-                    value={achievement}
-                    onChange={(e) => setAchievement(e.target.value)}
+                    name="achievement"
+                    value={formData.achievement}
+                    onChange={handleChange}
                     className={formInputStyle}
                     rows="3"
                     placeholder="What you did today that made you very happy ?"
@@ -354,19 +370,21 @@ setShowDeleteConfirm(true);
                   </label>
                   <input
                     type="number"
-                    value={timeWastedMinutes}
-                    onChange={(e) =>
-                      setTimeWastedMinutes(parseInt(e.target.value))
-                    }
+                    name="timeWastedMinutes"
+                    value={formData.timeWastedMinutes}
+                    onChange={handleChange}
                     className={formInputStyle}
                     required
                   />
                 </div>
                 <div>
-                  <label className={formLabelStyle}>Time Not Utilized Notes</label>
+                  <label className={formLabelStyle}>
+                    Time Not Utilized Notes
+                  </label>
                   <textarea
-                    value={timeWastedNotes}
-                    onChange={(e) => setTimeWastedNotes(e.target.value)}
+                    name="timeWastedNotes"
+                    value={formData.timeWastedNotes}
+                    onChange={handleChange}
                     className={formInputStyle}
                     rows="2"
                     placeholder="What was the time wasted on?"
@@ -378,8 +396,9 @@ setShowDeleteConfirm(true);
                     type="number"
                     step="any"
                     min="0"
-                    value={sleepHours}
-                    onChange={(e) => setSleepHours(parseFloat(e.target.value))}
+                    name="sleepHours"
+                    value={formData.sleepHours}
+                    onChange={handleChange}
                     className={formInputStyle}
                     required
                   />
@@ -387,8 +406,9 @@ setShowDeleteConfirm(true);
                 <div>
                   <label className={formLabelStyle}>Sleep Notes</label>
                   <textarea
-                    value={sleepNotes}
-                    onChange={(e) => setSleepNotes(e.target.value)}
+                    name="sleepNotes"
+                    value={formData.sleepNotes}
+                    onChange={handleChange}
                     className={formInputStyle}
                     rows="2"
                     placeholder="Quality of sleep, dreams, etc."
@@ -398,8 +418,9 @@ setShowDeleteConfirm(true);
                   <label className={formLabelStyle}>Physical Activity</label>
                   <input
                     type="text"
-                    value={physicalActivity}
-                    onChange={(e) => setPhysicalActivity(e.target.value)}
+                    name="physicalActivity"
+                    value={formData.physicalActivity}
+                    onChange={handleChange}
                     className={formInputStyle}
                     placeholder="e.g., Gym, Run, Yoga"
                   />
@@ -409,21 +430,23 @@ setShowDeleteConfirm(true);
                   <div className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={didMasturbate}
-                      onChange={(e) => setDidMasturbate(e.target.checked)}
+                      name="didMasturbate"
+                      checked={formData.didMasturbate}
+                      onChange={handleChange}
                       className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
                     <label className="ml-2 block text-sm text-white">
                       Did Masturbate
                     </label>
                   </div>
-                  {didMasturbate && (
+                  {formData.didMasturbate && (
                     <div className="w-full">
                       <label className={formLabelStyle}>Notes</label>
                       <input
                         type="text"
-                        value={masturbationNotes}
-                        onChange={(e) => setMasturbationNotes(e.target.value)}
+                        name="masturbationNotes"
+                        value={formData.masturbationNotes}
+                        onChange={handleChange}
                         className={formInputStyle}
                         placeholder="Notes on masturbation"
                       />
@@ -434,8 +457,9 @@ setShowDeleteConfirm(true);
                 <div className="flex items-center">
                   <input
                     type="checkbox"
-                    checked={didTakeBath}
-                    onChange={(e) => setDidTakeBath(e.target.checked)}
+                    name="didTakeBath"
+                    checked={formData.didTakeBath}
+                    onChange={handleChange}
                     className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <label className="ml-2 block text-sm text-white">
@@ -452,8 +476,9 @@ setShowDeleteConfirm(true);
                 <div>
                   <label className={formLabelStyle}>Diary Entry</label>
                   <textarea
-                    value={diaryEntry}
-                    onChange={(e) => setDiaryEntry(e.target.value)}
+                    name="diaryEntry"
+                    value={formData.diaryEntry}
+                    onChange={handleChange}
                     className={formInputStyle}
                     rows="6"
                     placeholder="Write your full diary entry here..."

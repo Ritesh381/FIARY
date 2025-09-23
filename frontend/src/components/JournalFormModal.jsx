@@ -3,9 +3,11 @@ import api from "../api/EntryCalls";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleSaveForm, setDate } from "../redux/slices/formSlice";
 import { addEntry } from "../redux/slices/entrySlice";
+import MoodSelector from "./MoodSelector";
 
 const JournalFormModal = () => {
-  const [feeling, setFeeling] = useState("");
+  const [mood, setMood] = useState("");
+  const [feelingScore, setFeelingScore] = useState(null);
   const [bestMoment, setBestMoment] = useState("");
   const [worstMoment, setWorstMoment] = useState("");
   const [achievement, setAchievement] = useState("");
@@ -52,7 +54,8 @@ const JournalFormModal = () => {
 
     const newEntry = {
       user: user._id,
-      feeling,
+      feeling: mood,
+      feelingScore,
       bestMoment,
       worstMoment,
       achievement,
@@ -169,13 +172,23 @@ const JournalFormModal = () => {
           <div>
             <h3 className={sectionTitleStyle}>Daily Summary</h3>
             <hr className={sectionDividerStyle} />
+            <div>
+              <label className={formLabelStyle}>Mood Score (1 - 10)</label>
+              <div>
+                <MoodSelector
+                  selectedMood={feelingScore}
+                  setSelectedMood={setFeelingScore}
+                />
+              </div>
+            </div>
+
             <div className="space-y-4">
               <div>
-                <label className={formLabelStyle}>Feeling</label>
+                <label className={formLabelStyle}>Mood Description</label>
                 <input
                   type="text"
-                  value={feeling}
-                  onChange={(e) => setFeeling(e.target.value)}
+                  value={mood}
+                  onChange={(e) => setMood(e.target.value)}
                   className={formInputStyle}
                   placeholder="e.g., Happy, Stressed, Motivated"
                   required
@@ -219,7 +232,9 @@ const JournalFormModal = () => {
             <hr className={sectionDividerStyle} />
             <div className="space-y-4">
               <div>
-                <label className={formLabelStyle}>Time Not Utilized (minutes)</label>
+                <label className={formLabelStyle}>
+                  Time Not Utilized (minutes)
+                </label>
                 <input
                   type="number"
                   value={timeWastedMinutes}
@@ -231,7 +246,9 @@ const JournalFormModal = () => {
                 />
               </div>
               <div>
-                <label className={formLabelStyle}>Time Not Utilized Notes</label>
+                <label className={formLabelStyle}>
+                  Time Not Utilized Notes
+                </label>
                 <textarea
                   value={timeWastedNotes}
                   onChange={(e) => setTimeWastedNotes(e.target.value)}

@@ -6,7 +6,8 @@ const saveEntry = async (req, res) => {
     const {
       user,
       date,
-      feeling,
+      feeling = "",
+      feelingScore,
       bestMoment = "",
       worstMoment = "",
       achievement = "",
@@ -23,7 +24,7 @@ const saveEntry = async (req, res) => {
 
     if (
       !date ||
-      !feeling ||
+      !feelingScore ||
       timeWastedMinutes === undefined || // Check for undefined specifically
       sleepHours === undefined || // Check for undefined specifically
       !diaryEntry
@@ -37,6 +38,7 @@ const saveEntry = async (req, res) => {
 
     const newEntry = {
       user,
+      feelingScore,
       feeling,
       bestMoment,
       worstMoment,

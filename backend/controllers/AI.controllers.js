@@ -1,5 +1,6 @@
 const callModel = require("../config/ai");
 const Entry = require("../models/Entry.models");
+
 const dailyPrompt = `You are a mentor AI for a user tracking their daily life on a platform called FIARY. I will provide you with a JSON object containing the user's diary entry data. Your task is to analyze this data and generate a new JSON object.
 
 The keys of this new JSON object should be meaningful, positive-sounding headings for each insight.
@@ -40,6 +41,25 @@ Suggest practical life-improving tips and tricks based on the user’s patterns.
 
 Do not include anything outside the JSON object.`;
 
+// NEW: Monthly Prompt
+const monthlyPrompt = `You are a mentor AI for a user tracking their monthly life on a platform called FIARY. I will provide you with a JSON array containing up to the last 30 diary entries of the user. Your task is to analyze this data and generate a new JSON object.
+
+The keys of this new JSON object should be clear, motivational headings for each major monthly insight.
+
+The values should be short, uplifting notes reflecting overall trends, strengths, struggles, and progress for the month.
+
+Use a warm, mentor-like tone with encouragement and positivity.
+
+Add emojis to keep it engaging and motivating.
+
+Include 2–3 playful but firm scoldings for bad habits that kept repeating throughout the month (like procrastination, social media bingeing, or poor sleep). Use a fun but strict style — e.g., “If you keep skipping workouts, I’ll personally drag you out of bed 💪😴!”
+
+Suggest practical, month-scale tips and tricks to help the user grow and improve next month.
+
+Keep the insights short, crisp, and like a monthly reflection from a caring mentor.
+
+Your response must be a single JSON object only, with no extra text.`;
+
 // DAILY
 const dailyInsight = async (req, res) => {
   try {
@@ -63,7 +83,6 @@ const weeklyInsight = async (req, res) => {
     const startDate = new Date(today);
     startDate.setDate(today.getDate() - 6); // 7 days window
 
-    // First try: get exactly 7 consecutive entries (today + past 6 days)
     const consecutiveEntries = await Entry.find({
       date: { $gte: startDate, $lte: today },
     }).sort({ date: 1 });
@@ -73,14 +92,13 @@ const weeklyInsight = async (req, res) => {
     if (consecutiveEntries.length === 7) {
       entriesToUse = consecutiveEntries;
     } else {
-      // Fallback: get last 7 entries within last 7 calendar days
       entriesToUse = await Entry.find({
         date: { $gte: startDate, $lte: today },
       })
         .sort({ date: -1 })
         .limit(7);
 
-      entriesToUse = entriesToUse.reverse(); // keep oldest → newest order
+      entriesToUse = entriesToUse.reverse();
     }
 
     if (!entriesToUse.length)
@@ -97,4 +115,33 @@ const weeklyInsight = async (req, res) => {
   }
 };
 
-module.exports = { dailyInsight, weeklyInsight };
+// MONTHLY
+const monthlyInsight = async (req, res) => {
+  try {
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - 29); // last 30 days window
+
+    let entriesToUse = await Entry.find({
+      date: { $gte: startDate, $lte: today },
+    })
+      .sort({ date: -1 })
+      .limit(30);
+
+    entriesToUse = entriesToUse.reverse(); // oldest → newest order
+
+    if (!entriesToUse.length)
+      return res.status(404).json({ message: "No monthly entries found" });
+
+    const response = await callModel(
+      monthlyPrompt + JSON.stringify(entriesToUse)
+    );
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports = { dailyInsight, weeklyInsight, monthlyInsight };

@@ -1,6 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Counter from "../ui/Counter";
-import { ChevronLeft, ChevronRight, Droplet, Pencil } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Droplet,
+  Pencil,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -9,14 +16,30 @@ import {
   toggleEditForm,
 } from "../redux/slices/formSlice";
 import api from "../api/EntryCalls";
-import { RiSparklingLine } from "react-icons/ri"; // Import the icon
+import { RiSparklingLine } from "react-icons/ri";
+import { speakText, stopSpeaking } from "../config/speech";
 
 function DescriptiveCal() {
   const allEntries = useSelector((state) => state.entry.entries);
+  const dateFromRedux = useSelector((state) => state.forms.date);
   const dispatch = useDispatch();
 
-  // Set initial currentDate based on today's or yesterday's entry
+  const [speakingKey, setSpeakingKey] = useState(null);
+  const utteranceRef = useRef(null);
+
+  const formatDateKey = (date) => {
+    if (!date) return "";
+    const y = date.getFullYear();
+    const m = (date.getMonth() + 1).toString().padStart(2, "0");
+    const d = date.getDate().toString().padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  };
+
+  // The state that will drive the component's UI
   const [currentDate, setCurrentDate] = useState(() => {
+    if (dateFromRedux) {
+      return new Date(dateFromRedux);
+    }
     const today = new Date();
     const todayNormalized = new Date(
       today.getFullYear(),
@@ -49,22 +72,25 @@ function DescriptiveCal() {
   const [tempDayInput, setTempDayInput] = useState(currentDate.getDate());
   const [tempYearInput, setTempYearInput] = useState(currentDate.getFullYear());
 
-  // AI mode state
   const [aiActive, setAiActive] = useState(false);
-  const [aiInsightsByDate, setAiInsightsByDate] = useState({}); // { 'YYYY-MM-DD': { Title: "..."} }
+  const [aiInsightsByDate, setAiInsightsByDate] = useState({});
   const [loadingAI, setLoadingAI] = useState(false);
 
-  // Utility: format date to yyyy-mm-dd string key
-  const formatDateKey = (date) => {
-    const y = date.getFullYear();
-    const m = (date.getMonth() + 1).toString().padStart(2, "0");
-    const d = date.getDate().toString().padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  };
-
-  // Load entries on currentDate change
+  // Syncs component with Redux state and handles effects of date change
+  // This is the single source of truth for synchronization
   useEffect(() => {
-    const normalizedCurrentDate = new Date(currentDate);
+    // Sync internal state with Redux, but avoid an infinite loop
+    const newDate = dateFromRedux ? new Date(dateFromRedux) : currentDate;
+    if (newDate.getTime() !== currentDate.getTime()) {
+      setCurrentDate(newDate);
+    }
+
+    // Update temporary input fields
+    setTempDayInput(newDate.getDate());
+    setTempYearInput(newDate.getFullYear());
+
+    // Load entry for the new date
+    const normalizedCurrentDate = new Date(newDate);
     normalizedCurrentDate.setHours(0, 0, 0, 0);
 
     const entryForDay = allEntries.find((entry) => {
@@ -75,56 +101,40 @@ function DescriptiveCal() {
     });
 
     setItems(entryForDay || {});
-  }, [currentDate, allEntries]);
 
-  // Dispatch date to redux and reset AI toggle as per cache on date change
-  useEffect(() => {
-    setTempDayInput(currentDate.getDate());
-    setTempYearInput(currentDate.getFullYear());
-
-    const dateKey = formatDateKey(currentDate);
-    dispatch(setDate(dateKey));
-
-    // If AI data exists for this date and was previously active, enable AI mode automatically,
-    // otherwise reset aiActive to false
+    // Manage AI state based on the new date
+    const dateKey = formatDateKey(newDate);
     if (aiInsightsByDate[dateKey]) {
       setAiActive(true);
     } else {
       setAiActive(false);
     }
-  }, [currentDate, dispatch, aiInsightsByDate]);
+  }, [dateFromRedux, allEntries, aiInsightsByDate]);
 
   // Handle AIButton click toggle
   const handleAiToggle = async () => {
     const dateKey = formatDateKey(currentDate);
-    
-    // Toggle the state immediately to show loading or insights
+
     setAiActive(!aiActive);
 
-    // If we're turning AI on
     if (!aiActive) {
-      // If we already have AI insights cached, just return
       if (aiInsightsByDate[dateKey]) {
         return;
       }
 
       if (!items._id) {
-        // No valid entry id to fetch for AI insights, so just return
         return;
       }
-      
+
       setLoadingAI(true);
       try {
         const data = await api.dailyInsights(items._id);
-        // Cache the AI insight for this date
         setAiInsightsByDate((prev) => ({
           ...prev,
           [dateKey]: data,
         }));
-
       } catch (err) {
         console.error("Failed to fetch AI insight:", err);
-        // On failure, turn AI mode off and show an error message
         setAiActive(false);
       } finally {
         setLoadingAI(false);
@@ -132,17 +142,16 @@ function DescriptiveCal() {
     }
   };
 
-
   const handlePrevDay = () => {
     const newDate = new Date(currentDate);
     newDate.setDate(currentDate.getDate() - 1);
-    setCurrentDate(newDate);
+    dispatch(setDate(formatDateKey(newDate)));
   };
 
   const handleNextDay = () => {
     const newDate = new Date(currentDate);
     newDate.setDate(currentDate.getDate() + 1);
-    setCurrentDate(newDate);
+    dispatch(setDate(formatDateKey(newDate)));
   };
 
   const getDaysInMonth = (year, month) => {
@@ -159,7 +168,7 @@ function DescriptiveCal() {
   const handleMonthChange = (e) => {
     const newDate = new Date(currentDate);
     newDate.setMonth(parseInt(e.target.value, 10));
-    setCurrentDate(newDate);
+    dispatch(setDate(formatDateKey(newDate)));
   };
 
   const handleDayUpdate = () => {
@@ -171,7 +180,7 @@ function DescriptiveCal() {
     if (!isNaN(newDay) && newDay >= 1 && newDay <= maxDays) {
       const newDate = new Date(currentDate);
       newDate.setDate(newDay);
-      setCurrentDate(newDate);
+      dispatch(setDate(formatDateKey(newDate)));
     }
     setIsDayEditing(false);
   };
@@ -182,7 +191,7 @@ function DescriptiveCal() {
     if (!isNaN(newYear) && newYear >= 2000 && newYear <= currentYear + 5) {
       const newDate = new Date(currentDate);
       newDate.setFullYear(newYear);
-      setCurrentDate(newDate);
+      dispatch(setDate(formatDateKey(newDate)));
     }
     setIsYearEditing(false);
   };
@@ -201,7 +210,6 @@ function DescriptiveCal() {
     }
   };
 
-  // Safer utility function to truncate strings
   const truncateString = (str, num) => {
     if (typeof str !== "string" || !str) {
       return "";
@@ -212,15 +220,17 @@ function DescriptiveCal() {
     return str;
   };
 
-  // Format AI data display from cached object, if any
   const currentDateKey = formatDateKey(currentDate);
   const aiData = aiInsightsByDate[currentDateKey];
 
-  // The AI Button logic is now inside this component
   const AIButton = () => (
     <div
       className={`relative rounded-full p-[2px] transition-all duration-300 ease-in-out
-        ${aiActive ? "bg-gradient-to-r from-blue-500 to-purple-500" : "bg-transparent"}`}
+        ${
+          aiActive
+            ? "bg-gradient-to-r from-blue-500 to-purple-500"
+            : "bg-transparent"
+        }`}
     >
       <button
         disabled={Object.keys(items).length === 0}
@@ -240,7 +250,11 @@ function DescriptiveCal() {
         <RiSparklingLine
           className={`
             relative z-10 transition-transform duration-500 ease-in-out
-            ${Object.keys(items).length > 0 ? "group-hover:rotate-360" : "text-gray-500"}
+            ${
+              Object.keys(items).length > 0
+                ? "group-hover:rotate-360"
+                : "text-gray-500"
+            }
           `}
         />
         {!aiActive && (
@@ -252,7 +266,6 @@ function DescriptiveCal() {
       </button>
     </div>
   );
-
 
   return (
     <div className="relative p-8 text-white font-urbane w-full">
@@ -274,16 +287,12 @@ function DescriptiveCal() {
           >
             <Pencil size={24} />
           </button>
-          {/* AI Button */}
           <AIButton />
         </div>
 
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => {
-              setAiActive(false); // Reset AI mode on manual date navigation
-              handlePrevDay();
-            }}
+            onClick={handlePrevDay}
             className="text-gray-400 hover:text-white transition-colors"
           >
             <ChevronLeft size={24} />
@@ -307,10 +316,7 @@ function DescriptiveCal() {
             name="month"
             id="month"
             value={currentDate.getMonth()}
-            onChange={(e) => {
-              setAiActive(false);
-              handleMonthChange(e);
-            }}
+            onChange={handleMonthChange}
             className="bg-gray-800 text-white border-none py-2 px-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-2xl"
           >
             {getMonths().map((month) => (
@@ -338,10 +344,7 @@ function DescriptiveCal() {
             </div>
           )}
           <button
-            onClick={() => {
-              setAiActive(false);
-              handleNextDay();
-            }}
+            onClick={handleNextDay}
             className="text-gray-400 hover:text-white transition-colors"
           >
             <ChevronRight size={24} />
@@ -366,10 +369,8 @@ function DescriptiveCal() {
         </div>
       </nav>
 
-      {/* Content area */}
       <AnimatePresence mode="wait">
         {aiActive ? (
-          // AI insights view
           <motion.div
             key="ai-view"
             initial={{ opacity: 0, y: 20 }}
@@ -385,8 +386,29 @@ function DescriptiveCal() {
             ) : aiData ? (
               <div className="grid gap-6">
                 {Object.entries(aiData).map(([title, insight]) => (
-                  <div key={title} className="bg-gray-800 p-4 rounded-md shadow-inner">
-                    <h3 className="font-bold text-gray-400 text-lg mb-1">{title}</h3>
+                  <div
+                    key={title}
+                    className="bg-gray-800 p-4 rounded-md shadow-inner relative"
+                  >
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-bold text-gray-400 text-lg mb-1">
+                        {title}
+                      </h3>
+                      <button
+                        onClick={() =>
+                          speakingKey === title
+                            ? stopSpeaking(setSpeakingKey, utteranceRef)
+                            : speakText(insight, title, setSpeakingKey, utteranceRef)
+                        }
+                        className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition"
+                      >
+                        {speakingKey === title ? (
+                          <VolumeX className="w-5 h-5 text-red-400" />
+                        ) : (
+                          <Volume2 className="w-5 h-5 text-green-400" />
+                        )}
+                      </button>
+                    </div>
                     <p className="text-white">{insight}</p>
                   </div>
                 ))}
@@ -398,7 +420,6 @@ function DescriptiveCal() {
             )}
           </motion.div>
         ) : Object.keys(items).length > 0 ? (
-          // Normal entry view
           <motion.div
             key="entry-view"
             initial={{ opacity: 0, y: 20 }}
@@ -469,12 +490,32 @@ function DescriptiveCal() {
               </motion.div>
             </div>
             <div className="md:w-1/2 p-6 bg-gray-900 bg-opacity-50 rounded-lg shadow-lg">
-              <h1 className="text-2xl font-bold mb-4">Journal Entry</h1>
+              <div className="flex justify-between items-center mb-4">
+                <h1 className="text-2xl font-bold">Journal Entry</h1>
+                <button
+                  onClick={() =>
+                    speakingKey === "journal"
+                      ? stopSpeaking(setSpeakingKey, utteranceRef)
+                      : speakText(
+                          items.diaryEntry || "No journal entry",
+                          "journal",
+                          setSpeakingKey,
+                          utteranceRef
+                        )
+                  }
+                  className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition"
+                >
+                  {speakingKey === "journal" ? (
+                    <VolumeX className="w-5 h-5 text-red-400" />
+                  ) : (
+                    <Volume2 className="w-5 h-5 text-green-400" />
+                  )}
+                </button>
+              </div>
               <p className="text-gray-300">{items.diaryEntry}</p>
             </div>
           </motion.div>
         ) : (
-          // No entries view if not AI
           <motion.div
             key="no-entry-view"
             initial={{ opacity: 0, y: 20 }}

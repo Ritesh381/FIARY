@@ -73,6 +73,15 @@ const api = {
       throw error;
     }
   },
+  monthlyInsights: async () => {
+    try{
+      const response = await axios.get(`${API_BASE_URL}/ai/month`);
+      return response.data;
+    } catch (error){
+      console.error("Error generating monthly ai insights:", error);
+      throw error;
+    }
+  }
 };
 
 export default api;

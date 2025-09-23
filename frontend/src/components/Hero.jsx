@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Calendar from "./Calendar";
+import MoodCalendar from "./MoodCalendar";
 import { SiFireship } from "react-icons/si";
 import { useSelector } from "react-redux";
 import {
@@ -176,7 +176,7 @@ function Hero() {
     <div className="flex flex-col lg:flex-row justify-center items-start gap-8 w-full p-4">
       {/* Calendar and Streak Container */}
       <div className="flex-shrink-0 relative">
-        <Calendar markedDates={markedDates} />
+        <MoodCalendar />
         <div className="absolute top-5 left-1/2 -translate-x-1/2 z-10 flex items-center space-x-2 text-orange-500 text-2xl">
           <SiFireship />
           <span className="font-extrabold">{streak}</span>
