@@ -13,7 +13,7 @@ const JournalEditFormModal = () => {
 
   const [currentEntry, setCurrentEntry] = useState(null);
   const [formData, setFormData] = useState({
-    mood: "",
+    feeling: "",
     feelingScore: null,
     bestMoment: "",
     worstMoment: "",
@@ -52,7 +52,7 @@ const JournalEditFormModal = () => {
       if (foundEntry) {
         setCurrentEntry(foundEntry);
         setFormData({
-          mood: foundEntry.feeling,
+          feeling: foundEntry.feeling,
           feelingScore: foundEntry.feelingScore,
           bestMoment: foundEntry.bestMoment,
           worstMoment: foundEntry.worstMoment,
@@ -71,7 +71,7 @@ const JournalEditFormModal = () => {
       } else {
         setCurrentEntry(null);
         setFormData({
-          mood: "",
+          feeling: "",
           feelingScore: null,
           bestMoment: "",
           worstMoment: "",
@@ -314,8 +314,8 @@ const JournalEditFormModal = () => {
                   <label className={formLabelStyle}>Mood Description</label>
                   <input
                     type="text"
-                    name="mood"
-                    value={formData.mood}
+                    name="feeling"
+                    value={formData.feeling}
                     onChange={handleChange}
                     className={formInputStyle}
                     placeholder="e.g., Happy, Stressed, Motivated"

@@ -3,6 +3,7 @@ import { RiSparklingLine } from "react-icons/ri";
 import { Volume2, VolumeX } from "lucide-react";
 import api from "../api/EntryCalls";
 import { speakText, stopSpeaking } from "../config/speech";
+import ReactMarkdown from "react-markdown";
 
 export default function WeeklyInsights() {
   const [status, setStatus] = useState("idle");
@@ -28,8 +29,6 @@ export default function WeeklyInsights() {
     }
   };
 
-  
-
   const renderLoading = () => (
     <div className="w-full max-w-2xl mx-auto p-6 bg-gray-900 bg-opacity-60 rounded-2xl shadow-lg flex flex-col items-center justify-center space-y-4">
       <RiSparklingLine className="w-12 h-12 animate-spin text-white" />
@@ -43,11 +42,7 @@ export default function WeeklyInsights() {
     }
 
     if (typeof result === "string") {
-      return (
-        <div className="prose prose-invert max-w-none">
-          <pre className="whitespace-pre-wrap">{result}</pre>
-        </div>
-      );
+      return <ReactMarkdown>{result}</ReactMarkdown>;
     }
 
     if (typeof result === "object") {
@@ -64,7 +59,12 @@ export default function WeeklyInsights() {
                   onClick={() =>
                     speakingKey === title
                       ? stopSpeaking(setSpeakingKey, utteranceRef)
-                      : speakText(String(body), title, setSpeakingKey, utteranceRef)
+                      : speakText(
+                          String(body),
+                          title,
+                          setSpeakingKey,
+                          utteranceRef
+                        )
                   }
                   className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition"
                   aria-label={`${
@@ -78,7 +78,7 @@ export default function WeeklyInsights() {
                   )}
                 </button>
               </div>
-              <p className="text-gray-200 mt-2">{String(body)}</p>
+              <ReactMarkdown>{String(body)}</ReactMarkdown>
             </div>
           ))}
         </div>

@@ -18,6 +18,7 @@ import {
 import api from "../api/EntryCalls";
 import { RiSparklingLine } from "react-icons/ri";
 import { speakText, stopSpeaking } from "../config/speech";
+import ReactMarkdown from "react-markdown";
 
 function DescriptiveCal() {
   const allEntries = useSelector((state) => state.entry.entries);
@@ -409,7 +410,7 @@ function DescriptiveCal() {
                         )}
                       </button>
                     </div>
-                    <p className="text-white">{insight}</p>
+                    <ReactMarkdown>{insight}</ReactMarkdown>
                   </div>
                 ))}
               </div>

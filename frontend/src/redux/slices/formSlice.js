@@ -1,9 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+const today = new Date();
+today.setDate(today.getDate() - 1);
+
 export const formSlice = createSlice({
   name: "forms",
   initialState: {
-    date: new Date().toISOString().split('T')[0],
+    date: today.toISOString().split("T")[0],
     saveForm: false,
     editForm: false,
   },

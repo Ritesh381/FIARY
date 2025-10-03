@@ -1,14 +1,10 @@
 import { useEffect } from "react";
 import LightRays from "./ui/LightRays";
 import JournalFormModal from "./components/JournalFormModal";
-import {
-  AiOutlineHome,
-  AiOutlineStar,
-  AiOutlineSetting,
-  AiOutlineUser,
-} from "react-icons/ai";
-import { BiCameraMovie } from "react-icons/bi";
-import { FaRupeeSign } from "react-icons/fa";
+import { AiOutlineHome, AiOutlineStar, AiOutlineSetting, AiOutlineUser } from "react-icons/ai";
+import { RiBookShelfFill } from "react-icons/ri";
+import { TfiThought } from "react-icons/tfi";
+import { FaRupeeSign, FaTasks, FaRegSmileBeam } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import {
   useNavigate,
@@ -20,17 +16,20 @@ import {
 import Dock from "./ui/Dock";
 import Nav from "./components/Nav";
 import Dashboard from "./pages/Dashboard.jsx";
-import Moments from "./pages/Moments";
 import Finance from "./pages/Finance";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
-import Movies from "./pages/Movies.jsx";
 import fetchEntries from "./api/fetchEntries.js";
 import JournalEditFormModal from "./components/JournalEditFormModal.jsx";
 import LandingPage from "./pages/Landing.jsx";
 import SignIn from "./pages/SignIn.jsx";
 import SignUp from "./pages/SignUp.jsx";
 import api from "./api/UserCalls.js";
+import TheShelf from "./pages/TheShelf.jsx";
+import Memories from "./pages/Memories.jsx";
+import Tasks from "./pages/Tasks.jsx";
+import Thoughts from "./pages/Thoughts.jsx"
+import Hobies from "./pages/Hobies.jsx"
 
 const AppContent = () => {
   const dispatch = useDispatch();
@@ -46,30 +45,45 @@ const AppContent = () => {
       onClick: () => navigate("/"),
     },
     {
+      icon: <FaTasks size={20} />,
+      label: "Tasks",
+      onClick: () => navigate("/tasks"),
+    },
+    {
+      icon: <FaRegSmileBeam size={20}/>,
+      label: "Hobies",
+      onClick: () => navigate("/hobies")
+    },
+    {
       icon: <FaRupeeSign size={20} />,
       label: "Finance",
       onClick: () => navigate("/finance"),
     },
     {
       icon: <AiOutlineStar size={20} />,
-      label: "Moments",
-      onClick: () => navigate("/moments"),
+      label: "Memories",
+      onClick: () => navigate("/memories"),
     },
     {
-      icon: <BiCameraMovie size={20} />,
-      label: "Movies",
-      onClick: () => navigate("/movies"),
+      icon: <TfiThought size={20}/>,
+      label: "Thoughts",
+      onClick: () => navigate("/thoughts")
     },
     {
-      icon: <AiOutlineSetting size={20} />,
-      label: "Settings",
-      onClick: () => navigate("/settings"),
+      icon: <RiBookShelfFill size={20} />,
+      label: "The Shelf",
+      onClick: () => navigate("/shelf"),
     },
-    {
-      icon: <AiOutlineUser size={20} />,
-      label: "Profile",
-      onClick: () => navigate("/profile"),
-    },
+    // {
+    //   icon: <AiOutlineSetting size={20} />,
+    //   label: "Settings",
+    //   onClick: () => navigate("/settings"),
+    // },
+    // {
+    //   icon: <AiOutlineUser size={20} />,
+    //   label: "Profile",
+    //   onClick: () => navigate("/profile"),
+    // },
   ];
 
   const showNavAndDock =
@@ -134,10 +148,13 @@ const AppContent = () => {
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/finance" element={<Finance />} />
-          <Route path="/moments" element={<Moments />} />
+          <Route path="/memories" element={<Memories />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/movies" element={<Movies />} />
+          <Route path="/shelf" element={<TheShelf />} />
+          <Route path="/tasks" element={<Tasks />}></Route>
+          <Route path="/thoughts" element={<Thoughts/>}></Route>
+          <Route path="/hobies" element={<Hobies/>}></Route>
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
       </div>

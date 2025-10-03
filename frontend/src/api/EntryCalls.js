@@ -9,6 +9,7 @@ const api = {
   // Function to save a new journal entry
   saveEntry: async (entryData) => {
     try {
+      
       const response = await axios.post(
         `${API_BASE_URL}/entry/save`,
         entryData

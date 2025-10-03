@@ -9,6 +9,7 @@ const api = {
   signIn: async (credentials, dispatch) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/signin`, credentials);
+      localStorage.setItem("userId", response.data.user._id);
       if (response.status === 200) {
         dispatch(setUser(response.data.user));
       }
@@ -22,6 +23,7 @@ const api = {
   signUp: async (userData, dispatch) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/signup`, userData);
+      localStorage.setItem("userId", response.data.user._id);
       if (response.status === 200) {
         dispatch(setUser(response.data.user));
       }
@@ -35,6 +37,7 @@ const api = {
   signOut: async (dispatch) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/logout`);
+      localStorage.removeItem("userId");
       dispatch(logout());
       return response.data;
     } catch (error) {

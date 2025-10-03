@@ -13,7 +13,7 @@ export default function SignUp() {
   useEffect(() => {
     const token = document.cookie.split('; ').find(row => row.startsWith('token='));
     if (token) {
-      navigate('/home');
+      navigate('/');
     }
   }, [navigate]);
 

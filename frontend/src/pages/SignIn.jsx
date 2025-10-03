@@ -13,7 +13,7 @@ export default function SignIn() {
     // Check if a user is already logged in
     const token = document.cookie.split('; ').find(row => row.startsWith('token='));
     if (token) {
-      navigate('/home');
+      navigate('/');
     }
   }, [navigate]);
 
@@ -21,7 +21,7 @@ export default function SignIn() {
     e.preventDefault();
     try {
       await authAPI.signIn({ email, password }, dispatch);
-      navigate('/home');
+      navigate('/');
     } catch (error) {
       alert(`Authentication failed: ${error.message}`);
     }

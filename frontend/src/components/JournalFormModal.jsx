@@ -3,37 +3,24 @@ import api from "../api/EntryCalls";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleSaveForm, setDate } from "../redux/slices/formSlice";
 import { addEntry } from "../redux/slices/entrySlice";
+import { setFormField, resetForm } from "../redux/slices/entryForm";
 import MoodSelector from "./MoodSelector";
 
 const JournalFormModal = () => {
-  const [mood, setMood] = useState("");
-  const [feelingScore, setFeelingScore] = useState(null);
-  const [bestMoment, setBestMoment] = useState("");
-  const [worstMoment, setWorstMoment] = useState("");
-  const [achievement, setAchievement] = useState("");
-  const [timeWastedMinutes, setTimeWastedMinutes] = useState(0);
-  const [timeWastedNotes, setTimeWastedNotes] = useState("");
-  const [sleepHours, setSleepHours] = useState(0);
-  const [sleepNotes, setSleepNotes] = useState("");
-  const [physicalActivity, setPhysicalActivity] = useState("");
-  const [didMasturbate, setDidMasturbate] = useState(false);
-  const [masturbationNotes, setMasturbationNotes] = useState("");
-  const [didTakeBath, setDidTakeBath] = useState(false);
-  const [diaryEntry, setDiaryEntry] = useState("");
+  const formData = useSelector((state) => state.entryForm);
+  const selDate = useSelector((state) => state.forms.date);
+  const user = useSelector((state) => state.user.user);
+
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
 
-  const selDate = useSelector((state) => state.forms.date);
-  const user = useSelector((state) => state.user.user);
   const todayFormatted = new Date().toISOString().split("T")[0];
   const minDate = new Date("2006-12-06");
   const dispatch = useDispatch();
 
+  // Date validation
   useEffect(() => {
-    // FIX: Use the 'selDate' from Redux for validation.
     const selectedDate = new Date(selDate);
-
-    // FIX: Use 'new Date()' for a proper date comparison.
     if (selectedDate > new Date()) {
       setMessage({ type: "error", text: "Can't set date to future" });
     } else if (selectedDate < minDate) {
@@ -44,7 +31,6 @@ const JournalFormModal = () => {
     } else {
       setMessage(null);
     }
-    // FIX: Depend on the Redux state to re-run the effect.
   }, [selDate]);
 
   const handleFormSubmit = async (e) => {
@@ -53,45 +39,20 @@ const JournalFormModal = () => {
     setMessage(null);
 
     const newEntry = {
+      ...formData,
       user: user._id,
-      feeling: mood,
-      feelingScore,
-      bestMoment,
-      worstMoment,
-      achievement,
-      timeWastedMinutes,
-      timeWastedNotes,
-      sleepHours,
-      sleepNotes,
-      physicalActivity,
-      didMasturbate,
-      masturbationNotes,
-      didTakeBath,
-      diaryEntry,
       date: selDate,
     };
 
     try {
       await api.saveEntry(newEntry);
       dispatch(addEntry(newEntry));
-      setFeeling("");
-      setBestMoment("");
-      setWorstMoment("");
-      setAchievement("");
-      setTimeWastedMinutes(0);
-      setTimeWastedNotes("");
-      setSleepHours(0);
-      setSleepNotes("");
-      setPhysicalActivity("");
-      setDidMasturbate(false);
-      setMasturbationNotes("");
-      setDidTakeBath(false);
-      setDiaryEntry("");
+      dispatch(resetForm()); // clear after save
       dispatch(setDate(new Date().toISOString().split("T")[0]));
-
       alert("Entry saved successfully!");
       dispatch(toggleSaveForm());
     } catch (error) {
+      console.error(error);
       setMessage({
         type: "error",
         text: "Failed to save entry. Please check the required fields.",
@@ -153,14 +114,13 @@ const JournalFormModal = () => {
         )}
 
         <form onSubmit={handleFormSubmit} className="space-y-6">
+          {/* Date */}
           <div className="flex items-center space-x-4">
             <div className="flex-1">
               <label className={formLabelStyle}>Date</label>
               <input
                 type="date"
-                // FIX: Connect the input value to the Redux state.
                 value={selDate}
-                // FIX: Dispatch an action to change the date in Redux.
                 onChange={(e) => dispatch(setDate(e.target.value))}
                 className={formInputStyle}
                 required
@@ -169,17 +129,19 @@ const JournalFormModal = () => {
               />
             </div>
           </div>
+
+          {/* Daily Summary */}
           <div>
             <h3 className={sectionTitleStyle}>Daily Summary</h3>
             <hr className={sectionDividerStyle} />
             <div>
               <label className={formLabelStyle}>Mood Score (1 - 10)</label>
-              <div>
-                <MoodSelector
-                  selectedMood={feelingScore}
-                  setSelectedMood={setFeelingScore}
-                />
-              </div>
+              <MoodSelector
+                selectedMood={formData.feelingScore}
+                setSelectedMood={(val) =>
+                  dispatch(setFormField({ field: "feelingScore", value: val }))
+                }
+              />
             </div>
 
             <div className="space-y-4">
@@ -187,8 +149,10 @@ const JournalFormModal = () => {
                 <label className={formLabelStyle}>Mood Description</label>
                 <input
                   type="text"
-                  value={mood}
-                  onChange={(e) => setMood(e.target.value)}
+                  value={formData.feeling}
+                  onChange={(e) =>
+                    dispatch(setFormField({ field: "feeling", value: e.target.value }))
+                  }
                   className={formInputStyle}
                   placeholder="e.g., Happy, Stressed, Motivated"
                   required
@@ -197,8 +161,10 @@ const JournalFormModal = () => {
               <div>
                 <label className={formLabelStyle}>Best Moment</label>
                 <textarea
-                  value={bestMoment}
-                  onChange={(e) => setBestMoment(e.target.value)}
+                  value={formData.bestMoment}
+                  onChange={(e) =>
+                    dispatch(setFormField({ field: "bestMoment", value: e.target.value }))
+                  }
                   className={formInputStyle}
                   rows="3"
                   placeholder="What was the best part of your day?"
@@ -207,8 +173,10 @@ const JournalFormModal = () => {
               <div>
                 <label className={formLabelStyle}>Worst Moment</label>
                 <textarea
-                  value={worstMoment}
-                  onChange={(e) => setWorstMoment(e.target.value)}
+                  value={formData.worstMoment}
+                  onChange={(e) =>
+                    dispatch(setFormField({ field: "worstMoment", value: e.target.value }))
+                  }
                   className={formInputStyle}
                   rows="3"
                   placeholder="What was the worst part of your day?"
@@ -217,8 +185,10 @@ const JournalFormModal = () => {
               <div>
                 <label className={formLabelStyle}>Achievement of the Day</label>
                 <textarea
-                  value={achievement}
-                  onChange={(e) => setAchievement(e.target.value)}
+                  value={formData.achievement}
+                  onChange={(e) =>
+                    dispatch(setFormField({ field: "achievement", value: e.target.value }))
+                  }
                   className={formInputStyle}
                   rows="3"
                   placeholder="What you did today that made you very happy ?"
@@ -227,6 +197,7 @@ const JournalFormModal = () => {
             </div>
           </div>
 
+          {/* Habits & Activities */}
           <div>
             <h3 className={sectionTitleStyle}>Habits & Activities</h3>
             <hr className={sectionDividerStyle} />
@@ -236,22 +207,27 @@ const JournalFormModal = () => {
                   Time Not Utilized (minutes)
                 </label>
                 <input
-                  type="number"
-                  value={timeWastedMinutes}
+                  type="text"
+                  value={formData.timeWastedMinutes}
                   onChange={(e) =>
-                    setTimeWastedMinutes(parseInt(e.target.value))
+                    dispatch(
+                      setFormField({
+                        field: "timeWastedMinutes",
+                        value: parseInt(e.target.value) || 0,
+                      })
+                    )
                   }
                   className={formInputStyle}
                   required
                 />
               </div>
               <div>
-                <label className={formLabelStyle}>
-                  Time Not Utilized Notes
-                </label>
+                <label className={formLabelStyle}>Time Not Utilized Notes</label>
                 <textarea
-                  value={timeWastedNotes}
-                  onChange={(e) => setTimeWastedNotes(e.target.value)}
+                  value={formData.timeWastedNotes}
+                  onChange={(e) =>
+                    dispatch(setFormField({ field: "timeWastedNotes", value: e.target.value }))
+                  }
                   className={formInputStyle}
                   rows="2"
                   placeholder="What was the time wasted on?"
@@ -260,11 +236,17 @@ const JournalFormModal = () => {
               <div>
                 <label className={formLabelStyle}>Sleep (hours)</label>
                 <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  value={sleepHours}
-                  onChange={(e) => setSleepHours(parseFloat(e.target.value))}
+                  type="text"
+
+                  value={formData.sleepHours}
+                  onChange={(e) =>
+                    dispatch(
+                      setFormField({
+                        field: "sleepHours",
+                        value: parseFloat(e.target.value) || 0,
+                      })
+                    )
+                  }
                   className={formInputStyle}
                   required
                 />
@@ -272,8 +254,10 @@ const JournalFormModal = () => {
               <div>
                 <label className={formLabelStyle}>Sleep Notes</label>
                 <textarea
-                  value={sleepNotes}
-                  onChange={(e) => setSleepNotes(e.target.value)}
+                  value={formData.sleepNotes}
+                  onChange={(e) =>
+                    dispatch(setFormField({ field: "sleepNotes", value: e.target.value }))
+                  }
                   className={formInputStyle}
                   rows="2"
                   placeholder="Quality of sleep, dreams, etc."
@@ -283,8 +267,12 @@ const JournalFormModal = () => {
                 <label className={formLabelStyle}>Physical Activity</label>
                 <input
                   type="text"
-                  value={physicalActivity}
-                  onChange={(e) => setPhysicalActivity(e.target.value)}
+                  value={formData.physicalActivity}
+                  onChange={(e) =>
+                    dispatch(
+                      setFormField({ field: "physicalActivity", value: e.target.value })
+                    )
+                  }
                   className={formInputStyle}
                   placeholder="e.g., Gym, Run, Yoga"
                 />
@@ -294,23 +282,27 @@ const JournalFormModal = () => {
                 <div className="flex items-center">
                   <input
                     type="checkbox"
-                    checked={didMasturbate}
-                    onChange={(e) => setDidMasturbate(e.target.checked)}
+                    checked={formData.didMasturbate}
+                    onChange={(e) =>
+                      dispatch(setFormField({ field: "didMasturbate", value: e.target.checked }))
+                    }
                     className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <label className="ml-2 block text-sm text-white">
                     Did Masturbate
                   </label>
                 </div>
-                {didMasturbate && (
+                {formData.didMasturbate && (
                   <div className="w-full">
                     <label className={formLabelStyle}>Notes</label>
                     <input
                       type="text"
-                      value={masturbationNotes}
-                      onChange={(e) => setMasturbationNotes(e.target.value)}
+                      value={formData.masturbationNotes}
+                      onChange={(e) =>
+                        dispatch(setFormField({ field: "masturbationNotes", value: e.target.value }))
+                      }
                       className={formInputStyle}
-                      placeholder="Notes on masturbation"
+                      placeholder="Why? urge?"
                     />
                   </div>
                 )}
@@ -319,8 +311,10 @@ const JournalFormModal = () => {
               <div className="flex items-center">
                 <input
                   type="checkbox"
-                  checked={didTakeBath}
-                  onChange={(e) => setDidTakeBath(e.target.checked)}
+                  checked={formData.didTakeBath}
+                  onChange={(e) =>
+                    dispatch(setFormField({ field: "didTakeBath", value: e.target.checked }))
+                  }
                   className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <label className="ml-2 block text-sm text-white">
@@ -330,6 +324,7 @@ const JournalFormModal = () => {
             </div>
           </div>
 
+          {/* Journal Entry */}
           <div>
             <h3 className={sectionTitleStyle}>Journal Entry</h3>
             <hr className={sectionDividerStyle} />
@@ -337,8 +332,10 @@ const JournalFormModal = () => {
               <div>
                 <label className={formLabelStyle}>Diary Entry</label>
                 <textarea
-                  value={diaryEntry}
-                  onChange={(e) => setDiaryEntry(e.target.value)}
+                  value={formData.diaryEntry}
+                  onChange={(e) =>
+                    dispatch(setFormField({ field: "diaryEntry", value: e.target.value }))
+                  }
                   className={formInputStyle}
                   rows="6"
                   placeholder="Write your full diary entry here..."

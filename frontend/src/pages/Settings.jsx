@@ -2,7 +2,9 @@ import React from 'react'
 
 function Settings() {
   return (
-    <div>Settings</div>
+    <div>
+      Here user will be able to set his preferences
+    </div>
   )
 }
 

@@ -2,7 +2,9 @@ import React from 'react'
 
 function Finance() {
   return (
-    <div>Finance</div>
+    <div>
+      In this page user will be able to log his expences and can review them using charts and graphs and other statistics.
+    </div>
   )
 }
 
