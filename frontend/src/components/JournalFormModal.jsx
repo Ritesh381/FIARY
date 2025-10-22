@@ -151,7 +151,9 @@ const JournalFormModal = () => {
                   type="text"
                   value={formData.feeling}
                   onChange={(e) =>
-                    dispatch(setFormField({ field: "feeling", value: e.target.value }))
+                    dispatch(
+                      setFormField({ field: "feeling", value: e.target.value })
+                    )
                   }
                   className={formInputStyle}
                   placeholder="e.g., Happy, Stressed, Motivated"
@@ -163,7 +165,12 @@ const JournalFormModal = () => {
                 <textarea
                   value={formData.bestMoment}
                   onChange={(e) =>
-                    dispatch(setFormField({ field: "bestMoment", value: e.target.value }))
+                    dispatch(
+                      setFormField({
+                        field: "bestMoment",
+                        value: e.target.value,
+                      })
+                    )
                   }
                   className={formInputStyle}
                   rows="3"
@@ -175,7 +182,12 @@ const JournalFormModal = () => {
                 <textarea
                   value={formData.worstMoment}
                   onChange={(e) =>
-                    dispatch(setFormField({ field: "worstMoment", value: e.target.value }))
+                    dispatch(
+                      setFormField({
+                        field: "worstMoment",
+                        value: e.target.value,
+                      })
+                    )
                   }
                   className={formInputStyle}
                   rows="3"
@@ -187,7 +199,12 @@ const JournalFormModal = () => {
                 <textarea
                   value={formData.achievement}
                   onChange={(e) =>
-                    dispatch(setFormField({ field: "achievement", value: e.target.value }))
+                    dispatch(
+                      setFormField({
+                        field: "achievement",
+                        value: e.target.value,
+                      })
+                    )
                   }
                   className={formInputStyle}
                   rows="3"
@@ -213,7 +230,7 @@ const JournalFormModal = () => {
                     dispatch(
                       setFormField({
                         field: "timeWastedMinutes",
-                        value: parseInt(e.target.value) || 0,
+                        value: Number(e.target.value) || 0,
                       })
                     )
                   }
@@ -222,11 +239,18 @@ const JournalFormModal = () => {
                 />
               </div>
               <div>
-                <label className={formLabelStyle}>Time Not Utilized Notes</label>
+                <label className={formLabelStyle}>
+                  Time Not Utilized Notes
+                </label>
                 <textarea
                   value={formData.timeWastedNotes}
                   onChange={(e) =>
-                    dispatch(setFormField({ field: "timeWastedNotes", value: e.target.value }))
+                    dispatch(
+                      setFormField({
+                        field: "timeWastedNotes",
+                        value: e.target.value,
+                      })
+                    )
                   }
                   className={formInputStyle}
                   rows="2"
@@ -236,17 +260,23 @@ const JournalFormModal = () => {
               <div>
                 <label className={formLabelStyle}>Sleep (hours)</label>
                 <input
-                  type="text"
-
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="24"
+                  inputmode="decimal"
                   value={formData.sleepHours}
-                  onChange={(e) =>
-                    dispatch(
-                      setFormField({
-                        field: "sleepHours",
-                        value: parseFloat(e.target.value) || 0,
-                      })
-                    )
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "" || (!isNaN(value) && Number(value) >= 0)) {
+                      dispatch(
+                        setFormField({
+                          field: "sleepHours",
+                          value,
+                        })
+                      );
+                    }
+                  }}
                   className={formInputStyle}
                   required
                 />
@@ -256,7 +286,12 @@ const JournalFormModal = () => {
                 <textarea
                   value={formData.sleepNotes}
                   onChange={(e) =>
-                    dispatch(setFormField({ field: "sleepNotes", value: e.target.value }))
+                    dispatch(
+                      setFormField({
+                        field: "sleepNotes",
+                        value: e.target.value,
+                      })
+                    )
                   }
                   className={formInputStyle}
                   rows="2"
@@ -270,7 +305,10 @@ const JournalFormModal = () => {
                   value={formData.physicalActivity}
                   onChange={(e) =>
                     dispatch(
-                      setFormField({ field: "physicalActivity", value: e.target.value })
+                      setFormField({
+                        field: "physicalActivity",
+                        value: e.target.value,
+                      })
                     )
                   }
                   className={formInputStyle}
@@ -284,7 +322,12 @@ const JournalFormModal = () => {
                     type="checkbox"
                     checked={formData.didMasturbate}
                     onChange={(e) =>
-                      dispatch(setFormField({ field: "didMasturbate", value: e.target.checked }))
+                      dispatch(
+                        setFormField({
+                          field: "didMasturbate",
+                          value: e.target.checked,
+                        })
+                      )
                     }
                     className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
@@ -299,7 +342,12 @@ const JournalFormModal = () => {
                       type="text"
                       value={formData.masturbationNotes}
                       onChange={(e) =>
-                        dispatch(setFormField({ field: "masturbationNotes", value: e.target.value }))
+                        dispatch(
+                          setFormField({
+                            field: "masturbationNotes",
+                            value: e.target.value,
+                          })
+                        )
                       }
                       className={formInputStyle}
                       placeholder="Why? urge?"
@@ -313,7 +361,12 @@ const JournalFormModal = () => {
                   type="checkbox"
                   checked={formData.didTakeBath}
                   onChange={(e) =>
-                    dispatch(setFormField({ field: "didTakeBath", value: e.target.checked }))
+                    dispatch(
+                      setFormField({
+                        field: "didTakeBath",
+                        value: e.target.checked,
+                      })
+                    )
                   }
                   className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
@@ -334,7 +387,12 @@ const JournalFormModal = () => {
                 <textarea
                   value={formData.diaryEntry}
                   onChange={(e) =>
-                    dispatch(setFormField({ field: "diaryEntry", value: e.target.value }))
+                    dispatch(
+                      setFormField({
+                        field: "diaryEntry",
+                        value: e.target.value,
+                      })
+                    )
                   }
                   className={formInputStyle}
                   rows="6"

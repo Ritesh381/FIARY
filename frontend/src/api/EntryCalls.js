@@ -1,6 +1,5 @@
 import axios from "axios";
 
-// This is the crucial line. It tells Axios to send cookies with all requests.
 axios.defaults.withCredentials = true;
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;

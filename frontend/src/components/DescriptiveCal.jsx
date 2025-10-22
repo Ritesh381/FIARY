@@ -399,7 +399,12 @@ function DescriptiveCal() {
                         onClick={() =>
                           speakingKey === title
                             ? stopSpeaking(setSpeakingKey, utteranceRef)
-                            : speakText(insight, title, setSpeakingKey, utteranceRef)
+                            : speakText(
+                                insight,
+                                title,
+                                setSpeakingKey,
+                                utteranceRef
+                              )
                         }
                         className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition"
                       >
@@ -410,7 +415,7 @@ function DescriptiveCal() {
                         )}
                       </button>
                     </div>
-                    <ReactMarkdown>{insight}</ReactMarkdown>
+                    {insight}
                   </div>
                 ))}
               </div>

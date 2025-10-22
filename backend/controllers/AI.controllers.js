@@ -2,7 +2,7 @@ const callModel = require("../config/ai");
 const Entry = require("../models/Entry.models");
 const {normal_prompts, special_prompts} = require("../lib/prompts");
 
-const useSpecial = process.env.USE_SPECIAL_PROMPTS
+const useSpecial = process.env.USE_SPECIAL_PROMPTS || false;
 const { daily: dailyPrompt, weekly: weeklyPrompt, monthly: monthlyPrompt } = useSpecial ? special_prompts : normal_prompts;
 
 const dailyInsight = async (req, res) => {

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sleep Hours Test</title>
+  <style>
+    body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; padding: 24px; }
+    .row { margin: 12px 0; }
+    label { display:block; margin-bottom:6px; }
+    input[type=number] { padding:8px 10px; width:120px; font-size:16px; }
+    .hint { color:#666; font-size:13px; margin-top:6px }
+    .error { color:crimson; font-size:13px; }
+  </style>
+</head>
+<body>
+  <h2>Test: sleepHours input (0 — 24)</h2>
+
+  <form id="sleepForm">
+      <input
+        id="sleepHours"
+        name="sleepHours"
+        type="number"
+        step="0.1"
+        min="0"
+        max="24"
+        inputmode="decimal"
+        required
+        placeholder="e.g. 7.5"
+      />
+    <button type="submit">Submit</button>
+  </form>
+
+  
+</body>
+</html>

@@ -1,7 +1,12 @@
 import { useEffect } from "react";
 import LightRays from "./ui/LightRays";
 import JournalFormModal from "./components/JournalFormModal";
-import { AiOutlineHome, AiOutlineStar, AiOutlineSetting, AiOutlineUser } from "react-icons/ai";
+import {
+  AiOutlineHome,
+  AiOutlineStar,
+  AiOutlineSetting,
+  AiOutlineUser,
+} from "react-icons/ai";
 import { RiBookShelfFill } from "react-icons/ri";
 import { TfiThought } from "react-icons/tfi";
 import { FaRupeeSign, FaTasks, FaRegSmileBeam } from "react-icons/fa";
@@ -28,8 +33,9 @@ import api from "./api/UserCalls.js";
 import TheShelf from "./pages/TheShelf.jsx";
 import Memories from "./pages/Memories.jsx";
 import Tasks from "./pages/Tasks.jsx";
-import Thoughts from "./pages/Thoughts.jsx"
-import Hobies from "./pages/Hobies.jsx"
+import Thoughts from "./pages/Thoughts.jsx";
+import Entry from "./pages/Entry.jsx";
+import Habits from "./pages/Habits.jsx";
 
 const AppContent = () => {
   const dispatch = useDispatch();
@@ -50,9 +56,9 @@ const AppContent = () => {
       onClick: () => navigate("/tasks"),
     },
     {
-      icon: <FaRegSmileBeam size={20}/>,
-      label: "Hobies",
-      onClick: () => navigate("/hobies")
+      icon: <FaRegSmileBeam size={20} />,
+      label: "Habits & Hobies",
+      onClick: () => navigate("/habits"),
     },
     {
       icon: <FaRupeeSign size={20} />,
@@ -65,9 +71,9 @@ const AppContent = () => {
       onClick: () => navigate("/memories"),
     },
     {
-      icon: <TfiThought size={20}/>,
+      icon: <TfiThought size={20} />,
       label: "Thoughts",
-      onClick: () => navigate("/thoughts")
+      onClick: () => navigate("/thoughts"),
     },
     {
       icon: <RiBookShelfFill size={20} />,
@@ -101,6 +107,9 @@ const AppContent = () => {
 
   useEffect(() => {
     const id = localStorage.getItem("userId");
+    if (!id) {
+      return
+    }
     api.getUserById(id, dispatch);
   });
 
@@ -153,9 +162,10 @@ const AppContent = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/shelf" element={<TheShelf />} />
           <Route path="/tasks" element={<Tasks />}></Route>
-          <Route path="/thoughts" element={<Thoughts/>}></Route>
-          <Route path="/hobies" element={<Hobies/>}></Route>
+          <Route path="/thoughts" element={<Thoughts />}></Route>
+          <Route path="/habits" element={<Habits />}></Route>
           <Route path="*" element={<Navigate to="/home" replace />} />
+          <Route path="/entry" element={<Entry/>}></Route>
         </Routes>
       </div>
 

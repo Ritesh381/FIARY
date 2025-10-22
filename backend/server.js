@@ -7,6 +7,7 @@ const entryRouter = require("./routes/Entry.routers.js");
 const aiRouter = require("./routes/AI.routes.js");
 const authRouter = require("./routes/Auth.routers.js");
 const userRouter = require("./routes/User.routes.js");
+const habitRouter = require("./routes/Habit.routes.js")
 
 const PORT = 8080;
 const app = express();
@@ -29,6 +30,7 @@ app.use("/api/entry", entryRouter);
 app.use("/api/ai", aiRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
+app.use("/api/habit", habitRouter)
 
 // Start server
 app.listen(PORT, () =>

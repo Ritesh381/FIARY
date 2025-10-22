@@ -4,6 +4,19 @@ const generateToken = require("../config/token")
 
 const saltRounds = 10;
 
+// Validate email format
+const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+};
+
+// Validate password strength
+const validatePassword = (password) => {
+    // At least 8 characters, one uppercase, one lowercase, one number
+    const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/;
+    return re.test(password);
+};
+
 const login = async (req, res) => {
     const { email, password } = req.body;
 
@@ -14,11 +27,13 @@ const login = async (req, res) => {
     try {
         const user = await User.findOne({ email });
         if (!user) {
+            // Generic error message to prevent email enumeration
             return res.status(400).json({ message: "Invalid credentials." });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
+            // Generic error message for failed authentication
             return res.status(400).json({ message: "Invalid credentials." });
         }
 
@@ -31,7 +46,7 @@ const login = async (req, res) => {
             maxAge: 1000 * 60 * 60 * 24 * 7
         });
 
-        res.status(200).json({ message: "Login successful.", user: { _id: user._id, name: user.name, email: user.email } });
+        res.status(200).json({ message: "Login successful.", user: { id: user._id, name: user.name, email: user.email } });
     } catch (error) {
         res.status(500).json({ message: "Server error.", error: error.message });
     }
@@ -45,10 +60,22 @@ const register = async (req, res) => {
         return res.status(400).json({ message: "All fields are required." });
     }
 
+    // Validate email format
+    if (!validateEmail(email)) {
+        return res.status(400).json({ message: "Please provide a valid email address." });
+    }
+
+    // Validate password strength
+    if (!validatePassword(password)) {
+        return res.status(400).json({ 
+            message: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number." 
+        });
+    }
+
     try {
-        let user = await User.findOne({ $or: [{ email }] });
+        let user = await User.findOne({ email });
         if (user) {
-            return res.status(409).json({ message: "Username or email already exists." });
+            return res.status(409).json({ message: "Email already exists." });
         }
 
         const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -70,7 +97,7 @@ const register = async (req, res) => {
             maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
         });
 
-        res.status(201).json({ message: "Registration successful.", user: { _id: user._id, name: user.name, email: user.email } });
+        res.status(201).json({ message: "Registration successful.", user: { id: user._id, name: user.name, email: user.email } });
     } catch (error) {
         res.status(500).json({ message: "Server error.", error: error.message });
     }

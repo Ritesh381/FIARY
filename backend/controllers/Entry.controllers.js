@@ -30,7 +30,8 @@ const saveEntry = async (req, res) => {
       !diaryEntry
     ) {
       console.warn("Save failed: Required fields missing.");
-      return res.status(400).json({ // Use 400 for bad request
+      return res.status(400).json({
+        // Use 400 for bad request
         message:
           "date, feeling, timeWastedMinutes, sleepHours, diaryEntry are required",
       });
@@ -62,8 +63,10 @@ const saveEntry = async (req, res) => {
   } catch (error) {
     console.error("Error saving entry:", error);
     // Check for Mongoose validation error
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({ message: "Validation error", details: error.message });
+    if (error.name === "ValidationError") {
+      return res
+        .status(400)
+        .json({ message: "Validation error", details: error.message });
     }
     res.status(500).json({ message: "Server error while saving entry" });
   }
@@ -72,7 +75,7 @@ const saveEntry = async (req, res) => {
 const getAllEntries = async (req, res) => {
   console.log("Received request to fetch all entries.");
   try {
-    const data = await Entry.find({}).sort({ createdAt: -1 });
+    const data = await Entry.find({ user: req.userId }).sort({ createdAt: -1 });
     console.log(`Successfully fetched ${data.length} entries.`);
     return res.status(200).json({ entries: data });
   } catch (error) {
@@ -90,9 +93,11 @@ const editEntry = async (req, res) => {
   console.log(`Received request to edit entry with ID: ${id}`);
 
   // **Step 2: Add robust checks for invalid input**
-  if (!id || id === 'undefined' || id === 'null') {
-      console.warn(`Edit failed: Invalid ID provided: ${id}`);
-      return res.status(400).json({ message: "A valid Entry ID must be provided." });
+  if (!id || id === "undefined" || id === "null") {
+    console.warn(`Edit failed: Invalid ID provided: ${id}`);
+    return res
+      .status(400)
+      .json({ message: "A valid Entry ID must be provided." });
   }
 
   if (!updateData || Object.keys(updateData).length === 0) {
@@ -121,12 +126,16 @@ const editEntry = async (req, res) => {
     console.error(`Error editing entry with ID: ${id}`, error);
 
     // Specific check for CastError (invalid ID format)
-    if (error.name === 'CastError') {
-      return res.status(400).json({ message: "Invalid ID format.", details: error.message });
+    if (error.name === "CastError") {
+      return res
+        .status(400)
+        .json({ message: "Invalid ID format.", details: error.message });
     }
     // Specific check for Mongoose validation errors
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({ message: "Validation failed.", details: error.message });
+    if (error.name === "ValidationError") {
+      return res
+        .status(400)
+        .json({ message: "Validation failed.", details: error.message });
     }
 
     // Generic server error for everything else
@@ -134,15 +143,16 @@ const editEntry = async (req, res) => {
   }
 };
 
-
 const deleteEntry = async (req, res) => {
   const { id } = req.params;
   console.log(`Received request to delete entry with ID: ${id}`);
 
   // Add check for invalid ID
-  if (!id || id === 'undefined' || id === 'null') {
-      console.warn(`Delete failed: Invalid ID provided: ${id}`);
-      return res.status(400).json({ message: "A valid Entry ID must be provided." });
+  if (!id || id === "undefined" || id === "null") {
+    console.warn(`Delete failed: Invalid ID provided: ${id}`);
+    return res
+      .status(400)
+      .json({ message: "A valid Entry ID must be provided." });
   }
 
   try {
@@ -157,8 +167,10 @@ const deleteEntry = async (req, res) => {
     res.status(200).json({ message: "Entry deleted successfully" });
   } catch (error) {
     console.error(`Error deleting entry with ID: ${id}`, error);
-     if (error.name === 'CastError') {
-      return res.status(400).json({ message: "Invalid ID format.", details: error.message });
+    if (error.name === "CastError") {
+      return res
+        .status(400)
+        .json({ message: "Invalid ID format.", details: error.message });
     }
     res.status(500).json({ message: "Server error while deleting entry" });
   }

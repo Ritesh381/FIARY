@@ -4,6 +4,7 @@ import streakReducer from "./slices/streakSlice";
 import formReducer from "./slices/formSlice";
 import userReducer from "./slices/userSlice";
 import entryFormReducer from "./slices/entryForm";
+import entryFormSlice from "./slices/entryFormSlice"
 
 const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ const store = configureStore({
     forms: formReducer,
     user: userReducer,
     entryForm: entryFormReducer,
+    entryData: entryFormSlice,
   },
 });
 

@@ -9,7 +9,7 @@ const api = {
   signIn: async (credentials, dispatch) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/signin`, credentials);
-      localStorage.setItem("userId", response.data.user._id);
+      localStorage.setItem("userId", response.data.user.id);
       if (response.status === 200) {
         dispatch(setUser(response.data.user));
       }
@@ -23,7 +23,7 @@ const api = {
   signUp: async (userData, dispatch) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/signup`, userData);
-      localStorage.setItem("userId", response.data.user._id);
+      localStorage.setItem("userId", response.data.user.id);
       if (response.status === 200) {
         dispatch(setUser(response.data.user));
       }
