@@ -1,19 +1,17 @@
 const { Habit, HabitEntry } = require("../models/Habit.models.js");
+const mongoose = require("mongoose");
 
 const createHabit = async (req, res) => {
   try {
     const { title, description, icon, habitType } = req.body;
-    // Corrected how userId is retrieved from the request
     const userId = req.userId;
 
-    // Updated validation to include habitType
     if (!title || !icon || !habitType) {
       return res
         .status(400)
         .json({ message: "title, icon, and habitType are required fields" });
     }
 
-    // Check if habitType is a valid value
     if (!['develop', 'quit'].includes(habitType)) {
         return res.status(400).json({ message: "habitType must be either 'develop' or 'quit'" });
     }
@@ -44,7 +42,6 @@ const editHabit = async (req, res) => {
     if (!updated || Object.keys(updated).length === 0) {
       return res.status(400).json({ message: "Update data cannot be empty." });
     }
-    // Security: Ensure a user can only edit their own habit
     const updatedEntry = await Habit.findOneAndUpdate(
         { _id: id, userId: req.userId }, 
         updated, 
@@ -69,7 +66,6 @@ const deleteHabit = async (req, res) => {
     return res.status(400).json({ message: "Provide a valid ID of habit" });
   }
   try {
-    // Security: Ensure a user can only delete their own habit
     const archivedHabit = await Habit.findOneAndUpdate(
       { _id: id, userId: req.userId },
       { isDeleted: true },
@@ -103,20 +99,22 @@ const getAllHabits = async (req, res) => {
 };
 
 // --- Habit entry controllers ---
-
 const getEntriesOfOneHabit = async (req, res) => {
   try {
-    const { habitId, startDate, endDate } = req.body;
+    // Read from req.params, not req.body
+    const { habitId } = req.params; 
+    const { startDate, endDate } = req.body;
     const userId = req.userId;
 
     if (!habitId || !startDate || !endDate) {
-      return res.status(400).json({ message: "Missing required fields: habitId, startDate, or endDate." });
+      return res.status(400).json({ message: "Missing required fields: habitId (in URL), startDate, or endDate." });
     }
 
     const start = new Date(startDate);
     const end = new Date(endDate);
-    start.setHours(0, 0, 0, 0);
-    end.setHours(23, 59, 59, 999);
+    // Set to start and end of day for accurate range
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
 
     const entries = await HabitEntry.find({
       habitId: habitId,
@@ -134,61 +132,87 @@ const getEntriesOfOneHabit = async (req, res) => {
   }
 };
 
-const createEntries = async (req, res) => {
-  const arr = req.body;
-  const userId = req.userId;
+const upsertHabitEntry = async (req, res) => {
+    const { habitId, date, done, notes } = req.body;
+    const userId = req.userId;
 
-  if (!Array.isArray(arr) || arr.length === 0) {
-    return res.status(400).json({ message: "Request body must be a non-empty array of entries." });
-  }
-
-  try {
-    const entriesToCreate = arr.map((entry) => ({ ...entry, userId }));
-    await HabitEntry.insertMany(entriesToCreate, { ordered: false });
-    res.status(201).json({ message: "All habit entries saved successfully" });
-  } catch (error) {
-    console.error("Error creating bulk entries:", error);
-    if (error.name === "ValidationError") {
-      return res.status(400).json({ message: "Invalid entry data.", details: error.message });
+    if (!habitId || !date || done === undefined) {
+        return res.status(400).json({ message: "habitId, date, and done are required." });
     }
-    res.status(500).json({ message: "Server error while saving entries." });
-  }
+
+    try {
+        // Normalize date to the start of the day
+        const entryDate = new Date(date);
+        entryDate.setUTCHours(0, 0, 0, 0);
+
+        // Find by habitId, userId, and date, and update (or create if not found)
+        const updatedEntry = await HabitEntry.findOneAndUpdate(
+            {
+                habitId: new mongoose.Types.ObjectId(habitId),
+                userId: new mongoose.Types.ObjectId(userId),
+                date: entryDate,
+            },
+            {
+                $set: {
+                    done: done,
+                    notes: notes,
+                },
+            },
+            {
+                new: true, // Return the modified (or new) document
+                upsert: true, // Create a new document if one doesn't match
+                runValidators: true,
+            }
+        );
+
+        res.status(200).json({ message: "Habit entry saved", entry: updatedEntry });
+    } catch (error) {
+        console.error("Error saving habit entry:", error);
+        if (error.name === "CastError") {
+            return res.status(400).json({ message: "Invalid ID format.", details: error.message });
+        }
+        res.status(500).json({ message: "Server error while saving habit entry." });
+    }
 };
 
-const updateEntries = async (req, res) => {
-  const arr = req.body;
-  const userId = req.userId;
-
-  if (!Array.isArray(arr) || arr.length === 0) {
-    return res.status(400).json({ message: "Request body must be a non-empty array of entries." });
-  }
-
+const getHabitEntriesForOneDay = async (req,res) => {
+  console.log("Received request to fetch habit entries for one day.");
   try {
-    const operations = arr.map((entry) => {
-      if (!entry._id) {
-        throw new Error("Invalid payload: All entries in the array must have an _id field.");
-      }
-      const { _id, ...fieldsToUpdate } = entry;
-      return {
-        updateOne: {
-          filter: { _id, userId },
-          update: { $set: fieldsToUpdate },
-        },
-      };
+    const { userId } = req;
+    const { date } = req.query; // e.g., "2025-10-10" or a full timestamp
+
+    if (!date) {
+      return res.status(400).json({ message: "A 'date' query parameter is required. (e.g., ?date=YYYY-MM-DD)" });
+    }
+
+    const localDay = new Date(date); 
+    const startDate = new Date(localDay);
+    startDate.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(localDay);
+    endDate.setHours(23, 59, 59, 999);
+
+    const habits = await HabitEntry.find({
+      user: userId,
+      date: { $gte: startDate, $lte: endDate },
     });
 
-    const result = await HabitEntry.bulkWrite(operations);
-    res.status(200).json({ message: "Entries updated successfully", modifiedCount: result.modifiedCount });
-  } catch (error) {
-    console.error("Error bulk updating entries:", error);
-    if (error.message.includes("Invalid payload")) {
-      return res.status(400).json({ message: error.message });
-    }
-    if (error.name === "CastError") {
-      return res.status(400).json({ message: "Invalid _id format in one or more entries." });
-    }
-    res.status(500).json({ message: "Server error while updating entries." });
-  }
-};
+    console.log(`Found ${habits.length} habit entries for date ${date}.`);
+    return res.status(200).json(habits); // Return the array of habits
 
-module.exports = { createHabit, editHabit, deleteHabit, getAllHabits, getEntriesOfOneHabit, createEntries, updateEntries };
+  } catch (error) {
+    console.error("Error fetching habit entries:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+}
+
+
+module.exports = { 
+    createHabit, 
+    editHabit, 
+    deleteHabit, 
+    getAllHabits, 
+    getEntriesOfOneHabit, 
+    upsertHabitEntry,
+    getHabitEntriesForOneDay
+};

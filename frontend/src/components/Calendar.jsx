@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 const Calendar = ({
   markedDates = [],
-  markedColor = "#f08214ff",
+  markedColor = "#6caa67ff",
   onClick = () => {},
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());

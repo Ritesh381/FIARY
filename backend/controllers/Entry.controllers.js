@@ -1,60 +1,49 @@
+const mongoose = require("mongoose")
 const Entry = require("../models/Entry.models.js");
+const {HabitEntry} = require("../models/Habit.models.js")
 
 const saveEntry = async (req, res) => {
   console.log("Received request to save new entry...");
   try {
+    const { userId } = req;
     const {
-      user,
       date,
-      feeling = "",
       feelingScore,
-      bestMoment = "",
-      worstMoment = "",
       achievement = "",
       timeWastedMinutes,
       timeWastedNotes = "",
       sleepHours,
       sleepNotes = "",
-      physicalActivity = "",
-      didMasturbate = false,
-      masturbationNotes = "",
-      didTakeBath = false,
       diaryEntry,
     } = req.body;
 
+    // validation
     if (
       !date ||
       !feelingScore ||
-      timeWastedMinutes === undefined || // Check for undefined specifically
-      sleepHours === undefined || // Check for undefined specifically
+      timeWastedMinutes === undefined ||
+      sleepHours === undefined ||
       !diaryEntry
     ) {
       console.warn("Save failed: Required fields missing.");
       return res.status(400).json({
-        // Use 400 for bad request
         message:
-          "date, feeling, timeWastedMinutes, sleepHours, diaryEntry are required",
+          "date, feelingScore, timeWastedMinutes, sleepHours, and diaryEntry are required",
       });
     }
 
     const newEntry = {
-      user,
+      user: userId,
+      date,
       feelingScore,
-      feeling,
-      bestMoment,
-      worstMoment,
       achievement,
       timeWastedMinutes,
       timeWastedNotes,
       sleepHours,
       sleepNotes,
-      physicalActivity,
-      didMasturbate,
-      masturbationNotes,
-      didTakeBath,
       diaryEntry,
-      date,
     };
+
     const createdEntry = await Entry.create(newEntry);
     console.log(`Successfully saved new entry with ID: ${createdEntry._id}`);
     res
@@ -62,7 +51,6 @@ const saveEntry = async (req, res) => {
       .json({ message: "Entry saved successfully", entry: createdEntry });
   } catch (error) {
     console.error("Error saving entry:", error);
-    // Check for Mongoose validation error
     if (error.name === "ValidationError") {
       return res
         .status(400)
@@ -71,6 +59,7 @@ const saveEntry = async (req, res) => {
     res.status(500).json({ message: "Server error while saving entry" });
   }
 };
+
 
 const getAllEntries = async (req, res) => {
   console.log("Received request to fetch all entries.");
@@ -84,15 +73,32 @@ const getAllEntries = async (req, res) => {
   }
 };
 
-// --- MODIFIED FUNCTION ---
+const getEntryById = async (req, res) => {
+  console.log(`Received request to fetch entry data for ID: ${req.params.id}`);
+  const { id } = req.params;
+
+  
+
+  try {
+    const entry = await Entry.findById(id);
+
+    if (!entry) {
+      return res.status(404).json({ message: "Entry not found" });
+    }
+    return res.status(200).json(entry);
+
+  } catch (error) {
+    console.error("Error fetching entry data:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+
 const editEntry = async (req, res) => {
   const { id } = req.params;
   const updateData = req.body;
-
-  // **Step 1: Log incoming data for debugging**
   console.log(`Received request to edit entry with ID: ${id}`);
 
-  // **Step 2: Add robust checks for invalid input**
   if (!id || id === "undefined" || id === "null") {
     console.warn(`Edit failed: Invalid ID provided: ${id}`);
     return res
@@ -106,10 +112,9 @@ const editEntry = async (req, res) => {
   }
 
   try {
-    // **Step 3: Find and update the document**
     const updatedEntry = await Entry.findByIdAndUpdate(id, updateData, {
-      new: true, // Return the modified document
-      runValidators: true, // IMPORTANT: This ensures the update follows your schema rules
+      new: true,
+      runValidators: true,
     });
 
     if (!updatedEntry) {
@@ -122,23 +127,17 @@ const editEntry = async (req, res) => {
       .status(200)
       .json({ message: "Entry updated successfully", entry: updatedEntry });
   } catch (error) {
-    // **Step 4: Provide specific error messages**
     console.error(`Error editing entry with ID: ${id}`, error);
-
-    // Specific check for CastError (invalid ID format)
     if (error.name === "CastError") {
       return res
         .status(400)
         .json({ message: "Invalid ID format.", details: error.message });
     }
-    // Specific check for Mongoose validation errors
     if (error.name === "ValidationError") {
       return res
         .status(400)
         .json({ message: "Validation failed.", details: error.message });
     }
-
-    // Generic server error for everything else
     res.status(500).json({ message: "Server error while editing entry" });
   }
 };
@@ -147,7 +146,6 @@ const deleteEntry = async (req, res) => {
   const { id } = req.params;
   console.log(`Received request to delete entry with ID: ${id}`);
 
-  // Add check for invalid ID
   if (!id || id === "undefined" || id === "null") {
     console.warn(`Delete failed: Invalid ID provided: ${id}`);
     return res
@@ -156,6 +154,7 @@ const deleteEntry = async (req, res) => {
   }
 
   try {
+    // This function is fine, it just deletes by ID.
     const deletedEntry = await Entry.findByIdAndDelete(id);
 
     if (!deletedEntry) {
@@ -176,4 +175,4 @@ const deleteEntry = async (req, res) => {
   }
 };
 
-module.exports = { saveEntry, getAllEntries, editEntry, deleteEntry };
+module.exports = { saveEntry, getAllEntries, editEntry, deleteEntry, getEntryById };

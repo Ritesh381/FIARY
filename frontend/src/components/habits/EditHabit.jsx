@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Edit3, Trash2 } from 'lucide-react';
-import apiHabits from '../api/HabitCalls';
+import apiHabits from '../../api/HabitCalls';
 
 const FormInput = ({ id, label, value, onChange, placeholder, type = 'text' }) => (
     <div>

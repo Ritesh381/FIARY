@@ -3,7 +3,6 @@ import Counter from "../ui/Counter";
 import {
   ChevronLeft,
   ChevronRight,
-  Droplet,
   Pencil,
   Volume2,
   VolumeX,
@@ -11,19 +10,22 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  toggleSaveForm,
   setDate,
   toggleEditForm,
 } from "../redux/slices/formSlice";
+// --- NEW IMPORT ---
+import { setEntryDate } from "../redux/slices/entryFormSlice";
 import api from "../api/EntryCalls";
 import { RiSparklingLine } from "react-icons/ri";
 import { speakText, stopSpeaking } from "../config/speech";
-import ReactMarkdown from "react-markdown";
+import { useNavigate } from "react-router-dom";
+
 
 function DescriptiveCal() {
   const allEntries = useSelector((state) => state.entry.entries);
   const dateFromRedux = useSelector((state) => state.forms.date);
   const dispatch = useDispatch();
+  const navigator = useNavigate()
 
   const [speakingKey, setSpeakingKey] = useState(null);
   const utteranceRef = useRef(null);
@@ -36,35 +38,11 @@ function DescriptiveCal() {
     return `${y}-${m}-${d}`;
   };
 
-  // The state that will drive the component's UI
   const [currentDate, setCurrentDate] = useState(() => {
     if (dateFromRedux) {
       return new Date(dateFromRedux);
     }
-    const today = new Date();
-    const todayNormalized = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
-    );
-
-    const hasTodayEntry = allEntries.some((entry) => {
-      const entryDate = new Date(entry.date || entry.createdAt);
-      const normalizedEntryDate = new Date(
-        entryDate.getFullYear(),
-        entryDate.getMonth(),
-        entryDate.getDate()
-      );
-      return normalizedEntryDate.getTime() === todayNormalized.getTime();
-    });
-
-    if (hasTodayEntry) {
-      return today;
-    } else {
-      const yesterday = new Date();
-      yesterday.setDate(today.getDate() - 1);
-      return yesterday;
-    }
+    return new Date(); 
   });
 
   const [items, setItems] = useState({});
@@ -77,20 +55,13 @@ function DescriptiveCal() {
   const [aiInsightsByDate, setAiInsightsByDate] = useState({});
   const [loadingAI, setLoadingAI] = useState(false);
 
-  // Syncs component with Redux state and handles effects of date change
-  // This is the single source of truth for synchronization
   useEffect(() => {
-    // Sync internal state with Redux, but avoid an infinite loop
     const newDate = dateFromRedux ? new Date(dateFromRedux) : currentDate;
     if (newDate.getTime() !== currentDate.getTime()) {
       setCurrentDate(newDate);
     }
-
-    // Update temporary input fields
     setTempDayInput(newDate.getDate());
     setTempYearInput(newDate.getFullYear());
-
-    // Load entry for the new date
     const normalizedCurrentDate = new Date(newDate);
     normalizedCurrentDate.setHours(0, 0, 0, 0);
 
@@ -110,7 +81,7 @@ function DescriptiveCal() {
     } else {
       setAiActive(false);
     }
-  }, [dateFromRedux, allEntries, aiInsightsByDate]);
+  }, [dateFromRedux, allEntries, aiInsightsByDate, currentDate]); // Added currentDate
 
   // Handle AIButton click toggle
   const handleAiToggle = async () => {
@@ -352,22 +323,7 @@ function DescriptiveCal() {
           </button>
         </div>
 
-        <div className="flex space-x-2">
-          <div className="text-2xl cursor-pointer">
-            <Droplet
-              size={24}
-              className="text-gray-400"
-              fill={items.didTakeBath ? "blue" : "none"}
-            />
-          </div>
-          <div className="text-2xl cursor-pointer">
-            <Droplet
-              size={24}
-              className="text-gray-400"
-              fill={items.didMasturbate ? "white" : "none"}
-            />
-          </div>
-        </div>
+        <div></div>
       </nav>
 
       <AnimatePresence mode="wait">
@@ -436,15 +392,6 @@ function DescriptiveCal() {
           >
             <div className="md:w-1/2 p-6 bg-gray-900 bg-opacity-50 rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-2 gap-4">
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-gray-800 p-4 rounded-md shadow-inner"
-              >
-                <h3 className="font-bold text-gray-400">Feeling</h3>
-                <p className="text-xl mt-1">{items.feeling}</p>
-              </motion.div>
-              <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 }}
@@ -454,24 +401,6 @@ function DescriptiveCal() {
                   Achievement of the Day
                 </h3>
                 <p className="mt-1">{truncateString(items.achievement, 200)}</p>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-gray-800 p-4 rounded-md shadow-inner"
-              >
-                <h3 className="font-bold text-gray-400">Best Moment</h3>
-                <p className="mt-1">{truncateString(items.bestMoment, 200)}</p>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-gray-800 p-4 rounded-md shadow-inner"
-              >
-                <h3 className="font-bold text-gray-400">Worst Moment</h3>
-                <p className="mt-1">{truncateString(items.worstMoment, 200)}</p>
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -549,7 +478,10 @@ function DescriptiveCal() {
                         📅 Haven't logged for this date
                       </p>
                       <button
-                        onClick={() => dispatch(toggleSaveForm())}
+                        onClick={() => {
+                          dispatch(setEntryDate(currentDate.toISOString()));
+                          navigator("/entry");
+                        }}
                         className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105"
                       >
                         Log

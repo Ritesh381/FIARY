@@ -13,6 +13,7 @@ export const formSlice = createSlice({
   reducers: {
     setDate: (state, action) => { 
       state.date = action.payload; 
+      
     },
     toggleSaveForm: (state) => { 
       state.saveForm = !state.saveForm; 

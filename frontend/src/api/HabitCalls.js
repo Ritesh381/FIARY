@@ -7,7 +7,6 @@ const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const apiHabits = {
   // --- HABIT-LEVEL FUNCTIONS ---
 
-  // Function to fetch all of a user's habits
   getAllHabits: async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/habit`);
@@ -18,7 +17,6 @@ const apiHabits = {
     }
   },
 
-  // Function to create a new habit
   createHabit: async (habitData) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/habit`, habitData);
@@ -29,7 +27,6 @@ const apiHabits = {
     }
   },
 
-  // Function to update an existing habit
   updateHabit: async (id, updatedData) => {
     try {
       const response = await axios.patch(
@@ -43,7 +40,6 @@ const apiHabits = {
     }
   },
 
-  // Function to delete (archive) a habit by its ID
   deleteHabit: async (id) => {
     try {
       const response = await axios.delete(`${API_BASE_URL}/habit/${id}`);
@@ -56,11 +52,12 @@ const apiHabits = {
 
   // --- HABIT ENTRY-LEVEL FUNCTIONS ---
 
-  // Function to get all entries for a single habit within a date range
+  // This function is now correct, as the backend controller matches
   getEntriesForHabit: async (habitId, startDate, endDate) => {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/habit/entry/${habitId}`,
+        // The controller now expects habitId in the URL
+        `${API_BASE_URL}/habit/entry/${habitId}`, 
         { startDate, endDate }
       );
       return response.data;
@@ -70,34 +67,23 @@ const apiHabits = {
     }
   },
 
-  // Function to create multiple habit entries at once
-  createHabitEntries: async (entriesData) => {
+  // *** NEW FUNCTION ***
+  // Replaces createHabitEntries and updateHabitEntry
+  // This will create or update a single entry for a given day
+  upsertHabitEntry: async (entryData) => {
+    // { habitId, date, done, notes }
     try {
+      // We'll use a new route for this, POST /habit/entry
       const response = await axios.post(
         `${API_BASE_URL}/habit/entry`,
-        entriesData
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Error creating bulk entries:", error);
-      throw error;
-    }
-  },
-
-  // Function to update multiple habit entries at once
-  updateHabitEntry: async (habitId, entryData) => {
-    try {
-      const response = await axios.patch(
-        `${API_BASE_URL}/habit/entry/${habitId}`,
         entryData
       );
       return response.data;
     } catch (error) {
-      console.error("Error updating entry: ", error);
+      console.error("Error upserting habit entry:", error);
       throw error;
     }
   },
 };
 
 export default apiHabits;
-

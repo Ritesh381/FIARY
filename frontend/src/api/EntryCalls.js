@@ -8,7 +8,6 @@ const api = {
   // Function to save a new journal entry
   saveEntry: async (entryData) => {
     try {
-      
       const response = await axios.post(
         `${API_BASE_URL}/entry/save`,
         entryData
@@ -81,7 +80,16 @@ const api = {
       console.error("Error generating monthly ai insights:", error);
       throw error;
     }
-  }
+  },
+  getOneEntry: async (id) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/entry/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching single entry:", error);
+      throw error;
+    }
+  },
 };
 
 export default api;

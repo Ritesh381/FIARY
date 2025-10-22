@@ -1,32 +1,33 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-
-// --- Assumed API Imports ---
-// You will need to create and import these API service files.
-import api from "../../api/EntryCalls"; // Assumed path for journal entries
-import apiHabits from "../../api/HabitCalls"; // Assumed path for habits
+import api from "../../api/EntryCalls";
+import apiHabits from "../../api/HabitCalls";
 // import apiTodos from '../../api/TodoCalls';
 // import apiFinance from '../../api/FinanceCalls';
 
-/**
- * Async thunk to save the entire daily entry form.
- * It reads the state, and dispatches API calls for each section.
- */
 export const saveDailyEntry = createAsyncThunk(
   "entryData/saveDailyEntry",
   async (_, { getState, rejectWithValue }) => {
     try {
-      const state = getState().entryData; // Get state from 'entryData' slice
+      const state = getState().entryData;
       const { entry, todo, habits, finance } = state;
 
       const apiPromises = [];
-
-      // 1. Save the main journal entry
       apiPromises.push(api.saveEntry(entry));
 
+
+      // --- *** THIS IS THE FIX *** ---
       // 2. Save habit entries if they exist
       if (habits && habits.length > 0) {
-        apiPromises.push(apiHabits.createHabitEntries(habits));
+        console.log("Saving habits:", habits);
+        // Loop through each habit entry in the state
+        for (const habitEntry of habits) {
+          // Push an individual API call for each one
+          // This uses the 'upsertHabitEntry' function that exists
+          apiPromises.push(apiHabits.upsertHabitEntry(habitEntry));
+        }
       }
+      // --- *** END OF FIX *** ---
+
 
       // 3. Placeholder for saving Todos
       // if (todo.completed.length > 0 || todo.addition.length > 0) {
@@ -40,6 +41,7 @@ export const saveDailyEntry = createAsyncThunk(
 
       await Promise.all(apiPromises);
 
+      // We don't call resetForm here. The extraReducer will handle it.
       return { success: true };
     } catch (error) {
       return rejectWithValue(
@@ -56,7 +58,7 @@ const initialState = {
     achievement: "",
     sleepHours: "",
     sleepNotes: "",
-    timeWastedMins: "",
+    timeWastedMinutes: "",
     timeWastedNotes: "",
     diaryEntry: "",
   },
@@ -68,6 +70,7 @@ const initialState = {
   finance: [],
   status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
   error: null,
+  _id:undefined,
 };
 
 const entryFormSlice = createSlice({
@@ -96,13 +99,12 @@ const entryFormSlice = createSlice({
       }
     },
     resetForm: (state) => {
-      // Resets the form but preserves the status
-      state.entry = { ...initialState.entry, date: new Date().toISOString() };
-      state.todo = initialState.todo;
-      state.habits = initialState.habits;
-      state.finance = initialState.finance;
-      state.error = null;
+      Object.assign(state, initialState);
+      state.entry.date = new Date().toISOString();
     },
+    setEntryDate: (state, action) => {
+      state.entry.date = action.payload;
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -111,12 +113,7 @@ const entryFormSlice = createSlice({
         state.error = null;
       })
       .addCase(saveDailyEntry.fulfilled, (state) => {
-        // On success, reset the form and set status to 'succeeded'
-        return {
-          ...initialState,
-          status: "succeeded",
-          entry: { ...initialState.entry, date: new Date().toISOString() },
-        };
+        state.status = "succeeded";
       })
       .addCase(saveDailyEntry.rejected, (state, action) => {
         state.status = "failed";
@@ -125,7 +122,8 @@ const entryFormSlice = createSlice({
   },
 });
 
-export const { setFormField, updateHabitEntry, resetForm } =
+export const { setFormField, updateHabitEntry, resetForm, setEntryDate } =
   entryFormSlice.actions;
 
 export default entryFormSlice.reducer;
+
