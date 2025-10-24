@@ -87,7 +87,7 @@ function EntryPage() {
 
   useEffect(() => {
     dispatch(setFormField({ section: "entry", field: "date", value: selDate }));
-  }, []);
+  }, [selDate,dispatch]);
 
   // Fetch the user's defined habits on load
   useEffect(() => {
@@ -110,6 +110,7 @@ function EntryPage() {
       setOverlayState("success"); // Show "Saved!"
 
       const timer = setTimeout(() => {
+        dispatch(resetForm()); //clear old entry for a fresh start
         navigate("/");
       }, 500); // 500ms delay
 
@@ -117,7 +118,7 @@ function EntryPage() {
     } else if (status === "failed") {
       setOverlayState("hidden"); // Hide overlay, show error message below button
     }
-  }, [status, navigate]);
+  }, [status, dispatch,navigate]);
 
   // --- Handlers ---
 
@@ -161,14 +162,12 @@ function EntryPage() {
   // --- FIX: Handler for "Habits" section with 3-state quit logic ---
   const handleHabitToggle = (habit, currentEntry) => {
     const isDone = currentEntry?.done || false; // Default to false if no entry
-    let newDoneStatus;
-
-    newDoneStatus = !isDone;
+    
 
     dispatch(
       updateHabitEntry({
         habitId: habit._id,
-        entry: { done: newDoneStatus, date: new Date().toISOString() },
+        entry: { done: !isDone, date: selDate|| entry.date },
       })
     );
   };
