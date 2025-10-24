@@ -20,7 +20,8 @@ If you find a bug, please check if it has already been reported in the [Issues](
 
 * Your environment details (Browser, OS, etc.).
 
-<a href="./SETUP.md" target="_blank">How to setup locally</a>
+### How to setup Locally ? 
+* Refer setup.md
 
 ### ✨ Suggesting Enhancements
 
