@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authAPI from '../api/AuthCalls';
 import { Loader2 } from 'lucide-react';
+import { useDispatch } from 'react-redux';
 
 // --- SignUp Component ---
 export default function SignUp() {
@@ -9,6 +10,7 @@ export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const dispatch = useDispatch()
 
   // State for loading and messages
   const [loading, setLoading] = useState(false);
@@ -38,11 +40,11 @@ export default function SignUp() {
     setLoading(true);
 
     try {
-      await authAPI.signUp({ name, email, password, confirmPassword });
+      await authAPI.signUp({ name, email, password, confirmPassword },dispatch);
       setSuccess('Sign up successful! Please sign in.');
       setTimeout(() => {
         navigate('/signin'); // Redirect to sign in page after success
-      }, 2000);
+      }, 500);
     } catch (error) {
       setError(error.message || 'An unknown sign-up error occurred.');
     } finally {

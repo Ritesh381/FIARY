@@ -13,19 +13,19 @@ const JournalEditFormModal = () => {
 
   const [currentEntry, setCurrentEntry] = useState(null);
   const [formData, setFormData] = useState({
-    feeling: "",
+    // feeling: "",
     feelingScore: null,
-    bestMoment: "",
-    worstMoment: "",
+    // bestMoment: "",
+    // worstMoment: "",
     achievement: "",
     timeWastedMinutes: 0,
     timeWastedNotes: "",
     sleepHours: 0,
     sleepNotes: "",
-    physicalActivity: "",
-    didMasturbate: false,
-    masturbationNotes: "",
-    didTakeBath: false,
+    // physicalActivity: "",
+    // didMasturbate: false,
+    // masturbationNotes: "",
+    // didTakeBath: false,
     diaryEntry: "",
   });
 
@@ -52,38 +52,38 @@ const JournalEditFormModal = () => {
       if (foundEntry) {
         setCurrentEntry(foundEntry);
         setFormData({
-          feeling: foundEntry.feeling,
+          // feeling: foundEntry.feeling,
           feelingScore: foundEntry.feelingScore,
-          bestMoment: foundEntry.bestMoment,
-          worstMoment: foundEntry.worstMoment,
+          // bestMoment: foundEntry.bestMoment,
+          // worstMoment: foundEntry.worstMoment,
           achievement: foundEntry.achievement,
           timeWastedMinutes: foundEntry.timeWastedMinutes,
           timeWastedNotes: foundEntry.timeWastedNotes,
           sleepHours: foundEntry.sleepHours,
           sleepNotes: foundEntry.sleepNotes,
-          physicalActivity: foundEntry.physicalActivity,
-          didMasturbate: foundEntry.didMasturbate,
-          masturbationNotes: foundEntry.masturbationNotes,
-          didTakeBath: foundEntry.didTakeBath,
+          // physicalActivity: foundEntry.physicalActivity,
+          // didMasturbate: foundEntry.didMasturbate,
+          // masturbationNotes: foundEntry.masturbationNotes,
+          // didTakeBath: foundEntry.didTakeBath,
           diaryEntry: foundEntry.diaryEntry,
         });
         setMessage(null);
       } else {
         setCurrentEntry(null);
         setFormData({
-          feeling: "",
+          // feeling: "",
           feelingScore: null,
-          bestMoment: "",
-          worstMoment: "",
+          // bestMoment: "",
+          // worstMoment: "",
           achievement: "",
           timeWastedMinutes: 0,
           timeWastedNotes: "",
           sleepHours: 0,
           sleepNotes: "",
-          physicalActivity: "",
-          didMasturbate: false,
-          masturbationNotes: "",
-          didTakeBath: false,
+          // physicalActivity: "",
+          // didMasturbate: false,
+          // masturbationNotes: "",
+          // didTakeBath: false,
           diaryEntry: "",
         });
         setMessage({ type: "error", text: "No entry found for this date." });
@@ -310,7 +310,7 @@ const JournalEditFormModal = () => {
               </div>
 
               <div className="space-y-4">
-                <div>
+                {/* <div>
                   <label className={formLabelStyle}>Mood Description</label>
                   <input
                     type="text"
@@ -321,8 +321,8 @@ const JournalEditFormModal = () => {
                     placeholder="e.g., Happy, Stressed, Motivated"
                     required
                   />
-                </div>
-                <div>
+                </div> */}
+                {/* <div>
                   <label className={formLabelStyle}>Best Moment</label>
                   <textarea
                     name="bestMoment"
@@ -343,7 +343,7 @@ const JournalEditFormModal = () => {
                     rows="3"
                     placeholder="What was the worst part of your day?"
                   />
-                </div>
+                </div> */}
                 <div>
                   <label className={formLabelStyle}>
                     Achievement of the Day
@@ -414,7 +414,7 @@ const JournalEditFormModal = () => {
                     placeholder="Quality of sleep, dreams, etc."
                   />
                 </div>
-                <div>
+                {/* <div>
                   <label className={formLabelStyle}>Physical Activity</label>
                   <input
                     type="text"
@@ -424,9 +424,9 @@ const JournalEditFormModal = () => {
                     className={formInputStyle}
                     placeholder="e.g., Gym, Run, Yoga"
                   />
-                </div>
+                </div> */}
 
-                <div className="flex items-center space-x-4">
+                {/* <div className="flex items-center space-x-4">
                   <div className="flex items-center">
                     <input
                       type="checkbox"
@@ -452,9 +452,9 @@ const JournalEditFormModal = () => {
                       />
                     </div>
                   )}
-                </div>
+                </div> */}
 
-                <div className="flex items-center">
+                {/* <div className="flex items-center">
                   <input
                     type="checkbox"
                     name="didTakeBath"
@@ -465,7 +465,7 @@ const JournalEditFormModal = () => {
                   <label className="ml-2 block text-sm text-white">
                     Did Take Bath
                   </label>
-                </div>
+                </div> */}
               </div>
             </div>
 
