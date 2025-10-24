@@ -68,4 +68,4 @@ const RepeatingTaskSchema = new Schema({
 
 const RepeatingTask = mongoose.model("RepeatingTask", RepeatingTaskSchema);
 
-module.exports = { RepeatingTask };
+module.exports = RepeatingTask;
