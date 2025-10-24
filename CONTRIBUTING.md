@@ -20,6 +20,8 @@ If you find a bug, please check if it has already been reported in the [Issues](
 
 * Your environment details (Browser, OS, etc.).
 
+[How to setup locally](./SETUP.md)
+
 ### ✨ Suggesting Enhancements
 
 Have an idea for a new feature or an improvement to an existing one? We'd love to hear it! Please open an issue and:
