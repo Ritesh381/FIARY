@@ -6,15 +6,15 @@ import apiHabits from "../../api/HabitCalls";
 
 export const saveDailyEntry = createAsyncThunk(
   "entryData/saveDailyEntry",
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { getState, dispatch ,rejectWithValue }) => {
     try {
       const state = getState().entryData;
       const { entry, todo, habits, finance } = state;
 
       const apiPromises = [];
-      apiPromises.push(api.saveEntry(entry));
 
-
+      const entryResponse = await api.saveEntry(entry);
+      
       // --- *** THIS IS THE FIX *** ---
       // 2. Save habit entries if they exist
       if (habits && habits.length > 0) {
@@ -38,11 +38,14 @@ export const saveDailyEntry = createAsyncThunk(
       // if (finance.length > 0) {
       //   apiPromises.push(apiFinance.saveTransactions(finance));
       // }
-
+      
       await Promise.all(apiPromises);
-
+      
+      dispatch(resetForm());
+      
+      return entryResponse;
       // We don't call resetForm here. The extraReducer will handle it.
-      return { success: true };
+      
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "An unknown error occurred"
