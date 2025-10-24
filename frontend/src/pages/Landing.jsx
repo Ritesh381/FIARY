@@ -200,14 +200,9 @@ export default function App() {
 
   const dailyLogItems = [
     { title: "Mood", emoji: "🙂" },
-    { title: "Win of the Day", emoji: "🏆" },
-    { title: "Lose of the Day", emoji: "😔" },
-    { title: "Goal Progress", emoji: "📈" },
+    { title: "Achievement", emoji: "📈" },
     { title: "Time Wasted", emoji: "⏱️" },
     { title: "Sleep", emoji: "💤" },
-    { title: "Physical Activity", emoji: "🏃" },
-    { title: "Did you take a bath?", emoji: "🚿" },
-    { title: "Did you masturbate?", emoji: "💦" },
     { title: "Full Diary Entry", emoji: "📝" },
   ];
 
