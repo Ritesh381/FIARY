@@ -1,7 +1,9 @@
-const Finance = require("../models/Finance"); // your Finance model
-const { Category, SubCategory } = require("../models/Category"); // destructured import
+const Finance = require("../models/Finance.models");
+const {
+  Category,
+  SubCategory,
+} = require("../models/Finance.Categories.models");
 
-// Create a new finance entry
 const createFinance = async (req, res) => {
   try {
     const {

@@ -5,7 +5,7 @@ const {
   deleteHabit,
   getAllHabits,
   getEntriesOfOneHabit,
-  upsertHabitEntry, 
+  upsertHabitEntry,
   getHabitEntriesForOneDay,
 } = require("../controllers/Habits.controllers"); // Corrected file name casing
 const isAuth = require("../middleware/isAuth");
@@ -18,7 +18,7 @@ HabitRouter.post("/", isAuth, createHabit);
 HabitRouter.patch("/:id", isAuth, editHabit);
 HabitRouter.delete("/:id", isAuth, deleteHabit);
 HabitRouter.post("/entry/:habitId", isAuth, getEntriesOfOneHabit);
-HabitRouter.get("/entry/bydate", isAuth, getHabitEntriesForOneDay)
+HabitRouter.get("/entry/bydate", isAuth, getHabitEntriesForOneDay);
 
 // This route matches the frontend API call: POST /habit/entry
 // It handles creating/updating a single entry (e.g., from a click)
