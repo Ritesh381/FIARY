@@ -2,40 +2,47 @@
 
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'motion/react';
 import { Children, cloneElement, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Only if using React Router
 
-function DockItem({ children, className = '', onClick, mouseX, spring, distance, magnification, baseItemSize }) {
+function DockItem({ children, className = '', onClick, href, mouseX, spring, distance, magnification, baseItemSize }) {
   const ref = useRef(null);
   const isHovered = useMotionValue(0);
+  const navigate = useNavigate(); // For SPA navigation
 
   const mouseDistance = useTransform(mouseX, val => {
-    const rect = ref.current?.getBoundingClientRect() ?? {
-      x: 0,
-      width: baseItemSize
-    };
+    const rect = ref.current?.getBoundingClientRect() ?? { x: 0, width: baseItemSize };
     return val - rect.x - baseItemSize / 2;
   });
 
   const targetSize = useTransform(mouseDistance, [-distance, 0, distance], [baseItemSize, magnification, baseItemSize]);
   const size = useSpring(targetSize, spring);
 
+  const handleClick = (e) => {
+    e.stopPropagation();
+    if (href) {
+      navigate ? navigate(href) : window.location.href = href;
+    } else if (typeof onClick === 'function') {
+      onClick();
+    }
+  };
+
   return (
     <motion.div
       ref={ref}
-      style={{
-        width: size,
-        height: size
-      }}
+      style={{ width: size, height: size, pointerEvents: 'auto' }}
       onHoverStart={() => isHovered.set(1)}
       onHoverEnd={() => isHovered.set(0)}
       onFocus={() => isHovered.set(1)}
       onBlur={() => isHovered.set(0)}
-      onClick={onClick}
+      onClick={handleClick}
       className={`relative inline-flex items-center justify-center rounded-full bg-[#060010] border-neutral-700 border-2 shadow-md ${className}`}
       tabIndex={0}
       role="button"
       aria-haspopup="true"
     >
-      {Children.map(children, child => cloneElement(child, { isHovered }))}
+      <div style={{ pointerEvents: 'none' }}>
+        {Children.map(children, child => cloneElement(child, { isHovered }))}
+      </div>
     </motion.div>
   );
 }
@@ -45,9 +52,7 @@ function DockLabel({ children, className = '', ...rest }) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = isHovered.on('change', latest => {
-      setIsVisible(latest === 1);
-    });
+    const unsubscribe = isHovered.on('change', latest => setIsVisible(latest === 1));
     return () => unsubscribe();
   }, [isHovered]);
 
@@ -114,6 +119,7 @@ export default function Dock({
           <DockItem
             key={index}
             onClick={item.onClick}
+            href={item.href} // New prop for navigation
             className={item.className}
             mouseX={mouseX}
             spring={spring}
@@ -129,18 +135,3 @@ export default function Dock({
     </motion.div>
   );
 }
-
-
-// const items = [
-//     { icon: <VscHome size={18} />, label: 'Home', onClick: () => alert('Home!') },
-//     { icon: <VscArchive size={18} />, label: 'Archive', onClick: () => alert('Archive!') },
-//     { icon: <VscAccount size={18} />, label: 'Profile', onClick: () => alert('Profile!') },
-//     { icon: <VscSettingsGear size={18} />, label: 'Settings', onClick: () => alert('Settings!') },
-//   ];
-
-//   <Dock 
-//     items={items}
-//     panelHeight={68}
-//     baseItemSize={50}
-//     magnification={70}
-//   />
