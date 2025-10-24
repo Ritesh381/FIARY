@@ -32,10 +32,15 @@ const getCurrentUser = async (req, res) => {
 const updateUserProfile = async (req, res) => {
   try {
     const { name, email, profilePic } = req.body;
-    
+
     // Validate input
     if (!name && !email && !profilePic) {
-      return res.status(400).json({ message: "At least one field (name, email, or profilePic) is required for update." });
+      return res
+        .status(400)
+        .json({
+          message:
+            "At least one field (name, email, or profilePic) is required for update.",
+        });
     }
 
     // Check if email is being updated and if it's already taken
@@ -56,9 +61,9 @@ const updateUserProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({ 
-      message: "Profile updated successfully", 
-      user: updatedUser 
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: updatedUser,
     });
   } catch (error) {
     console.error("Error updating user profile:", error);
@@ -76,7 +81,9 @@ const deleteUser = async (req, res) => {
     // Clear the authentication cookie
     res.clearCookie("token", {
       httpOnly: true,
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
     });
 
     res.status(200).json({ message: "User deleted successfully" });
@@ -90,5 +97,5 @@ module.exports = {
   getUserById,
   getCurrentUser,
   updateUserProfile,
-  deleteUser
+  deleteUser,
 };
