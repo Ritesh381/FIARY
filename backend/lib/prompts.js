@@ -39,11 +39,15 @@ The JSON object you generate MUST have these exact five keys:
 Be powerful and direct, but always supportive. Add emojis to show your encouragement. 🚀 Your response must be this single JSON object.`,
 };
 
-let special_prompts =  {};
+let prompts =  {};
 try {
-  special_prompts = require("../specialprompt")
+  if(process.env.USE_SPECIAL_PROMPTS == "true"){
+    prompts = require("../specialprompt")
+  }else{
+    prompts = normal_prompts
+  }
 } catch (error) {
-  special_prompts = {}
+  prompts = normal_prompts
 }
 
-module.exports = { normal_prompts, special_prompts };
+module.exports = prompts;

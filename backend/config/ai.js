@@ -6,10 +6,14 @@ const ai = new GoogleGenAI({
 
 async function callModel(prompt) {
   try {
+    console.log(prompt)
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
     });
+console.log("\n\n\n")
+console.log(response.text)
+console.log("\n\n\n")
     const responseText = response.text;
     const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
     if (jsonMatch && jsonMatch[1]) {
