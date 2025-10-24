@@ -8,6 +8,7 @@ const aiRouter = require("./routes/AI.routes.js");
 const authRouter = require("./routes/Auth.routers.js");
 const userRouter = require("./routes/User.routes.js");
 const habitRouter = require("./routes/Habit.routes.js")
+const financeRouter = require("./routes/Finance.routes.js")
 
 const PORT = 8080;
 const app = express();
@@ -31,6 +32,7 @@ app.use("/api/ai", aiRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 app.use("/api/habit", habitRouter)
+app.use("/api/finance", financeRouter)
 
 // Start server
 app.listen(PORT, () =>
