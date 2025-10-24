@@ -1,80 +1,95 @@
 # 📝 FIARY – Feedback + Diary
 
-FIARY is a self-reflection and productivity platform designed to help you grow, track progress, and stay mindful of your daily life.
-Think of it as your digital diary + productivity dashboard – a single place to record your habits, track goals, log finances, celebrate wins, and reflect on challenges.
+FIARY is your personal digital space for self-reflection and habit building. Track your days, understand your patterns, and stay mindful of your journey.
 
-# 🌟 Core Features
+# ✨ Core Features
 
-## 🔥 Streaks
-- Track consecutive days of logging entries
-- Stay motivated with visual streak progress
+* **Journaling:** Capture your daily thoughts, feelings, and experiences.
 
-## 📊 Dashboard
-- Central hub for all your stats and insights
-- View trends over time and understand your lifestyle better
+* **Habit Tracking:** Build consistency and monitor your progress on key habits.
 
-## 💰 Finance Tracker
-- Log daily expenses and categorize them
-- Analyze where your money goes with clear summaries
+* **Streaks:** Stay motivated by tracking consecutive days of engagement.
 
-## 📸 Moments
-- Save special memories with photos & details
-- Revisit them anytime to spark joy
+* **AI Insights:** Gain deeper understanding with AI-powered summaries of your journal entries (Daily, Weekly, Monthly planned).
 
-## ✅ Habits
-- Add, edit, or delete habits
-- Log whether you completed a habit each day
-- Track consistency and progress visually
+# 🚀 Features Currently in FIARY
 
-## 🔄 Repetitive Activities
-- Plan recurring tasks (e.g., “Do 2 LeetCode questions daily”)
-- Build discipline through structured repetition
+* **Daily Journaling:**
 
-## 🎯 Goals
-- Set weekly and monthly goals
-- Review and analyze your progress in a dedicated goals page
+  * Log your Mood Score (1-10).
 
-## 🎬 Movies 
-- Kepp what movies you have watched till now.
-- Made usign TMDB api set the movie name, date watched, poster(from tmdb)
+  * Record daily Achievements.
 
-## 📅 Daily Entries
+  * Track Sleep Hours and add notes.
 
-Every day, you can log:
+  * Monitor Time Wasted and identify distractions.
 
-1. Mood 🙂😐☹️
-2. Win of the Day (something positive you achieved)
-3. Lose of the Day (what didn’t go well)
-4. Goal Progress (reflect on ongoing goals)
-5. Time Wasted + Notes (track distractions & learn from them)
-6. Sleep + Notes (quality, duration, and thoughts)
-7. Physical Activity
-8. Did you take a bath? 🚿
-10. Full Diary Entry (free-form writing & reflection)
+  * Write a detailed Diary Entry for reflection.
 
-## 🔮 Future Additions:
+  * Access past entries through an interactive calendar view.
 
-1. Integrate daily finance logs directly into entries
+* **Advanced Habit Tracking:**
 
-## 🛠️ Tech Stack
+  * Create and manage custom habits (both 'develop' and 'quit' types).
+
+  * Log daily completion status (Done/Not Done) and add specific notes for each habit.
+
+  * Visualize progress with detailed **Habit Analytics Cards**:
+
+    * See completion percentage for the current month.
+
+    * Track your current and longest streaks.
+
+    * View a mini heatmap calendar for visual pattern recognition.
+
+    * Get qualitative feedback on your performance.
+
+* **Streak Tracking:**
+
+  * Monitor your consecutive days of logging journal entries.
+
+* **Daily AI Insights:**
+
+  * Receive AI-generated summaries and reflections based on your diary entry for the day. (Accessible from the calendar view).
+
+* **Authentication:**
+
+  * Secure Sign Up and Sign In functionality.
+
+## 🔮 Planned / In Progress Features:
+
+* Finance Tracker
+
+* Advance Todo List Integration
+
+* Hobby Tracker
+
+* 
+
+# 🛠️ Tech Stack
 
 FIARY is built using the MERN stack:
 
-- MongoDB – Database for storing entries, habits, and stats
-- Express.js – Backend framework for APIs
-- React.js – Frontend for an interactive and smooth UI
-- Node.js – Runtime for backend services
+* **MongoDB** – Database for storing entries, habits, and stats.
 
-## 🚀 Vision
+* **Express.js** – Backend framework for APIs.
 
-FIARY isn’t just a diary – it’s a life dashboard.
-It’s built to help you:
+* **React.js** – Frontend for an interactive and smooth UI (using Vite, Redux Toolkit, Framer Motion, Tailwind CSS).
 
-- Stay consistent with habits
-- Understand where your time and money go
-- Celebrate your wins & learn from losses
-- Reflect on life with meaningful insights
+* **Node.js** – Runtime for backend services.
 
-## 📌 Status
+# 🚀 Vision
 
-⚠️ Work in Progress – Contributions & feedback are welcome!
+FIARY isn’t just a diary – it’s a life dashboard. It’s built to help you:
+
+* Stay consistent with habits through visual feedback and streaks.
+
+* Understand where your time goes.
+
+* Celebrate your wins & learn from patterns.
+
+* Reflect on life with meaningful insights, potentially enhanced by AI.
+
+# 📌 Status
+
+⚠️ Work in Progress – Core journaling, habit tracking/analytics, streaks, and daily AI insights are functional. Other features are under active development. Contributions & feedback are welcome!
