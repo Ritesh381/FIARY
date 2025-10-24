@@ -1,138 +1,172 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authAPI from '../api/AuthCalls';
-import { useDispatch } from 'react-redux';
+import { Loader2 } from 'lucide-react';
 
+// --- SignUp Component ---
 export default function SignUp() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedPic, setSelectedPic] = useState('https://placehold.co/150x150/A0522D/FFFFFF?text=Astronaut');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // State for loading and messages
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check if a user is already logged in
     const token = document.cookie.split('; ').find(row => row.startsWith('token='));
     if (token) {
       navigate('/');
     }
   }, [navigate]);
 
-  const profilePics = [
-    { id: 1, url: 'https://placehold.co/150x150/A0522D/FFFFFF?text=Astronaut' },
-    { id: 2, url: 'https://placehold.co/150x150/B8860B/FFFFFF?text=Fox' },
-    { id: 3, url: 'https://placehold.co/150x150/CD853F/FFFFFF?text=Owl' },
-    { id: 4, url: 'https://placehold.co/150x150/D2691E/FFFFFF?text=Potato' },
-    { id: 5, url: 'https://placehold.co/150x150/8B4513/FFFFFF?text=Sloth' },
-    { id: 6, url: 'https://placehold.co/150x150/A0522D/FFFFFF?text=Cat' },
-    { id: 7, url: 'https://placehold.co/150x150/B8860B/FFFFFF?text=Mushroom' },
-    { id: 8, url: 'https://placehold.co/150x150/CD853F/FFFFFF?text=Frog' },
-    { id: 9, url: 'https://placehold.co/150x150/D2691E/FFFFFF?text=Robot' },
-    { id: 10, url: 'https://placehold.co/150x150/8B4513/FFFFFF?text=Human' },
-  ];
-  const dispatch = useDispatch()
-
   const handleSignUp = async (e) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      await authAPI.signUp({ name, email, password, profilePic: selectedPic }, dispatch);
-      alert('Registration successful! Please sign in.');
-      navigate('/signin');
+      await authAPI.signUp({ name, email, password, confirmPassword });
+      setSuccess('Sign up successful! Please sign in.');
+      setTimeout(() => {
+        navigate('/signin'); // Redirect to sign in page after success
+      }, 2000);
     } catch (error) {
-      alert(`Registration failed: ${error.message}`);
+      setError(error.message || 'An unknown sign-up error occurred.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="bg-transparent min-h-screen flex flex-col">
+    // Main container: full screen, simple dark background
+    <div className="relative overflow-hidden text-gray-200 antialiased font-sans flex items-center justify-center p-4">
       <style>{`
         .font-sans {
           font-family: 'Inter', sans-serif;
         }
       `}</style>
-      <nav className="flex items-center justify-between p-4 md:p-6 lg:p-8">
+      
+      {/* Removed HeroCanvas */}
+
+      {/* Navigation - simple text in the corner */}
+      <nav className="fixed top-0 left-0 w-full p-4 sm:p-6 lg:p-8 z-20 flex justify-start">
         <div
           onClick={() => navigate('/')}
-          className="text-white text-2xl font-bold cursor-pointer transition-transform transform hover:scale-105"
+          className="text-2xl sm:text-3xl font-bold cursor-pointer transition-transform transform hover:scale-105 text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-indigo-600"
         >
           FIARY
         </div>
       </nav>
-      <div className="flex-grow flex items-center justify-center text-gray-200 antialiased font-sans px-4">
-        <div className="w-full max-w-md mx-auto p-8 rounded-2xl bg-white/20 backdrop-blur-md shadow-xl border border-gray-200">
-          <h2 className="text-3xl font-bold text-center mb-6 text-white">Create an Account</h2>
-          <form onSubmit={handleSignUp} className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-white mb-2" htmlFor="name">Name</label>
-                <input
-                  type="text"
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full p-3 rounded-md bg-white/10 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Your Name"
-                  required
-                />
+
+      {/* Main content area */}
+      <main className="z-10 w-full max-w-md">
+        
+        {/* Simple Card for the form */}
+        <div className="w-full mx-auto p-6 sm:p-8 rounded-2xl bg-gray-800/60 backdrop-blur-sm shadow-xl border border-gray-700/50">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-white">Create Account</h2>
+          
+          <form onSubmit={handleSignUp} className="space-y-4">
+            
+            {/* Error/Success Messages */}
+            {error && (
+              <div className="bg-red-500/20 border border-red-500 text-red-200 p-3 rounded-lg text-center text-sm">
+                {error}
               </div>
-              <div>
-                <label className="block text-white mb-2" htmlFor="email">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full p-3 rounded-md bg-white/10 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="name@example.com"
-                  required
-                />
+            )}
+            {success && (
+              <div className="bg-green-500/20 border border-green-500 text-green-200 p-3 rounded-lg text-center text-sm">
+                {success}
               </div>
-              <div>
-                <label className="block text-white mb-2" htmlFor="password">Password</label>
-                <input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-3 rounded-md bg-white/10 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-white mb-2">Choose a Profile Pic</label>
-                <div className="grid grid-cols-5 gap-2">
-                  {profilePics.map((pic) => (
-                    <img
-                      key={pic.id}
-                      src={pic.url}
-                      alt={`Profile pic ${pic.id}`}
-                      className={`w-14 h-14 rounded-full cursor-pointer transition-transform transform hover:scale-110 ${selectedPic === pic.url ? 'ring-4 ring-indigo-500' : ''}`}
-                      onClick={() => setSelectedPic(pic.url)}
-                    />
-                  ))}
-                </div>
-              </div>
+            )}
+
+            <div>
+              <label className="block text-sm sm:text-base text-white mb-2" htmlFor="name-signup">Name</label>
+              <input
+                type="text"
+                id="name-signup"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full p-3 rounded-lg bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-transparent focus:border-indigo-500 text-sm sm:text-base"
+                placeholder="John Doe"
+                required
+                disabled={loading}
+              />
             </div>
+            <div>
+              <label className="block text-sm sm:text-base text-white mb-2" htmlFor="email-signup">Email</label>
+              <input
+                type="email"
+                id="email-signup"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-3 rounded-lg bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-transparent focus:border-indigo-500 text-sm sm:text-base"
+                placeholder="name@example.com"
+                required
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <label className="block text-sm sm:text-base text-white mb-2" htmlFor="password-signup">Password</label>
+              <input
+                type="password"
+                id="password-signup"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3 rounded-lg bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-transparent focus:border-indigo-500 text-sm sm:text-base"
+                placeholder="••••••••"
+                required
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <label className="block text-sm sm:text-base text-white mb-2" htmlFor="confirm-password-signup">Confirm Password</label>
+              <input
+                type="password"
+                id="confirm-password-signup"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full p-3 rounded-lg bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-transparent focus:border-indigo-500 text-sm sm:text-base"
+                placeholder="••••••••"
+                required
+                disabled={loading}
+              />
+            </div>
+            
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-teal-500 to-indigo-600 text-white font-semibold py-3 rounded-md shadow-lg hover:shadow-xl transition-transform transform hover:-translate-y-1"
+              disabled={loading || success}
+              className="w-full bg-gradient-to-r from-teal-500 to-indigo-600 text-white font-semibold py-3 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
             >
-              Sign Up
+              {loading ? <Loader2 className="animate-spin" /> : 'Sign Up'}
             </button>
           </form>
+          
           <div className="mt-6 text-center">
-            <p className="text-gray-300">
+            <p className="text-gray-300 text-sm sm:text-base">
               Already have an account?
               <a
-                onClick={() => navigate('/signin')}
-                className="font-semibold text-indigo-400 hover:text-indigo-300 ml-1 cursor-pointer"
+                onClick={() => !loading && navigate('/signin')}
+                className={`font-semibold text-indigo-400 hover:text-indigo-300 ml-1 ${loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
               >
                 Sign In
               </a>
             </p>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
