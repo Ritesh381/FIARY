@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const today = new Date();
-today.setDate(today.getDate() - 1);
+today.setDate(today.getDate());
 
 export const formSlice = createSlice({
   name: "forms",
@@ -13,7 +13,6 @@ export const formSlice = createSlice({
   reducers: {
     setDate: (state, action) => { 
       state.date = action.payload; 
-      
     },
     toggleSaveForm: (state) => { 
       state.saveForm = !state.saveForm; 

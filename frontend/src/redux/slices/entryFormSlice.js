@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { addEntry } from "./entrySlice";
 import api from "../../api/EntryCalls";
 import apiHabits from "../../api/HabitCalls";
 // import apiTodos from '../../api/TodoCalls';
@@ -6,7 +7,7 @@ import apiHabits from "../../api/HabitCalls";
 
 export const saveDailyEntry = createAsyncThunk(
   "entryData/saveDailyEntry",
-  async (_, { getState, dispatch ,rejectWithValue }) => {
+  async (_, { getState, dispatch, rejectWithValue }) => {
     try {
       const state = getState().entryData;
       const { entry, todo, habits, finance } = state;
@@ -14,20 +15,16 @@ export const saveDailyEntry = createAsyncThunk(
       const apiPromises = [];
 
       const entryResponse = await api.saveEntry(entry);
-      
+      console.log("SAving entry: ", entry);
       // --- *** THIS IS THE FIX *** ---
       // 2. Save habit entries if they exist
       if (habits && habits.length > 0) {
         console.log("Saving habits:", habits);
-        // Loop through each habit entry in the state
         for (const habitEntry of habits) {
-          // Push an individual API call for each one
-          // This uses the 'upsertHabitEntry' function that exists
           apiPromises.push(apiHabits.upsertHabitEntry(habitEntry));
         }
       }
       // --- *** END OF FIX *** ---
-
 
       // 3. Placeholder for saving Todos
       // if (todo.completed.length > 0 || todo.addition.length > 0) {
@@ -38,17 +35,18 @@ export const saveDailyEntry = createAsyncThunk(
       // if (finance.length > 0) {
       //   apiPromises.push(apiFinance.saveTransactions(finance));
       // }
-      
       await Promise.all(apiPromises);
-      
+      dispatch(addEntry(entry))
       dispatch(resetForm());
-      
+
       return entryResponse;
       // We don't call resetForm here. The extraReducer will handle it.
-      
     } catch (error) {
+      console.error("Error in saveDailyEntry:", error);
       return rejectWithValue(
-        error.response?.data?.message || "An unknown error occurred"
+        error.response?.data?.message ||
+          error.message ||
+          "An unknown error occurred"
       );
     }
   }
@@ -73,7 +71,7 @@ const initialState = {
   finance: [],
   status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
   error: null,
-  _id:undefined,
+  _id: undefined,
 };
 
 const entryFormSlice = createSlice({
@@ -101,13 +99,17 @@ const entryFormSlice = createSlice({
         state.habits.push({ habitId, ...entry });
       }
     },
-    resetForm: (state) => {
-      Object.assign(state, initialState);
-      state.entry.date = new Date().toISOString();
-    },
+    resetForm: () => ({
+      ...initialState,
+      entry: {
+        ...initialState.entry,
+        date: new Date().toISOString(),
+      },
+    }),
+
     setEntryDate: (state, action) => {
       state.entry.date = action.payload;
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -129,4 +131,3 @@ export const { setFormField, updateHabitEntry, resetForm, setEntryDate } =
   entryFormSlice.actions;
 
 export default entryFormSlice.reducer;
-
