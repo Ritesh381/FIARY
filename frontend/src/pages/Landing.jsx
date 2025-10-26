@@ -10,12 +10,15 @@ import {
   Lightbulb,
   Sparkles,
   Smile,
-  LineChart
+  LineChart,
+  Repeat, // Added Repeat for Tasks
+  IndianRupee, // Added IndianRupee for Finance
 } from "lucide-react";
-import AIInsight from "../assets/AI-insight.png";
-import HabitImage from "../assets/Habit-Tracker.png";
-import Founder from "../assets/founder.png";
-import SleepGraph from "../assets/SleepGraph.png"
+import AIInsight from "../assets/AI-insight.png"; // Mock AI image
+import HabitImage from "../assets/Habit-Tracker.png"; // Mock Habit image
+import Founder from "../assets/founder.png"; // Founder image
+// import AnalyticsGraph from "../assets/AnalyticsGraph.png" // Using a generic graph name
+import FinDashboard from "../assets/FinDashboard.png"
 
 export default function App() {
   const navigate = useNavigate();
@@ -40,9 +43,9 @@ export default function App() {
 
   const features = [
   {
-    name: "AI-Powered Journal",
+    name: "AI-Powered Journaling",
     description:
-      "Powered by Google's Gemini, our AI analyzes your mood, sleep, and reflections to generate personalized daily, weekly, and monthly insights. Understand your patterns, discover correlations, and get actionable advice to build a better you.",
+      "Powered by Gemini, AI analyzes your mood, sleep, and entries to generate personalized insights. Understand your emotional and productivity patterns and get actionable advice to build a better you.",
     icon: <BrainCircuit className="w-6 h-6" />,
     visual: (
       <img
@@ -51,7 +54,7 @@ export default function App() {
         className="w-full h-auto rounded-lg border border-white/10"
         onError={(e) =>
           (e.target.src =
-            "https://placehold.co/600x400/111827/4f46e5?text=Image+Error")
+            "https://placehold.co/600x400/111827/4f46e5?text=AI+Insights")
         }
       />
     ),
@@ -59,7 +62,7 @@ export default function App() {
   {
     name: "Effortless Habit Tracking",
     description:
-      "Log the habits that matter. Our simple, beautiful tracker helps you build streaks and visualize your progress, turning small, consistent actions into lasting change.",
+      "Log the habits that matter, whether you are developing a new skill or trying to quit a bad pattern. Build streaks and visualize your commitment with clear analytics and progress heatmaps.",
     icon: <CheckCircle2 className="w-6 h-6" />,
     visual: (
       <img
@@ -68,24 +71,24 @@ export default function App() {
         className="w-full h-auto rounded-lg border border-white/10"
         onError={(e) =>
           (e.target.src =
-            "https://placehold.co/600x400/0f172a/14b8a6?text=Image+Error")
+            "https://placehold.co/600x400/0f172a/14b8a6?text=Habit+Tracker")
         }
       />
     ),
   },
   {
-    name: "Insightful Graphs",
+    name: "Integrated Tasks & Finance",
     description:
-      "Visualize your journey. See beautiful, interactive graphs that connect your mood, habits, and sleep. Instantly spot trends and understand how your daily choices impact your well-being.",
-    icon: <LineChart className="w-6 h-6" />, // Changed icon to be more general
+      "Manage daily priorities with one-time Todos and set up automated 'Repeating Tasks'. Log all your financial transactions (Income/Expense) directly alongside your daily journal, centralizing your entire life log.",
+    icon: <Repeat className="w-6 h-6" />,
     visual: (
       <img
-        src={SleepGraph} // You might want to rename this variable if the graph shows more
-        alt="Analytics Graphs Mockup"
+        src={FinDashboard}
+        alt="Habit Tracker Mockup"
         className="w-full h-auto rounded-lg border border-white/10"
         onError={(e) =>
           (e.target.src =
-            "https://placehold.co/600x400/0f172a/14b8a6?text=Image+Error")
+            "https://placehold.co/600x400/0f172a/14b8a6?text=Habit+Tracker")
         }
       />
     ),
@@ -93,24 +96,23 @@ export default function App() {
 ];
 
   const roadmapFeatures = [
-    { name: "Todo Lists", icon: <CheckCircle2 className="w-6 h-6" /> },
-    { name: "Finance Tracker", icon: <Wallet className="w-6 h-6" /> },
-    { name: "Hobie Tracker", icon: <Smile className="w-6 h-6" /> },
-    { name: "The Shelf (Books/Movies)", icon: <Book className="w-6 h-6" /> },
-    { name: "Thoughts & Memories", icon: <Lightbulb className="w-6 h-6" /> },
+    { name: "Moments (Memories)", icon: <Lightbulb className="w-6 h-6" /> },
+    { name: "Thoughts Vault", icon: <Smile className="w-6 h-6" /> },
+    { name: "The Shelf (Media)", icon: <Book className="w-6 h-6" /> },
+    { name: "Personalization (Profile/Settings)", icon: <Wallet className="w-6 h-6" /> },
   ];
 
   const testimonials = [
     {
       quote:
-        "The AI insights are scary good. It connected my bad sleep to my 'Time Wasted' entries, which was a real wake-up call.",
-      name: "Rohan S.",
+        "FIARY helped me analyze my days with the journaling feature and the AI insights are also a very good feature to analyze your time. I also loved the UI of FIARY",
+      name: "Ritesh Prajapati",
       location: "Bengaluru",
     },
     {
       quote:
-        "I've tried 10+ habit trackers. This is the first one I've stuck with for more than a month. The interface is just so... calm.",
-      name: "Priya K.",
+        "I was tired of using five different apps. FIARY is the first one I've stuck with for more than a month—the interface is just so intuitive.",
+      name: "Someone",
       location: "Bengaluru",
     },
   ];
@@ -132,18 +134,17 @@ export default function App() {
               Features
             </a>
             <a href="#vision" className="hover:text-teal-400 transition-colors">
-              Our Vision
+              Roadmap
             </a>
             <a
               href="#founder"
               className="hover:text-teal-400 transition-colors"
             >
-              Founder
+              About
             </a>
           </div>
 
           <div className="flex items-center space-x-2">
-            {/* Theme toggle button removed */}
             <div className="hidden sm:block">{ctaButton("Sign Up")}</div>
 
             {/* --- Mobile Menu Button --- */}
@@ -158,7 +159,6 @@ export default function App() {
         </div>
 
         {/* --- Mobile Menu --- */}
-        {/* Mobile menu uses a solid dark background to be readable */}
         {isMobileMenuOpen && (
           <div className="md:hidden fixed inset-0 z-50 bg-gray-900 p-4 flex flex-col">
             <div className="flex justify-between items-center mb-8">
@@ -186,14 +186,14 @@ export default function App() {
                 className="text-xl hover:text-teal-400 transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Our Vision
+                Roadmap
               </a>
               <a
                 href="#founder"
                 className="text-xl hover:text-teal-400 transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Founder
+                About
               </a>
               {ctaButton("Sign Up", "mt-6")}
             </div>
@@ -201,6 +201,7 @@ export default function App() {
         )}
       </nav>
 
+      {/* --- HERO SECTION --- */}
       <section className="relative text-center py-20 md:py-32 container mx-auto px-4 overflow-hidden">
         <div className="relative z-10">
           <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6">
@@ -210,14 +211,14 @@ export default function App() {
             </span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-10">
-            Fiary is more than a journal. It’s your personal AI analyst, turning
-            your daily entries and habits into powerful, actionable insights.
+            Fiary is more than a journal. It’s your personal dashboard, turning
+            your daily entries, habits, and finances into powerful, actionable insights.
           </p>
           {ctaButton("Start Your Journey")}
         </div>
       </section>
 
-      {/* --- Features Section (What's Live) --- */}
+      {/* --- Features Section (What's Live - UPDATED) --- */}
       <section id="features" className="py-24 container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-white">
           Your Life in High-Res
@@ -231,7 +232,7 @@ export default function App() {
               } items-center gap-12`}
             >
               {/* Text Content */}
-              <div className="lg:w-1-2">
+              <div className="lg:w-1/2">
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-teal-400 to-indigo-600 text-white mb-4">
                   {feature.icon}
                 </div>
@@ -241,7 +242,7 @@ export default function App() {
                 <p className="text-lg text-gray-300">{feature.description}</p>
               </div>
               {/* Visual Content */}
-              <div className="lg:w-1-2 w-full">
+              <div className="lg:w-1/2 w-full">
                 <GlassCard>{feature.visual}</GlassCard>
               </div>
             </div>
@@ -249,23 +250,20 @@ export default function App() {
         </div>
       </section>
 
-      {/* --- Vision/Roadmap Section --- */}
-      {/* Using a subtle transparent white overlay to differentiate the section */}
+      {/* --- Vision/Roadmap Section (UPDATED) --- */}
       <section id="vision" className="py-24 bg-white/5">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
             One App for Your Entire Life
           </h2>
           <p className="text-lg text-gray-300 max-w-3xl mx-auto mb-12">
-            We're building Fiary to be the single dashboard for your
-            productivity. Stop switching between apps—your life, all in one
-            place.
+            We're building Fiary to be the single dashboard for your productivity. Stop switching between apps—your life, all in one place.
           </p>
           <h3 className="text-2xl font-semibold mb-8 text-white">
-            Coming Soon...
+            Next on the Roadmap
           </h3>
-          {/* Updated grid for 5 items */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-8 max-w-5xl mx-auto">
+          {/* Updated grid for features in development */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 max-w-5xl mx-auto">
             {roadmapFeatures.map((feature) => (
               <GlassCard
                 key={feature.name}
@@ -290,7 +288,7 @@ export default function App() {
                   <h4 className="text-xl font-bold text-indigo-300">
                     The Ultimate Goal: The Mirror
                   </h4>
-                  <p className="text-indigo-200">
+                  <p className="text-indigo-200 text-sm">
                     Your personal AI chatbot, trained on *you*. Ask it
                     questions, get advice, and reflect like never before.
                   </p>
@@ -341,7 +339,7 @@ export default function App() {
                     className="w-full h-full object-cover object-center"
                     onError={(e) =>
                       (e.target.src =
-                        "https://placehold.co/160x160/4338ca/ffffff?text=Image+Error")
+                        "https://placehold.co/160x160/4338ca/ffffff?text=Founder")
                     }
                   />
                 </div>
