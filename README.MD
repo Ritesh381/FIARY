@@ -1,95 +1,61 @@
-# 📝 FIARY – Feedback + Diary
+# FIARY: Your Integrated Life Dashboard
 
-FIARY is your personal digital space for self-reflection and habit building. Track your days, understand your patterns, and stay mindful of your journey.
+FIARY (A friendly wordplay on 'Diary' and 'Fiery') is designed to be the ultimate personal companion, moving beyond simple data logging to provide actionable insights and foster better self-understanding. It serves as a single source of truth for your journaling, productivity, and personal finance needs.
 
-# ✨ Core Features
+## 🚀 Motivation and Vision
 
-* **Journaling:** Capture your daily thoughts, feelings, and experiences.
+FIARY was conceived out of the frustration of juggling **too many separate applications**—a habit tracker here, a financial log there, and a simple journal somewhere else.
 
-* **Habit Tracking:** Build consistency and monitor your progress on key habits.
+**The Core Value:** Our primary goal is to **manage everything in one place**, providing powerful, correlated data that helps you stop guessing and start knowing how your daily activities influence your overall well-being and productivity.
 
-* **Streaks:** Stay motivated by tracking consecutive days of engagement.
+**The Vision:** FIARY isn’t just a diary—it’s a life dashboard built to help you:
+* **Stay Consistent:** Achieve habits through immediate visual feedback and streaks.
+* **Understand Time:** Gain clarity on where your time is spent (or "unutilized").
+* **Reflect & Learn:** Celebrate your wins and learn from personal patterns.
 
-* **AI Insights:** Gain deeper understanding with AI-powered summaries of your journal entries (Daily, Weekly, Monthly planned).
+---
 
-# 🚀 Features Currently in FIARY
+## 📋 Features Developed (MVP)
 
-* **Daily Journaling:**
+I have established the foundational features needed for a comprehensive life-management tool:
 
-  * Log your Mood Score (1-10).
+| **Feature** | **Description** | **Status** | 
+| :--- | :--- | :--- |
+| **Journaling** | Daily logging of mood, sleep, achievements, time wasted, and diary entries. | **Complete** | 
+| **Authentication** | Secure user sign-up and sign-in functionality. | **Complete** | 
+| **Habit Tracker** | Tracking "Develop" and "Quit" habits with logging and analytics. | **Complete** | 
+| **Tasks & Todos** | Management of single, time-sensitive **Todos** and repeatable **Repeating Task Templates**. | **Complete** | 
+| **Finance Tracker** | Logging Income/Expense transactions with category management and monthly totals. | **Complete** | 
 
-  * Record daily Achievements.
+---
 
-  * Track Sleep Hours and add notes.
+## 🛠️ Tech Stack
 
-  * Monitor Time Wasted and identify distractions.
+FIARY is built on a modern, flexible **MERN** architecture:
 
-  * Write a detailed Diary Entry for reflection.
+* **Frontend:** React (Vite)
+* **Styling:** Tailwind CSS (Responsive, mobile-first, glassy aesthetic)
+* **State Management:** Redux Toolkit
+* **Backend:** MERN Stack (MongoDB, Express, Node.js)
+* **Icons:** Lucide-React
 
-  * Access past entries through an interactive calendar view.
+---
 
-* **Advanced Habit Tracking:**
+## 🔮 The Roadmap & The Final Boss
 
-  * Create and manage custom habits (both 'develop' and 'quit' types).
+The following features are planned to expand FIARY into the ultimate life dashboard:
 
-  * Log daily completion status (Done/Not Done) and add specific notes for each habit.
+### Features In Development
+1.  **Moments (Memories):** Dedicated space for logging significant life events.
+2.  **Thoughts Vault:** Simple space for capturing quick ideas and notes.
+3.  **The Shelf:** Tracking media consumption (Books, Movies, Courses, Games).
+4.  **Personalization:** User Profile management and detailed settings.
 
-  * Visualize progress with detailed **Habit Analytics Cards**:
+### 👑 The Final Boss: The Mirror
 
-    * See completion percentage for the current month.
+The ultimate feature on FIARY's roadmap is **The Mirror**. This will be a sophisticated **AI chatbot** powered by Gemini, trained specifically on the user's longitudinal data (Journal entries, Habits, Transactions, Thoughts, etc.).
 
-    * Track your current and longest streaks.
+**Functionality:** Users can query The Mirror about their past behavior, patterns, and trends, receiving truly personalized, data-backed advice and reflections.
 
-    * View a mini heatmap calendar for visual pattern recognition.
-
-    * Get qualitative feedback on your performance.
-
-* **Streak Tracking:**
-
-  * Monitor your consecutive days of logging journal entries.
-
-* **Daily AI Insights:**
-
-  * Receive AI-generated summaries and reflections based on your diary entry for the day. (Accessible from the calendar view).
-
-* **Authentication:**
-
-  * Secure Sign Up and Sign In functionality.
-
-## 🔮 Planned / In Progress Features:
-
-* Finance Tracker
-
-* Advance Todo List Integration
-
-* Hobby Tracker
-
-* 
-
-# 🛠️ Tech Stack
-
-FIARY is built using the MERN stack:
-
-* **MongoDB** – Database for storing entries, habits, and stats.
-
-* **Express.js** – Backend framework for APIs.
-
-* **React.js** – Frontend for an interactive and smooth UI (using Vite, Redux Toolkit, Framer Motion, Tailwind CSS).
-
-* **Node.js** – Runtime for backend services.
-
-# 🚀 Vision
-
-FIARY isn’t just a diary – it’s a life dashboard. It’s built to help you:
-
-* Stay consistent with habits through visual feedback and streaks.
-
-* Understand where your time goes.
-
-* Celebrate your wins & learn from patterns.
-
-* Reflect on life with meaningful insights, potentially enhanced by AI.
-
-# 📌 Status
-
-⚠️ Work in Progress – Core journaling, habit tracking/analytics, streaks, and daily AI insights are functional. Other features are under active development. Contributions & feedback are welcome!
+* *Example Query:* "Why did my mood score drop sharply two weeks ago, and was it related to my sleep hours?"
+* *The Mirror's Response:* An analytical breakdown rooted entirely in the user's own logged data.

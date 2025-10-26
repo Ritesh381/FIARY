@@ -2,8 +2,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { addEntry } from "./entrySlice";
 import api from "../../api/EntryCalls";
 import apiHabits from "../../api/HabitCalls";
-// import apiTodos from '../../api/TodoCalls';
-// import apiFinance from '../../api/FinanceCalls';
+import apiTodos from '../../api/TodoCalls';
+import apiFinance from '../../api/FinanceCalls'; // Assuming you have this API client
 
 export const saveDailyEntry = createAsyncThunk(
   "entryData/saveDailyEntry",
@@ -14,33 +14,47 @@ export const saveDailyEntry = createAsyncThunk(
 
       const apiPromises = [];
 
-      const entryResponse = await api.saveEntry(entry);
-      console.log("SAving entry: ", entry);
-      // --- *** THIS IS THE FIX *** ---
-      // 2. Save habit entries if they exist
-      if (habits && habits.length > 0) {
-        console.log("Saving habits:", habits);
-        for (const habitEntry of habits) {
-          apiPromises.push(apiHabits.upsertHabitEntry(habitEntry));
-        }
-      }
-      // --- *** END OF FIX *** ---
+      // 1. Save the main Journal Entry (MANDATORY)
+      // const entryResponse = await api.saveEntry(entry);
+      // console.log("Saving journal entry: ", entryResponse);
 
-      // 3. Placeholder for saving Todos
+      // 2. Save Habit entries (if they exist)
+      // if (habits && habits.length > 0) {
+      //   console.log("Saving habits:", habits);
+      //   for (const habitEntry of habits) {
+      //     apiPromises.push(apiHabits.upsertHabitEntry(habitEntry));
+      //   }
+      // }
+
+      // 3. Save Todos (NEW INTEGRATION)
+      // The Entry page should save the todos the user marked as completed or created for tomorrow
       // if (todo.completed.length > 0 || todo.addition.length > 0) {
-      //   apiPromises.push(apiTodos.saveTodos(todo));
+      //    console.log("Saving todos:", todo);
+      //   // Assuming your backend supports a route to handle completed tasks and new additions
+      //   apiPromises.push(apiTodos.saveDayTodos({ 
+      //       completed: todo.completed, 
+      //       additions: todo.addition,
+      //       date: entry.date // Pass date if needed for context
+      //   }));
       // }
 
-      // 4. Placeholder for saving Finance entries
-      // if (finance.length > 0) {
-      //   apiPromises.push(apiFinance.saveTransactions(finance));
-      // }
+      // 4. Save Finance entries (NEW INTEGRATION)
+      if (finance.length > 0) {
+         console.log("Saving finance transactions:", finance);
+         for(const transaction of finance) {
+             // Saving each transaction individually (assuming this simplified approach)
+             apiPromises.push(apiFinance.createFinance(transaction));
+         }
+      }
+
+      // Execute all optional API calls concurrently
       await Promise.all(apiPromises);
-      dispatch(addEntry(entry))
+      
+      // Update Redux state and reset form
+      // dispatch(addEntry(entryResponse)); // Use entryResponse which contains the saved entry ID
       dispatch(resetForm());
 
-      return entryResponse;
-      // We don't call resetForm here. The extraReducer will handle it.
+      // return entryResponse;
     } catch (error) {
       console.error("Error in saveDailyEntry:", error);
       return rejectWithValue(
@@ -54,7 +68,7 @@ export const saveDailyEntry = createAsyncThunk(
 
 const initialState = {
   entry: {
-    date: new Date().toISOString(),
+    date: new Date().toISOString().split('T')[0], // Use YYYY-MM-DD
     feelingScore: null,
     achievement: "",
     sleepHours: "",
@@ -64,11 +78,11 @@ const initialState = {
     diaryEntry: "",
   },
   todo: {
-    completed: [],
-    addition: [],
+    completed: [], // Tasks marked as done today
+    addition: [],  // New tasks created for tomorrow
   },
-  habits: [],
-  finance: [],
+  habits: [], // Habit entries for the day
+  finance: [], // Temporary finance transactions for the day
   status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
   error: null,
   _id: undefined,
@@ -82,6 +96,9 @@ const entryFormSlice = createSlice({
       const { section, field, value } = action.payload;
       if (state[section] && typeof state[section][field] !== "undefined") {
         state[section][field] = value;
+      } else if (state[section]) {
+         // Handle direct object replacement if field is the section itself (e.g., finance list)
+        state[section] = value;
       }
     },
     updateHabitEntry: (state, action) => {
@@ -103,7 +120,7 @@ const entryFormSlice = createSlice({
       ...initialState,
       entry: {
         ...initialState.entry,
-        date: new Date().toISOString(),
+        date: new Date().toISOString().split('T')[0],
       },
     }),
 

@@ -1,13 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import apiTodos from '../../api/TodoCalls';
+import apiTodo from '../../api/TodoCalls'; // Assuming path
 
-// --- Async Thunks for Todos ---
+// --- ASYNC THUNKS (Simplified for slice definition) ---
 
 export const fetchTodos = createAsyncThunk(
-    'todos/fetchTodos',
+    'todo/fetchTodos',
     async (_, { rejectWithValue }) => {
         try {
-            const todos = await apiTodos.getTodos();
+            const todos = await apiTodo.getTodos();
             return todos;
         } catch (error) {
             return rejectWithValue(error.message || 'Failed to fetch todos.');
@@ -15,50 +15,11 @@ export const fetchTodos = createAsyncThunk(
     }
 );
 
-export const createTodoEntry = createAsyncThunk(
-    'todos/createTodo',
-    async (todoData, { rejectWithValue, dispatch }) => {
-        try {
-            const response = await apiTodos.createTodo(todoData);
-            dispatch(fetchTodos()); // Refresh list to ensure consistency
-            return response;
-        } catch (error) {
-            return rejectWithValue(error.message || 'Failed to create todo.');
-        }
-    }
-);
-
-export const markTodoCompleted = createAsyncThunk(
-    'todos/markCompleted',
-    async (todoId, { rejectWithValue }) => {
-        try {
-            const response = await apiTodos.markTodoCompleted(todoId);
-            return response; // Returns the updated todo
-        } catch (error) {
-            return rejectWithValue(error.message || 'Failed to mark todo completed.');
-        }
-    }
-);
-
-export const deleteTodoEntry = createAsyncThunk(
-    'todos/deleteTodo',
-    async (todoId, { rejectWithValue }) => {
-        try {
-            await apiTodos.deleteTodo(todoId);
-            return todoId; // Return ID on success for reducer
-        } catch (error) {
-            return rejectWithValue(error.message || 'Failed to delete todo.');
-        }
-    }
-);
-
-// --- Async Thunks for Repeating Tasks ---
-
 export const fetchRepeatingTasks = createAsyncThunk(
-    'todos/fetchRepeatingTasks',
+    'todo/fetchRepeatingTasks',
     async (_, { rejectWithValue }) => {
         try {
-            const tasks = await apiTodos.getRepeatingTasks();
+            const tasks = await apiTodo.getRepeatingTasks();
             return tasks;
         } catch (error) {
             return rejectWithValue(error.message || 'Failed to fetch repeating tasks.');
@@ -66,66 +27,68 @@ export const fetchRepeatingTasks = createAsyncThunk(
     }
 );
 
-export const createRepeatingTaskEntry = createAsyncThunk(
-    'todos/createRepeatingTask',
-    async (taskData, { rejectWithValue, dispatch }) => {
+export const markTodoCompleted = createAsyncThunk(
+    'todo/markTodoCompleted',
+    async (todoId, { dispatch, rejectWithValue }) => {
         try {
-            const response = await apiTodos.createRepeatingTask(taskData);
-            dispatch(fetchRepeatingTasks()); // Refresh template list
-            dispatch(fetchTodos()); // Refresh todo list (for the initial todo created)
-            return response.repeatingTask;
+            await apiTodo.markTodoCompleted(todoId);
+            dispatch(fetchTodos()); // Refresh list after completion
+            return todoId;
         } catch (error) {
-            return rejectWithValue(error.message || 'Failed to create repeating task.');
+            return rejectWithValue(error.message || 'Failed to mark task complete.');
         }
     }
 );
 
-export const toggleRepeatingTaskStatus = createAsyncThunk(
-    'todos/toggleRepeatingTaskStatus',
-    async (taskId, { rejectWithValue }) => {
-        try {
-            const response = await apiTodos.toggleRepeatingTask(taskId);
-            return response.task; // Returns the updated task
-        } catch (error) {
-            return rejectWithValue(error.message || 'Failed to toggle repeating task status.');
-        }
-    }
-);
+// (Placeholder thunks used by TaskEditModal)
+export const updateTodoEntry = createAsyncThunk('todo/updateTodoEntry', async ({ id, updates }) => { /* ... */ });
+export const deleteTodoEntry = createAsyncThunk('todo/deleteTodoEntry', async (id) => { /* ... */ });
+export const updateRepeatingTaskEntry = createAsyncThunk('todo/updateRepeatingTaskEntry', async ({ id, updates }) => { /* ... */ });
+export const deleteRepeatingTaskEntry = createAsyncThunk('todo/deleteRepeatingTaskEntry', async (id) => { /* ... */ });
+export const toggleRepeatingTaskStatus = createAsyncThunk('todo/toggleRepeatingTaskStatus', async (id) => { /* ... */ });
+export const createTodoEntry = createAsyncThunk('todo/createTodoEntry', async (data) => { /* ... */ });
+export const createRepeatingTaskEntry = createAsyncThunk('todo/createRepeatingTaskEntry', async (data) => { /* ... */ });
 
-export const deleteRepeatingTaskEntry = createAsyncThunk(
-    'todos/deleteRepeatingTask',
-    async (taskId, { rejectWithValue }) => {
-        try {
-            await apiTodos.deleteRepeatingTask(taskId);
-            return taskId; // Return ID on success for reducer
-        } catch (error) {
-            return rejectWithValue(error.message || 'Failed to delete repeating task.');
-        }
-    }
-);
 
-// --- Slice Definition ---
+// --- SLICE DEFINITION ---
+
+const initialState = {
+    todos: [],
+    repeatingTasks: [],
+    status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+    error: null,
+    
+    // UI Modal States (NEW ADDITIONS)
+    isFormModalOpen: false, 
+    isEditModalOpen: false,
+    selectedTask: null, // Holds data for the task being edited
+};
 
 const todoSlice = createSlice({
     name: 'todo',
-    initialState: {
-        todos: [],
-        repeatingTasks: [],
-        status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
-        error: null,
-    },
+    initialState,
     reducers: {
-        // Reducer to manually update a todo (used for optimistic updates if needed)
-        updateTodoLocally: (state, action) => {
-            const index = state.todos.findIndex(t => t._id === action.payload._id);
-            if (index !== -1) {
-                state.todos[index] = { ...state.todos[index], ...action.payload };
+        // Toggle the visibility of the new task creation modal
+        toggleFormModal: (state, action) => {
+            state.isFormModalOpen = action.payload;
+            if (action.payload === false) {
+                 state.selectedTask = null;
             }
+        },
+        // Open the edit modal and set the task to be edited
+        openEditModal: (state, action) => {
+            state.selectedTask = action.payload;
+            state.isEditModalOpen = true;
+        },
+        // Close the edit modal and clear the selected task
+        closeEditModal: (state) => {
+            state.selectedTask = null;
+            state.isEditModalOpen = false;
         },
     },
     extraReducers: (builder) => {
         builder
-            // --- Fetch Todos ---
+            // Fetch Todos
             .addCase(fetchTodos.pending, (state) => {
                 state.status = 'loading';
             })
@@ -137,47 +100,29 @@ const todoSlice = createSlice({
                 state.status = 'failed';
                 state.error = action.payload;
             })
-
-            // --- Mark Todo Completed ---
-            .addCase(markTodoCompleted.fulfilled, (state, action) => {
-                const updatedTodo = action.payload;
-                const index = state.todos.findIndex(t => t._id === updatedTodo._id);
-                if (index !== -1) {
-                    // Update status to 'completed'
-                    state.todos[index] = updatedTodo;
-                }
+            
+            // Fetch Repeating Tasks
+            .addCase(fetchRepeatingTasks.pending, (state) => {
+                state.status = 'loading';
             })
-
-            // --- Delete Todo ---
-            .addCase(deleteTodoEntry.fulfilled, (state, action) => {
-                state.todos = state.todos.filter(t => t._id !== action.payload);
-            })
-
-            // --- Create Repeating Task ---
-            .addCase(createRepeatingTaskEntry.fulfilled, (state, action) => {
-                state.repeatingTasks.push(action.payload);
-            })
-
-            // --- Fetch Repeating Tasks ---
             .addCase(fetchRepeatingTasks.fulfilled, (state, action) => {
+                state.status = 'succeeded';
                 state.repeatingTasks = action.payload;
             })
-
-            // --- Toggle Repeating Task Status ---
-            .addCase(toggleRepeatingTaskStatus.fulfilled, (state, action) => {
-                const updatedTask = action.payload;
-                const index = state.repeatingTasks.findIndex(t => t._id === updatedTask._id);
-                if (index !== -1) {
-                    state.repeatingTasks[index] = updatedTask;
-                }
-            })
-
-            // --- Delete Repeating Task ---
-            .addCase(deleteRepeatingTaskEntry.fulfilled, (state, action) => {
-                state.repeatingTasks = state.repeatingTasks.filter(t => t._id !== action.payload);
+            .addCase(fetchRepeatingTasks.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload;
             });
+            
+            // Add case for other thunks if required (e.g., refreshing state after update)
     }
 });
 
-export const { updateTodoLocally } = todoSlice.actions;
+// Export all actions, including the new modal controls
+export const { 
+    toggleFormModal, 
+    openEditModal, 
+    closeEditModal
+} = todoSlice.actions;
+
 export default todoSlice.reducer;

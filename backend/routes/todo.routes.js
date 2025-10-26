@@ -8,13 +8,18 @@ const {
   updateTodo,
   deleteTodo,
   markTodoCompleted,
+  batchsave,
+  getTodosByDate,
 } = require("../controllers/todo.controller");
 
 router.post("/", auth, createTodo);
 router.get("/", auth, getTodos);
-router.get("/:id", auth, getTodoById);
+router.get("/id/:id", auth, getTodoById);
 router.put("/:id", auth, updateTodo);
 router.delete("/:id", auth, deleteTodo);
 router.patch("/:id/complete", auth, markTodoCompleted);
+router.post("/batch-save", auth, batchsave)
+router.get("/by-date", auth, getTodosByDate);
+
 
 module.exports = router;

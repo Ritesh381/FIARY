@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Plus, Camera, X as XIcon, Check } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Plus, Camera, X as XIcon, Check, DollarSign, Clock, Tag, TrendingUp, TrendingDown, Calendar } from "lucide-react";
 import MoodSelector from "../components/MoodSelector.jsx";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -9,9 +9,12 @@ import {
   resetForm,
 } from "../redux/slices/entryFormSlice.js";
 import apiHabits from "../api/HabitCalls.js";
+import apiTodo from "../api/TodoCalls.js"; 
 import { useNavigate } from "react-router";
+// Import finance action
+import { fetchCategoriesAndSubcategories } from "../redux/slices/financeSlice"; 
 
-// --- STATUS OVERLAY COMPONENT ---
+// --- STATUS OVERLAY COMPONENT (omitted for brevity) ---
 const StatusOverlay = ({ state }) => {
   if (state === "hidden") return null;
 
@@ -43,32 +46,74 @@ const GlassCard = ({ children, className = "" }) => (
   </div>
 );
 
-// --- HELPER HOOK for managing state of "pending" items like Finance ---
-const useFinanceForm = () => {
+// Helper to get current time in HH:mm format
+const getCurrentTime = () => {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+};
+
+// --- FINANCE FORM HOOK (Simplified and inline for clarity) ---
+const useFinanceForm = (categories, selDate) => {
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
-  const [category, setCategory] = useState("Expense");
+  const [type, setType] = useState("Expense");
+  const [category_id, setCategoryId] = useState("");
+  const [sub_category_id, setSubCategoryId] = useState("");
+  const [transactionTime, setTransactionTime] = useState(getCurrentTime()); // New state for time
+
   const reset = () => {
     setAmount("");
     setNote("");
+    setTransactionTime(getCurrentTime()); // Reset time to current
+    const defaultExpenseCat = categories.find(c => c.isExpense === true)?._id || '';
+    setCategoryId(defaultExpenseCat); 
+    setSubCategoryId("");
   };
 
+  const filteredCategories = useMemo(() => {
+    const isExpenseType = type === 'Expense';
+    return categories.filter(cat => cat.isExpense === isExpenseType);
+  }, [categories, type]);
+
+  const currentSubcategories = useMemo(() => {
+    const selectedCat = categories.find(c => c._id === category_id);
+    return selectedCat?.subcategories || [];
+  }, [categories, category_id]);
+
+  useEffect(() => {
+    if (categories.length > 0 && !category_id) {
+        const defaultExpenseCat = categories.find(c => c.isExpense === true)?._id || '';
+        setCategoryId(defaultExpenseCat);
+    }
+  }, [categories, category_id]);
+
+
   return {
-    amount,
-    setAmount,
-    note,
-    setNote,
-    category,
-    reset,
-    data: { amount, note, category },
+    amount, setAmount, note, setNote, type, setType, 
+    category_id, setCategoryId, sub_category_id, setSubCategoryId,
+    transactionTime, setTransactionTime, // Export new time state
+    reset, filteredCategories, currentSubcategories,
+    // Combine selected date (selDate) with chosen time (transactionTime)
+    data: { 
+        amount, note, type, category_id, sub_category_id, 
+        // IMPORTANT: The backend requires an ISO string. We combine the YYYY-MM-DD from selDate 
+        // with the HH:mm from transactionTime.
+        when: `${selDate}T${transactionTime}:00.000Z` 
+    },
   };
 };
+
 
 // --- MAIN COMPONENT ---
 function EntryPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const selDate = useSelector((state) => state.forms.date);
+  const { entries: allFinanceEntries, categories: financeCategories } = useSelector(state => state.finance);
+  const user = useSelector((state) => state.user.user);
+  const userId = user?._id;
 
   // Get all form data from Redux
   const formData = useSelector((state) => state.entryData);
@@ -77,64 +122,85 @@ function EntryPage() {
   // Local state for UI things
   const [userHabits, setUserHabits] = useState([]);
   const [newTodoText, setNewTodoText] = useState("");
-  const [overlayState, setOverlayState] = useState("hidden"); // 'hidden', 'loading', 'success'
-  const financeForm = useFinanceForm();
+  const [overlayState, setOverlayState] = useState("hidden"); 
+  const [todaysTodos, setTodaysTodos] = useState([]); 
+  
+  // Custom hook for managing the temporary finance form state
+  const financeForm = useFinanceForm(financeCategories, selDate); // Pass selDate
 
-  // --- FIX: Scroll to top on page load ---
+  // --- Initial Data Fetch ---
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  // Update entry date in redux when selector date changes
   useEffect(() => {
-    dispatch(setFormField({ section: "entry", field: "date", value: selDate }));
-  }, [selDate,dispatch]);
+    if (selDate && entry.date !== selDate) {
+      dispatch(setFormField({ section: "entry", field: "date", value: selDate }));
+    }
+  }, [selDate, dispatch, entry.date]);
 
-  // Fetch the user's defined habits on load
+  // Fetch HABITS, TODOS, AND FINANCE CATEGORIES on load/date change
   useEffect(() => {
-    const fetchUserHabits = async () => {
-      try {
-        const habits = await apiHabits.getAllHabits();
-        setUserHabits(habits.filter((h) => !h.isDeleted));
-      } catch (error) {
-        console.error("Failed to fetch user habits:", error);
-      }
+    const fetchRequiredData = async () => {
+        try {
+            // FIX: Ensure finance categories are loaded immediately for the form
+            dispatch(fetchCategoriesAndSubcategories()); 
+
+            // 1. Fetch Habits
+            const habits = await apiHabits.getAllHabits();
+            setUserHabits(habits.filter((h) => !h.isDeleted));
+            
+            // 2. Fetch Today's Todos
+            const todos = await apiTodo.getTodosByDate(selDate);
+            setTodaysTodos(todos || []);
+            
+        } catch (error) {
+            console.error("Failed to fetch data for entry page:", error);
+        }
     };
-    fetchUserHabits();
-  }, []);
+    fetchRequiredData();
+  }, [selDate, dispatch]); // Added dispatch as dependency
 
-  // Effect to handle navigation and overlays based on save status
+  // Effect to handle navigation and overlays based on save status (omitted for brevity)
   useEffect(() => {
     if (status === "loading") {
       setOverlayState("loading");
     } else if (status === "succeeded") {
-      setOverlayState("success"); // Show "Saved!"
+      setOverlayState("success"); 
 
       const timer = setTimeout(() => {
-        dispatch(resetForm()); //clear old entry for a fresh start
         navigate("/");
-      }, 500); // 500ms delay
+      }, 500); 
 
-      return () => clearTimeout(timer); // Cleanup timer if component unmounts
+      return () => clearTimeout(timer); 
     } else if (status === "failed") {
-      setOverlayState("hidden"); // Hide overlay, show error message below button
+      setOverlayState("hidden"); 
     }
-  }, [status, dispatch,navigate]);
+  }, [status, dispatch, navigate]);
 
   // --- Handlers ---
-
+  
   // Generic handler to update the main 'entry' section
   const handleEntryChange = (field, value) => {
     dispatch(setFormField({ section: "entry", field, value }));
   };
 
-  // Handler for "Create Todos for tomorrow"
-  const handleAddTodo = (e) => {
+  // Handler for "Create Todos for tomorrow" (ADDITION)
+  const handleAddTodoAddition = (e) => {
     e.preventDefault();
     if (newTodoText.trim() === "") return;
 
+    const newAddition = {
+        id: Date.now(),
+        title: newTodoText,
+        frequency: 'daily', 
+        userId: userId,
+    };
+    
     const newAdditions = [
       ...todo.addition,
-      { id: Date.now(), text: newTodoText },
+      newAddition,
     ];
     dispatch(
       setFormField({ section: "todo", field: "addition", value: newAdditions })
@@ -142,50 +208,72 @@ function EntryPage() {
     setNewTodoText("");
   };
 
-  // Handler for "Today's Todos" (marking as complete)
+  // Handler for "Today's Todos" (COMPLETION)
   const handleCompleteTodo = (task) => {
-    console.log("Marking as complete (not saved to Redux yet):", task);
+    const isCompleted = todo.completed.some(t => t._id === task._id);
+    
+    let updatedCompleted;
+    if (isCompleted) {
+        updatedCompleted = todo.completed.filter(t => t._id !== task._id);
+    } else {
+        updatedCompleted = [...todo.completed, task];
+    }
+    
+    dispatch(
+      setFormField({ section: "todo", field: "completed", value: updatedCompleted })
+    );
   };
-
+  
+  // Handler for Habit Toggling (omitted for brevity)
+  const handleHabitToggle = (habit, currentEntry) => {
+    const isDone = currentEntry?.done || false;
+    
+    dispatch(
+      updateHabitEntry({
+        habitId: habit._id,
+        entry: { done: !isDone, date: entry.date },
+      })
+    );
+  };
+  
   const handleHabitNotesChange = (habit, newNotes) => {
     dispatch(
       updateHabitEntry({
         habitId: habit._id,
-        entry: {
-          notes: newNotes,
-          date: entry.date, // Also include date to create the entry if it doesn't exist
-        },
+        entry: { notes: newNotes, date: entry.date },
       })
     );
   };
-
-  // --- FIX: Handler for "Habits" section with 3-state quit logic ---
-  const handleHabitToggle = (habit, currentEntry) => {
-    const isDone = currentEntry?.done || false; // Default to false if no entry
-    
-
-    dispatch(
-      updateHabitEntry({
-        habitId: habit._id,
-        entry: { done: !isDone, date: selDate|| entry.date },
-      })
-    );
-  };
-
-  // Handler for "Finance" section
+  
+  // Handler for "Finance" section (ADDITION)
   const handleAddFinance = (e) => {
     e.preventDefault();
-    if (!financeForm.amount || !financeForm.note) return;
+    if (!financeForm.amount || !financeForm.category_id || parseFloat(financeForm.amount) <= 0) return;
+
+    // Use selectedCategory/Subcategory ONLY for display purposes here
+    const selectedCategory = financeCategories.find(c => c._id === financeForm.category_id);
+    const selectedSubcategory = financeForm.currentSubcategories.find(s => s._id === financeForm.sub_category_id);
 
     const newFinanceEntry = {
-      id: Date.now(),
-      ...financeForm.data,
+      id: Date.now(), // Client-side ID for list key
+      amount: parseFloat(financeForm.amount),
+      note: financeForm.note,
+      type: financeForm.type,
+      category_id: financeForm.category_id,
+      sub_category_id: financeForm.sub_category_id || null,
+      when: financeForm.data.when, // <-- Uses the combined date/time string from the hook
+      
+      // Store names for TEMPORARY display only. Backend relies on IDs.
+      category_name: selectedCategory?.name,
+      sub_category_name: selectedSubcategory?.name,
     };
+    
+    // Add to the list and save back to Redux
     const newFinanceList = [...finance, newFinanceEntry];
     dispatch(
       setFormField({
         section: "finance",
-        field: "finance",
+        field: "finance", 
         value: newFinanceList,
       })
     );
@@ -201,11 +289,12 @@ function EntryPage() {
     <div className="bg-transparent min-h-screen text-gray-300 p-4 md:p-8 font-sans mb-20">
       <StatusOverlay state={overlayState} />
       <div className="max-w-4xl mx-auto space-y-8">
-        {/* --- HEADER & MOOD --- */}
+        
+        {/* --- HEADER & MOOD (omitted for brevity) --- */}
         <div className="p-4 rounded-2xl">
           <div className="flex justify-between items-center mb-2">
-            <h1 className="text-2xl font-bold">
-              {new Date(selDate).toLocaleDateString("en-US", {
+            <h1 className="text-2xl font-bold text-white">
+              {new Date(selDate + 'T00:00:00').toLocaleDateString("en-US", {
                 dateStyle: "long",
               })}
             </h1>
@@ -218,26 +307,26 @@ function EntryPage() {
           />
         </div>
 
-        {/* --- JOURNAL & NOTES (REDESIGNED TOP PART) --- */}
-        <div className="p-4 space-y-4">
+        {/* --- JOURNAL & NOTES (omitted for brevity) --- */}
+        <GlassCard className="p-4 space-y-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-grow">
               <textarea
                 rows="3"
                 placeholder="Achievement of the day"
-                className="w-full bg-gray-800/70 resize-none rounded-lg px-4 py-3 placeholder-gray-400 focus:outline-none focus:ring-2 "
+                className="w-full bg-gray-900/70 resize-none rounded-lg px-4 py-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 border border-gray-700/50"
                 value={entry.achievement}
                 onChange={(e) =>
                   handleEntryChange("achievement", e.target.value)
                 }
               />
             </div>
-            <div className="space-y-3">
+            <div className="space-y-3 flex-shrink-0">
               <div className="flex items-center gap-3">
                 <input
                   type="number"
                   placeholder="0"
-                  className="w-16 bg-gray-800/70 text-center rounded-lg p-2 focus:outline-none focus:ring-2 "
+                  className="w-16 bg-gray-900/70 text-center rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-teal-400 border border-gray-700/50"
                   value={entry.sleepHours}
                   onChange={(e) =>
                     handleEntryChange("sleepHours", e.target.value)
@@ -247,7 +336,7 @@ function EntryPage() {
                 <input
                   type="text"
                   placeholder="Sleep Notes"
-                  className="flex-grow bg-transparent focus:outline-none border-b border-gray-700 focus:border-white"
+                  className="flex-grow bg-transparent focus:outline-none border-b border-gray-700 focus:border-teal-400"
                   value={entry.sleepNotes}
                   onChange={(e) =>
                     handleEntryChange("sleepNotes", e.target.value)
@@ -258,7 +347,7 @@ function EntryPage() {
                 <input
                   type="number"
                   placeholder="0"
-                  className="w-16 bg-gray-800/70 text-center rounded-lg p-2 focus:outline-none focus:ring-2 "
+                  className="w-16 bg-gray-900/70 text-center rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-teal-400 border border-gray-700/50"
                   value={entry.timeWastedMinutes}
                   onChange={(e) =>
                     handleEntryChange("timeWastedMinutes", e.target.value)
@@ -268,7 +357,7 @@ function EntryPage() {
                 <input
                   type="text"
                   placeholder="Unutilized time Notes"
-                  className="flex-grow bg-transparent focus:outline-none border-b border-gray-700 focus:border-white"
+                  className="flex-grow bg-transparent focus:outline-none border-b border-gray-700 focus:border-teal-400"
                   value={entry.timeWastedNotes}
                   onChange={(e) =>
                     handleEntryChange("timeWastedNotes", e.target.value)
@@ -276,80 +365,97 @@ function EntryPage() {
                 />
               </div>
             </div>
-          </div>
+            </div>
           <textarea
             rows="12"
             placeholder="Start writing your beautiful day's story...."
-            className="w-full bg-gray-800/70 rounded-lg resize-none px-4 py-3 placeholder-gray-400 focus:outline-none focus:ring-2 "
+            className="w-full bg-gray-900/70 rounded-lg resize-none px-4 py-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 border border-gray-700/50"
             value={entry.diaryEntry}
             onChange={(e) => handleEntryChange("diaryEntry", e.target.value)}
           />
-        </div>
-
-        {/* --- TODAY'S TODOS --- */}
-        <div className="p-4">
-          <h2 className="text-xl font-bold mb-4">Today's Todos</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
-            {/* This should be populated by a fetch call for today's todos */}
-            {["Will be added soon"].map((task) => (
-              <div
-                key={task}
-                className="flex items-center gap-3 bg-gray-800/70 p-3 rounded-lg cursor-pointer hover:bg-gray-700"
-                onClick={() => handleCompleteTodo(task)}
-              >
-                <div className="w-4 h-4 rounded-full border-2 border-gray-500"></div>
-                <span>{task}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* --- CREATE TODOS FOR TOMORROW --- */}
-        <div className="p-4">
-          <h2 className="text-xl font-bold mb-4">Create Todos for tomorrow</h2>
+        </GlassCard>
+        
+        {/* --- TODO SECTION (omitted for brevity) --- */}
+        <GlassCard className="p-6">
+          <h2 className="text-xl font-bold mb-4 text-indigo-400 flex items-center gap-2">
+            <Check size={20} /> Today's Todos
+          </h2>
           <div className="space-y-3">
-            <form onSubmit={handleAddTodo} className="relative">
+            {todaysTodos.length === 0 ? (
+                <p className="text-gray-500 italic">No tasks set for today. Stay productive!</p>
+            ) : (
+                todaysTodos.map((task) => {
+                    const isCompleted = todo.completed.some(t => t._id === task._id);
+                    return (
+                        <div
+                            key={task._id}
+                            className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                                isCompleted ? 'bg-green-900/30 line-through text-gray-500' : 'bg-gray-700/50 hover:bg-gray-700'
+                            }`}
+                            onClick={() => handleCompleteTodo(task)}
+                        >
+                            <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${isCompleted ? 'border-green-500 bg-green-500' : 'border-gray-500'}`}>
+                                {isCompleted && <Check size={14} className="text-white" />}
+                            </div>
+                            <span className="flex-1 truncate">{task.title}</span>
+                        </div>
+                    );
+                })
+            )}
+          </div>
+        </GlassCard>
+
+        {/* --- CREATE TODOS FOR TOMORROW (omitted for brevity) --- */}
+        <GlassCard className="p-6">
+          <h2 className="text-xl font-bold mb-4 text-indigo-400 flex items-center gap-2">
+            <Plus size={20} /> Tasks for Tomorrow
+          </h2>
+          <div className="space-y-3">
+            <form onSubmit={handleAddTodoAddition} className="relative">
               <input
                 type="text"
-                placeholder="Dosen't work for now just a placeholder"
-                className="w-full bg-gray-800/70 rounded-lg pl-4 pr-10 py-3 placeholder-gray-400 focus:outline-none focus:ring-2 "
+                placeholder="Add a new task for tomorrow"
+                className="w-full bg-gray-900/70 rounded-lg pl-4 pr-10 py-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 border border-gray-700/50"
                 value={newTodoText}
                 onChange={(e) => setNewTodoText(e.target.value)}
               />
               <button
                 type="submit"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-400 hover:text-white"
               >
                 <Plus size={20} />
               </button>
             </form>
             {/* Display todos added to Redux state */}
-            {todo.addition.map((item) => (
+            {todo.addition.map((item, index) => (
               <div
                 key={item.id}
-                className="bg-gray-800/70 p-3 rounded-lg text-gray-400"
+                className="bg-gray-700/50 p-3 rounded-lg text-gray-300 flex justify-between items-center"
               >
-                {item.text}
+                <span className="truncate">{item.title}</span>
+                {/* Add a button to remove the item from the list if needed */}
               </div>
             ))}
           </div>
-        </div>
+        </GlassCard>
 
-        {/* --- HABITS SECTION --- */}
+
+        {/* --- HABITS SECTION (omitted for brevity) --- */}
         <GlassCard className="p-6">
-          <h2 className="text-xl font-bold mb-4">Habits</h2>
+          <h2 className="text-xl font-bold mb-4 text-green-400 flex items-center gap-2">Habits</h2>
           <div className="space-y-3">
-            {" "}
-            {/* Increased spacing */}
-            {userHabits.map((habit) => {
+            {userHabits.length === 0 ? (
+                <p className="text-gray-500 italic">No active habits defined.</p>
+            ) : (
+            userHabits.map((habit) => {
               const habitEntry = habits.find((h) => h.habitId === habit._id);
               const isDone = habitEntry?.done === true;
 
-              let buttonClass = "bg-gray-700"; // Default: Gray
+              let buttonClass = "bg-gray-700/50 border border-gray-600"; 
               let icon = null;
 
               if (isDone) {
-                buttonClass = "bg-green-500";
+                buttonClass = "bg-green-600 border-green-500";
                 icon = <Check size={16} className="text-white" />;
               }
 
@@ -359,9 +465,7 @@ function EntryPage() {
                   className="flex items-center justify-between gap-3 p-2"
                 >
                   {/* Left Side: Title */}
-                  <span className="font-medium w-1/3 truncate">
-                    {" "}
-                    {/* Added truncate */}
+                  <span className="font-medium w-1/3 truncate text-white">
                     {habit.icon} {habit.title}
                   </span>
 
@@ -369,7 +473,8 @@ function EntryPage() {
                   <div className="flex items-center gap-2 w-2/3">
                     <button
                       onClick={() => handleHabitToggle(habit, habitEntry)}
-                      className={`p-1 w-6 h-6 rounded flex items-center justify-center flex-shrink-0 ${buttonClass}`}
+                      className={`p-1 w-6 h-6 rounded flex items-center justify-center flex-shrink-0 transition-colors ${buttonClass}`}
+                      aria-label={`Toggle habit: ${habit.title}`}
                     >
                       {icon}
                     </button>
@@ -377,99 +482,149 @@ function EntryPage() {
                     <input
                       type="text"
                       placeholder="Notes..."
-                      className="w-full bg-gray-700/50 rounded-md px-3 py-1 text-sm text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full bg-gray-700/50 rounded-md px-3 py-1 text-sm text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-teal-400 border border-gray-700/50"
                       value={habitEntry?.notes || ""}
                       onChange={(e) =>
                         handleHabitNotesChange(habit, e.target.value)
                       }
+                      disabled={!isDone} // Only allow notes if the habit is marked as done
                     />
                   </div>
                 </div>
               );
-            })}
+            }))}
           </div>
         </GlassCard>
 
-        {/* --- FINANCE SECTION --- */}
+        {/* --- FINANCE SECTION (Updated with Time Input) --- */}
         <GlassCard className="p-6">
-          <h2 className="text-xl font-bold mb-4">Finance (Coming soon)</h2>
+          <h2 className="text-xl font-bold mb-4 text-red-400 flex items-center gap-2">
+            <DollarSign size={20} /> Transactions for Today
+          </h2>
           <form onSubmit={handleAddFinance} className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3 text-sm">
-              <span className="bg-gray-700 px-3 py-1 rounded-full">
-                Expense
-              </span>
-              <span className="bg-gray-700 px-3 py-1 rounded-full">
-                Category
-              </span>
-              <span className="bg-gray-700 px-3 py-1 rounded-full">
-                Sub-Category
-              </span>
-              <Camera size={20} className="text-gray-400 cursor-pointer" />
+            
+            {/* Type Selector (Simplified) */}
+            <div className="flex gap-4 p-1 bg-gray-900/50 rounded-lg border border-gray-700">
+                <button 
+                    type="button" 
+                    onClick={() => financeForm.setType('Income')}
+                    className={`flex-1 py-1 rounded-lg font-medium text-sm flex items-center justify-center gap-2 ${financeForm.type === 'Income' ? 'bg-green-600 text-white' : 'text-gray-300 hover:bg-gray-700/50'}`}
+                >
+                    <TrendingUp size={16} /> Income
+                </button>
+                <button 
+                    type="button" 
+                    onClick={() => financeForm.setType('Expense')}
+                    className={`flex-1 py-1 rounded-lg font-medium text-sm flex items-center justify-center gap-2 ${financeForm.type === 'Expense' ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700/50'}`}
+                >
+                    <TrendingDown size={16} /> Expense
+                </button>
             </div>
+            
+            {/* Time Input Field */}
+            <div className="flex items-center gap-3">
+                <Calendar size={20} className="text-gray-400" />
+                <span className="text-sm text-gray-300">{new Date(selDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                <Clock size={20} className="text-gray-400 ml-4" />
+                <input
+                    type="time"
+                    value={financeForm.transactionTime}
+                    onChange={(e) => financeForm.setTransactionTime(e.target.value)}
+                    className="w-full p-2 rounded-lg bg-gray-900/50 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-400 border border-gray-600 transition-colors"
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {/* Category Selector */}
+              <div>
+                  <select
+                      name="category_id"
+                      value={financeForm.category_id}
+                      onChange={(e) => financeForm.setCategoryId(e.target.value)}
+                      className="w-full p-2 rounded-lg bg-gray-900/50 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-400 border border-gray-600 transition-colors"
+                      required
+                  >
+                      {financeForm.filteredCategories.length === 0 ? (
+                          <option value="">No categories</option>
+                      ) : (
+                          financeForm.filteredCategories.map(cat => (
+                              <option key={cat._id} value={cat._id}>{cat.name}</option>
+                          ))
+                      )}
+                  </select>
+              </div>
+
+              {/* Subcategory Selector */}
+              <div>
+                  <select
+                      name="sub_category_id"
+                      value={financeForm.sub_category_id}
+                      onChange={(e) => financeForm.setSubCategoryId(e.target.value)}
+                      className="w-full p-2 rounded-lg bg-gray-900/50 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-400 border border-gray-600 transition-colors"
+                      disabled={financeForm.currentSubcategories.length === 0}
+                  >
+                      <option value="">-- Subcategory --</option>
+                      {financeForm.currentSubcategories.map(sub => (
+                          <option key={sub._id} value={sub._id}>{sub.name}</option>
+                      ))}
+                  </select>
+              </div>
+            </div>
+            
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                ₹
-              </span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-lg">₹</span>
               <input
                 type="number"
-                placeholder="Amount"
-                className="w-full bg-gray-800/7F0 rounded-lg pl-8 pr-4 py-3"
+                placeholder="Amount (required)"
+                className="w-full bg-gray-900/70 rounded-lg pl-8 pr-4 py-3 border border-gray-700/50"
                 value={financeForm.amount}
                 onChange={(e) => financeForm.setAmount(e.target.value)}
+                required
               />
             </div>
             <input
               type="text"
-              placeholder="Note"
-              className="w-full bg-gray-800/70 rounded-lg px-4 py-3"
+              placeholder="Note (optional)"
+              className="w-full bg-gray-900/70 rounded-lg px-4 py-3 border border-gray-700/50"
               value={financeForm.note}
               onChange={(e) => financeForm.setNote(e.target.value)}
             />
+            
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm"
+              className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold w-full"
             >
-              Add
+              Add Transaction to Log
             </button>
-            <div className="flex flex-wrap gap-4 pt-4">
-              {finance.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-gray-900/80 p-3 rounded-lg flex gap-3 items-start relative"
-                >
-                  <div className="w-16 h-16 rounded-md bg-gray-700 flex items-center justify-center">
-                    <span className="text-2xl">🍕</span>
-                  </div>
-                  <div>
-                    <p className="font-semibold">{item.category}</p>
-                    <p className="text-gray-400 text-sm">₹ {item.amount}</p>
-                    <p className="text-gray-400 text-sm">{item.note}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      /* Add remove logic here */
-                    }}
-                  >
-                    <XIcon
-                      size={14}
-                      className="absolute top-2 right-2 text-gray-500 cursor-pointer"
-                    />
-                  </button>
-                </div>
-              ))}
+            
+            {/* Display temporary transactions added */}
+            <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-700/50">
+              {finance.length === 0 ? (
+                  <p className="text-gray-500 italic text-sm">No transactions added for today.</p>
+              ) : (
+                  finance.map((item, index) => (
+                    <div
+                      key={item.id}
+                      className={`p-2 rounded-lg flex gap-2 items-center relative text-sm ${item.type === 'Income' ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'}`}
+                    >
+                      <span className="font-semibold">{item.category_name || item.type}</span>
+                      <span className="text-xs font-mono">₹{parseFloat(item.amount).toFixed(2)}</span>
+                      {/* Optional: Add remove button */}
+                    </div>
+                  ))
+              )}
             </div>
           </form>
         </GlassCard>
 
-        {/* --- SAVE BUTTON (MODIFIED) --- */}
+        {/* --- SAVE BUTTON (omitted for brevity) --- */}
         <div className="flex flex-col items-center justify-center pt-4">
           <button
             onClick={handleSave}
             disabled={status === "loading" || overlayState === "success"}
             className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-200 disabled:bg-gray-500 disabled:cursor-not-allowed"
           >
-            Save Entry
+            Save Complete Daily Log
           </button>
 
           {status === "failed" && <p className="text-red-400 mt-4">{error}</p>}
