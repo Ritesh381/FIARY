@@ -371,7 +371,7 @@ export default function App() {
           Ready to build a more productive life?
         </h2>
         <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-10">
-          Start for free. No credit card required.
+          Start for free.
         </p>
         {ctaButton("Sign Up Now for Free")}
       </section>
