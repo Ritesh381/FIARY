@@ -41,7 +41,7 @@ export const updateFinanceEntry = createAsyncThunk(
 
 export const deleteFinanceEntry = createAsyncThunk(
     'finance/deleteFinanceEntry',
-    async (id, { rejectWithValue }) => {
+    async (id, { rejectWithValue }) => {       
         try {
             await apiFinance.deleteFinance(id);
             return id; // Return the ID of the deleted entry
@@ -57,7 +57,7 @@ export const fetchCategoriesAndSubcategories = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             // Assuming this API call fetches all categories and their subcategories
-            const data = await apiFinance.getAllCategories(); 
+            const data = await apiFinance.getFinanceCategories(); 
             return data;
         } catch (error) {
             return rejectWithValue(error.message || 'Failed to fetch categories.');

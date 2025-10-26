@@ -9,6 +9,7 @@ const authRouter = require("./routes/Auth.routers.js");
 const userRouter = require("./routes/User.routes.js");
 const habitRouter = require("./routes/Habit.routes.js");
 const financeRouter = require("./routes/Finance.routes.js");
+const financeCategoryRouter = require("./routes/Finance.categories.routes.js")
 const todoRoutes = require("./routes/todo.routes");
 const repeatingTaskRoutes = require("./routes/repeatingTask.routes");
 
@@ -35,6 +36,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 app.use("/api/habit", habitRouter);
 app.use("/api/finance", financeRouter);
+app.use("/api/fincat", financeCategoryRouter)
 app.use("/api/todos", todoRoutes);
 app.use("/api/repeating-tasks", repeatingTaskRoutes);
 

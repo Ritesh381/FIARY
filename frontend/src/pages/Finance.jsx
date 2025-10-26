@@ -1,210 +1,375 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { DollarSign, TrendingUp, TrendingDown, Clock, Tag, NotepadText, Loader2, AlertTriangle, Plus, Edit3 } from 'lucide-react';
-import { fetchFinanceEntries, fetchCategoriesAndSubcategories, toggleAddModal, openEditModal } from "../redux/slices/financeSlice";
+import {
+  IndianRupee,
+  TrendingUp,
+  TrendingDown,
+  Clock,
+  Tag,
+  NotepadText,
+  Loader2,
+  AlertTriangle,
+  Plus,
+  Edit3,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import {
+  fetchFinanceEntries,
+  fetchCategoriesAndSubcategories,
+  toggleAddModal,
+  openEditModal,
+} from "../redux/slices/financeSlice";
 import FinanceFormModal from "../components/finance/FinanceFormModal";
 import FinanceEditModal from "../components/finance/FinanceEditModal";
 
 const GlassCard = ({ children, className = "" }) => (
-    <div
-        className={`bg-white/10 backdrop-blur-lg rounded-2xl p-4 md:p-6 shadow-2xl border border-white/10 ${className}`}
-    >
-        {children}
-    </div>
+  <div
+    className={`bg-white/10 backdrop-blur-lg rounded-2xl p-4 md:p-6 shadow-2xl border border-white/10 ${className}`}
+  >
+    {children}
+  </div>
 );
 
 // Helper to format Decimal128 amount safely
 const formatAmount = (amount) => {
-    // Safely handle Decimal128 object or string/number
-    if (amount && typeof amount === 'object' && amount.$numberDecimal) {
-        return parseFloat(amount.$numberDecimal).toFixed(2);
-    }
-    if (typeof amount === 'string' || typeof amount === 'number') {
-        return parseFloat(amount).toFixed(2);
-    }
-    return '0.00';
+  // Safely handle Decimal128 object or string/number
+  if (amount && typeof amount === "object" && amount.$numberDecimal) {
+    return parseFloat(amount.$numberDecimal).toFixed(2);
+  }
+  if (typeof amount === "string" || typeof amount === "number") {
+    return parseFloat(amount).toFixed(2);
+  }
+  return "0.00";
 };
 
-const FinanceEntryCard = ({ entry, onEdit }) => {
-    const isIncome = entry.type === 'Income';
-    const amountColor = isIncome ? 'text-green-400' : 'text-red-400';
-    const Icon = isIncome ? TrendingUp : TrendingDown;
+// Helper function to format date to YYYY-MM-DD
+const formatDateKey = (date) => {
+  if (!date) return "";
+  const y = date.getFullYear();
+  const m = (date.getMonth() + 1).toString().padStart(2, "0");
+  const d = date.getDate().toString().padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
 
-    const formattedDate = new Date(entry.when).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-    });
+const FinanceEntryItem = ({ entry, onEdit }) => {
+  const isIncome = entry.type === "Income";
+  const amountColor = isIncome ? "text-green-400" : "text-red-400";
 
-    return (
-        <GlassCard 
-            className="p-4 flex flex-col space-y-3 relative hover:scale-[1.02] transition-transform duration-200 cursor-pointer group"
-            onClick={() => onEdit(entry)}
+  // Display only time and Category/Subcategory in the grouped list
+  const formattedTime = new Date(entry.when).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const categoryIcon = isIncome ? "💰" : "💳"; // Simple emoji icon placeholders
+
+  return (
+    <div
+      className="flex items-center justify-between p-3 border-b border-gray-700/50 hover:bg-white/5 transition-colors duration-150 cursor-pointer group relative"
+      onClick={() => onEdit(entry)}
+    >
+      {/* Left side: Icon, Category, Note */}
+      <div className="flex items-center space-x-4 min-w-0 flex-1">
+        <div className="text-xl flex-shrink-0">{categoryIcon}</div>
+        <div className="min-w-0">
+          <p className="font-semibold text-white truncate">
+            {entry.category_name || "N/A"}
+          </p>
+          <p className="text-xs text-gray-400 truncate">
+            {entry.note || entry.sub_category_name || "No notes"}
+          </p>
+        </div>
+      </div>
+
+      {/* Right side: Amount, Time, Edit Button */}
+      <div className="flex items-center space-x-4 flex-shrink-0">
+        <div className={`text-lg font-bold ${amountColor} text-right`}>
+          {isIncome ? "+₹" : "-₹"} {formatAmount(entry.amount)}
+        </div>
+        <div className="text-xs text-gray-500 hidden sm:block w-12 text-right">
+          {formattedTime}
+        </div>
+        <button
+          className="p-1 rounded-full text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity hover:text-teal-400"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(entry);
+          }}
+          aria-label="Edit transaction"
         >
-            {/* Edit Button */}
-            <button 
-                className="absolute top-3 right-3 p-2 rounded-full bg-gray-800/70 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity hover:text-white z-10"
-                onClick={(e) => { e.stopPropagation(); onEdit(entry); }}
-                aria-label="Edit transaction"
-            >
-                <Edit3 size={18} />
-            </button>
-
-            {/* Header: Type and Amount */}
-            <div className="flex justify-between items-center pb-2 border-b border-gray-700/50">
-                <div className="flex items-center space-x-2">
-                    <Icon size={20} className={amountColor} />
-                    <span className={`font-bold text-lg ${amountColor}`}>{entry.type}</span>
-                </div>
-                <div className={`text-2xl font-extrabold ${amountColor}`}>
-                    ₹ {formatAmount(entry.amount)}
-                </div>
-            </div>
-
-            {/* Details Grid */}
-            <div className="grid grid-cols-2 gap-y-2 text-sm text-gray-300">
-                {/* Category */}
-                <div className="flex items-center space-x-2">
-                    <Tag size={16} className="text-blue-400" />
-                    <span className="font-semibold truncate">{entry.category_name || 'N/A'}</span>
-                </div>
-                {/* Date */}
-                <div className="flex items-center space-x-2 justify-end text-right">
-                    <Clock size={16} className="text-gray-500" />
-                    <span>{formattedDate}</span>
-                </div>
-                {/* SubCategory */}
-                <div className="flex items-center space-x-2 col-span-2">
-                    <Tag size={16} className="text-purple-400" />
-                    <span className="text-gray-400 truncate">{entry.sub_category_name || '-'}</span>
-                </div>
-            </div>
-
-            {/* Note */}
-            {entry.note && (
-                <div className="pt-2 border-t border-gray-700/50">
-                    <div className="flex items-center space-x-2 text-xs italic text-gray-400">
-                        <NotepadText size={16} />
-                        <span className="truncate">{entry.note}</span>
-                    </div>
-                </div>
-            )}
-        </GlassCard>
-    );
+          <Edit3 size={16} />
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default function FinancePage() {
-    const dispatch = useDispatch();
-    const { entries, status, error, isAddModalOpen, isEditModalOpen } = useSelector(state => state.finance);
-    const [filterType, setFilterType] = useState('all');
+  const dispatch = useDispatch();
+  const {
+    entries,
+    status,
+    error,
+    isAddModalOpen,
+    isEditModalOpen,
+    isCategoryModalOpen,
+  } = useSelector((state) => state.finance);
 
-    // Fetch data on component mount
-    useEffect(() => {
-        dispatch(fetchFinanceEntries());
-        dispatch(fetchCategoriesAndSubcategories());
-    }, [dispatch]);
-    
-    // --- Data Processing for Totals and Filtering ---
-    const { totalIncome, totalExpense } = entries.reduce((acc, entry) => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [filterType, setFilterType] = useState("all");
+
+  // Fetch data on component mount (Entries and Categories)
+  useEffect(() => {
+    dispatch(fetchFinanceEntries());
+    dispatch(fetchCategoriesAndSubcategories());
+  }, [dispatch]);
+
+  // --- Data Filtering and Grouping Logic ---
+  const { monthlyTotals, groupedEntries } = useMemo(() => {
+    const currentMonthEntries = entries
+      .filter((entry) => {
+        const entryDate = new Date(entry.when);
+        const isMonthMatch =
+          entryDate.getMonth() === currentDate.getMonth() &&
+          entryDate.getFullYear() === currentDate.getFullYear();
+
+        const isTypeMatch =
+          filterType === "all" || entry.type.toLowerCase() === filterType;
+
+        return isMonthMatch && isTypeMatch;
+      })
+      .sort((a, b) => new Date(b.when).getTime() - new Date(a.when).getTime()); // Sort newest to oldest
+
+    const totals = currentMonthEntries.reduce(
+      (acc, entry) => {
         const amount = parseFloat(formatAmount(entry.amount));
-        if (entry.type === 'Income') {
-            acc.totalIncome += amount;
+        if (entry.type === "Income") {
+          acc.totalIncome += amount;
         } else {
-            acc.totalExpense += amount;
+          acc.totalExpense += amount;
         }
         return acc;
-    }, { totalIncome: 0, totalExpense: 0 });
-
-    const netBalance = totalIncome - totalExpense;
-
-    const filteredEntries = entries.filter(entry => {
-        if (filterType === 'all') return true;
-        return entry.type.toLowerCase() === filterType;
-    });
-
-    const filterButtonClass = (type) =>
-        `px-4 py-2 rounded-full font-semibold transition-colors duration-200 text-sm ${
-            filterType === type
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
-        }`;
-
-    const handleEditEntry = (entry) => {
-        dispatch(openEditModal(entry));
-    };
-
-    return (
-        <div className="p-4 md:p-8 min-h-screen max-w-6xl mx-auto">
-            <h1 className="text-4xl font-extrabold text-white mb-8 flex items-center gap-3">
-                <DollarSign size={32} className="text-green-400" /> Financial Dashboard
-            </h1>
-
-            {/* --- Summary / Totals --- */}
-            <GlassCard className="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                <div className="p-3">
-                    <p className="text-gray-400 font-medium">Total Income</p>
-                    <p className="text-2xl font-bold text-green-400 mt-1">₹ {totalIncome.toFixed(2)}</p>
-                </div>
-                <div className="p-3">
-                    <p className="text-gray-400 font-medium">Total Expense</p>
-                    <p className="text-2xl font-bold text-red-400 mt-1">₹ {totalExpense.toFixed(2)}</p>
-                </div>
-                <div className="p-3">
-                    <p className="text-gray-400 font-medium">Net Balance</p>
-                    <p className={`text-2xl font-bold mt-1 ${netBalance >= 0 ? 'text-teal-400' : 'text-red-400'}`}>
-                        ₹ {netBalance.toFixed(2)}
-                    </p>
-                </div>
-            </GlassCard>
-
-            {/* --- Filters and Actions --- */}
-            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                <div className="flex space-x-3 w-full sm:w-auto">
-                    <button onClick={() => setFilterType('all')} className={filterButtonClass('all')}>
-                        All
-                    </button>
-                    <button onClick={() => setFilterType('income')} className={filterButtonClass('income')}>
-                        Income
-                    </button>
-                    <button onClick={() => setFilterType('expense')} className={filterButtonClass('expense')}>
-                        Expense
-                    </button>
-                </div>
-                
-                <button
-                    className="w-full sm:w-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-500 font-semibold text-white transition-colors flex items-center justify-center gap-2"
-                    onClick={() => dispatch(toggleAddModal())} 
-                >
-                    <Plus size={20} /> Add New Entry
-                </button>
-            </div>
-
-            {/* --- Loading / Error / Data Display --- */}
-            {status === 'loading' && entries.length === 0 ? (
-                <div className="text-center py-20 text-gray-400 flex flex-col items-center">
-                    <Loader2 size={32} className="animate-spin mb-4" />
-                    Loading financial records...
-                </div>
-            ) : status === 'failed' && entries.length === 0 ? (
-                <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg flex items-center gap-3">
-                    <AlertTriangle size={24} />
-                    <p>{error || "Failed to load financial records. Please try again."}</p>
-                </div>
-            ) : filteredEntries.length === 0 ? (
-                <GlassCard className="text-center py-10 text-gray-400">
-                    No {filterType !== 'all' ? filterType : ''} entries found. Click "Add New Entry" to start logging!
-                </GlassCard>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredEntries.map((entry) => (
-                        <FinanceEntryCard key={entry._id} entry={entry} onEdit={handleEditEntry} />
-                    ))}
-                </div>
-            )}
-            
-            {/* Modals are rendered outside the main flow */}
-            {isAddModalOpen && <FinanceFormModal />}
-            {isEditModalOpen && <FinanceEditModal />}
-        </div>
+      },
+      { totalIncome: 0, totalExpense: 0 }
     );
+
+    // Grouping by Date (YYYY-MM-DD)
+    const grouped = currentMonthEntries.reduce((acc, entry) => {
+      const dateKey = formatDateKey(new Date(entry.when));
+      if (!acc[dateKey]) {
+        acc[dateKey] = [];
+      }
+      acc[dateKey].push(entry);
+      return acc;
+    }, {});
+
+    return { monthlyTotals: totals, groupedEntries: grouped };
+  }, [entries, currentDate, filterType]);
+
+  const netBalance = monthlyTotals.totalIncome - monthlyTotals.totalExpense;
+
+  // --- Handlers ---
+  const handleMonthChange = (offset) => {
+    setCurrentDate((prev) => {
+      const newDate = new Date(prev);
+      newDate.setMonth(prev.getMonth() + offset);
+      return newDate;
+    });
+  };
+
+  const handleEditEntry = (entry) => {
+    dispatch(openEditModal(entry));
+  };
+
+  // --- UI Helpers ---
+  const filterButtonClass = (type) =>
+    `flex-1 px-2 py-2 text-center rounded-lg font-semibold transition-colors duration-200 text-sm ${
+      filterType === type
+        ? "bg-blue-600 text-white shadow-md"
+        : "bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
+    }`;
+
+  const getDayName = (dateKey) => {
+    const date = new Date(dateKey + "T00:00:00");
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      day: "numeric",
+    });
+  };
+
+  const getDayTotal = (dateKey) => {
+    const dayEntries = groupedEntries[dateKey] || [];
+    const { income, expense } = dayEntries.reduce(
+      (acc, entry) => {
+        const amount = parseFloat(formatAmount(entry.amount));
+        if (entry.type === "Income") {
+          acc.income += amount;
+        } else {
+          acc.expense += amount;
+        }
+        return acc;
+      },
+      { income: 0, expense: 0 }
+    );
+
+    return { income, expense };
+  };
+
+  return (
+    <div className="p-4 md:p-8 min-h-screen max-w-4xl mx-auto">
+      <div className="flex sm:flex-row justify-between items-center mb-6 gap-4">
+        <h1 className="text-4xl font-extrabold text-white mb-6 flex items-center gap-3">
+          <IndianRupee size={32} className="text-green-400" /> Finance Dashboard
+        </h1>
+        <GlassCard className="flex items-center gap-2 glass-select rounded-lg">
+          <button
+            onClick={() => handleMonthChange(-1)}
+            className="p-2 rounded-md hover:bg-gray-700"
+            aria-label="Previous Month"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <span className="font-semibold text-lg text-white mx-4">
+            {currentDate.toLocaleDateString("en-US", {
+              month: "long",
+              year: "numeric",
+            })}
+          </span>
+          <button
+            onClick={() => handleMonthChange(1)}
+            className="p-2 rounded-full hover:bg-gray-700/50 transition-colors"
+            aria-label="Next Month"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </GlassCard>
+      </div>
+
+      {/* --- Month Selector & Category Management --- */}
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <div className="flex space-x-3 w-full sm:w-auto">
+          <button
+            className="py-2 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-semibold text-white transition-colors flex items-center justify-center gap-2 text-sm"
+            onClick={() => dispatch(openCategoryModal())}
+          >
+            <Tag size={18} /> Categories
+          </button>
+          <button
+            className="py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-500 font-semibold text-white transition-colors flex items-center justify-center gap-2 text-sm"
+            onClick={() => dispatch(toggleAddModal())}
+          >
+            <Plus size={20} /> Add Entry
+          </button>
+        </div>
+      </div>
+
+      {/* --- Monthly Summary Totals --- */}
+      <GlassCard className="mb-6 grid grid-cols-3 divide-x divide-gray-700/50 text-center p-4">
+        <div className="p-1">
+          <p className="text-xs text-gray-400 font-medium">Income</p>
+          <p className="text-xl sm:text-2xl font-bold text-green-400 mt-1">
+            ₹ {monthlyTotals.totalIncome.toFixed(2)}
+          </p>
+        </div>
+        <div className="p-1">
+          <p className="text-xs text-gray-400 font-medium">Expenses</p>
+          <p className="text-xl sm:text-2xl font-bold text-red-400 mt-1">
+            ₹ {monthlyTotals.totalExpense.toFixed(2)}
+          </p>
+        </div>
+        <div className="p-1">
+          <p className="text-xs text-gray-400 font-medium">Balance</p>
+          <p
+            className={`text-xl sm:text-2xl font-bold mt-1 ${
+              netBalance >= 0 ? "text-teal-400" : "text-red-400"
+            }`}
+          >
+            ₹ {netBalance.toFixed(2)}
+          </p>
+        </div>
+      </GlassCard>
+
+      {/* --- Type Filters --- */}
+      <div className="flex space-x-3 w-full mb-6">
+        <button
+          onClick={() => setFilterType("all")}
+          className={filterButtonClass("all")}
+        >
+          All
+        </button>
+        <button
+          onClick={() => setFilterType("income")}
+          className={filterButtonClass("income")}
+        >
+          Income
+        </button>
+        <button
+          onClick={() => setFilterType("expense")}
+          className={filterButtonClass("expense")}
+        >
+          Expense
+        </button>
+      </div>
+
+      {/* --- Loading / Error / Data Display --- */}
+      {status === "loading" && entries.length === 0 ? (
+        <div className="text-center py-20 text-gray-400 flex flex-col items-center">
+          <Loader2 size={32} className="animate-spin mb-4" />
+          Loading financial records...
+        </div>
+      ) : status === "failed" && entries.length === 0 ? (
+        <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg flex items-center gap-3">
+          <AlertTriangle size={24} />
+          <p>
+            {error || "Failed to load financial records. Please try again."}
+          </p>
+        </div>
+      ) : Object.keys(groupedEntries).length === 0 ? (
+        <GlassCard className="text-center py-10 text-gray-400">
+          No {filterType !== "all" ? filterType : ""} transactions found for
+          this month.
+        </GlassCard>
+      ) : (
+        <div className="space-y-6">
+          {/* --- Grouped Transaction List --- */}
+          {Object.keys(groupedEntries).map((dateKey) => {
+            const dayTotal = getDayTotal(dateKey);
+            return (
+              <GlassCard key={dateKey} className="p-0 overflow-hidden">
+                {/* Day Header */}
+                <div className="flex justify-between items-center bg-gray-800/70 px-4 py-3 border-b border-gray-700/50">
+                  <h3 className="text-xl font-bold text-white">
+                    {getDayName(dateKey)}
+                  </h3>
+                  <div className="flex space-x-4 text-sm font-medium">
+                    <span className="text-green-400">
+                      Inc: ₹{dayTotal.income.toFixed(2)}
+                    </span>
+                    <span className="text-red-400">
+                      Exp: ₹{dayTotal.expense.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Transaction Items */}
+                <div>
+                  {groupedEntries[dateKey].map((entry) => (
+                    <FinanceEntryItem
+                      key={entry._id}
+                      entry={entry}
+                      onEdit={handleEditEntry}
+                    />
+                  ))}
+                </div>
+              </GlassCard>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Modals are rendered outside the main flow */}
+      {isAddModalOpen && <FinanceFormModal />}
+      {isEditModalOpen && <FinanceEditModal />}
+    </div>
+  );
 }
