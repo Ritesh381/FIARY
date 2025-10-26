@@ -3,9 +3,10 @@ import entryReducer from "./slices/entrySlice";
 import streakReducer from "./slices/streakSlice";
 import formReducer from "./slices/formSlice";
 import userReducer from "./slices/userSlice";
-import entryFormSlice from "./slices/entryFormSlice"
-import financeReducer from "./slices/financeSlice"; 
-import tasksReducer from "./slices/todoSlice"
+import entryFormSlice from "./slices/entryFormSlice";
+import financeReducer from "./slices/financeSlice";
+import tasksReducer from "./slices/todoSlice";
+import thoughtReducer from "./slices/thoughtsSlice";
 
 const store = configureStore({
   reducer: {
@@ -15,7 +16,8 @@ const store = configureStore({
     user: userReducer,
     entryData: entryFormSlice,
     finance: financeReducer,
-    todo: tasksReducer
+    todo: tasksReducer,
+    thoughts: thoughtReducer,
   },
 });
 
