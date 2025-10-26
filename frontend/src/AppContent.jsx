@@ -46,37 +46,37 @@ const AppContent = () => {
 
   const items = [
     {
-      icon: <AiOutlineHome size={20} />,
+      icon: <AiOutlineHome size={18} />,
       label: "Home",
       onClick: () => navigate("/"),
     },
     {
-      icon: <FaTasks size={20} />,
+      icon: <FaTasks size={18} />,
       label: "Tasks",
       onClick: () => navigate("/tasks"),
     },
     {
-      icon: <FaRegSmileBeam size={20} />,
+      icon: <FaRegSmileBeam size={18} />,
       label: "Habits & Hobies",
       onClick: () => navigate("/habits"),
     },
     {
-      icon: <FaRupeeSign size={20} />,
+      icon: <FaRupeeSign size={18} />,
       label: "Finance",
       onClick: () => navigate("/finance"),
     },
     {
-      icon: <AiOutlineStar size={20} />,
+      icon: <AiOutlineStar size={18} />,
       label: "Memories",
       onClick: () => navigate("/memories"),
     },
     {
-      icon: <TfiThought size={20} />,
+      icon: <TfiThought size={18} />,
       label: "Thoughts",
       onClick: () => navigate("/thoughts"),
     },
     {
-      icon: <RiBookShelfFill size={20} />,
+      icon: <RiBookShelfFill size={18} />,
       label: "The Shelf",
       onClick: () => navigate("/shelf"),
     },
@@ -135,8 +135,8 @@ const AppContent = () => {
           <div className="bottom-0 right-[50%] fixed z-11 max-w-[80%]">
             <Dock
               items={items}
-              panelHeight={68}
-              baseItemSize={50}
+              panelHeight={58}
+              baseItemSize={40}
               magnification={70}
             />
           </div>

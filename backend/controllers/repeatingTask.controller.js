@@ -1,5 +1,5 @@
-const { RepeatingTask } = require("../models/RepeatingTaskSchema.models");
-const { Todo } = require("../models/Todo.models");
+const RepeatingTask = require("../models/RepeatingTaskSchema.models");
+const Todo = require("../models/Todo.models");
 
 // ✅ Create a new repeating task + initial todo
 const createRepeatingTask = async (req, res) => {

@@ -5,6 +5,7 @@ import formReducer from "./slices/formSlice";
 import userReducer from "./slices/userSlice";
 import entryFormSlice from "./slices/entryFormSlice"
 import financeReducer from "./slices/financeSlice"; 
+import tasksReducer from "./slices/todoSlice"
 
 const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ const store = configureStore({
     user: userReducer,
     entryData: entryFormSlice,
     finance: financeReducer,
+    todo: tasksReducer
   },
 });
 

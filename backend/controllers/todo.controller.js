@@ -1,4 +1,4 @@
-const { Todo } = require("../models/Todo.models");
+const Todo = require("../models/Todo.models");
 const RepeatingTask = require("../models/RepeatingTaskSchema.models");
 
 // ✅ Create a new todo
