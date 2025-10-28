@@ -15,28 +15,28 @@ export const saveDailyEntry = createAsyncThunk(
       const apiPromises = [];
 
       // 1. Save the main Journal Entry (MANDATORY)
-      // const entryResponse = await api.saveEntry(entry);
-      // console.log("Saving journal entry: ", entryResponse);
+      const entryResponse = await api.saveEntry(entry);
+      console.log("Saving journal entry: ", entryResponse);
 
       // 2. Save Habit entries (if they exist)
-      // if (habits && habits.length > 0) {
-      //   console.log("Saving habits:", habits);
-      //   for (const habitEntry of habits) {
-      //     apiPromises.push(apiHabits.upsertHabitEntry(habitEntry));
-      //   }
-      // }
+      if (habits && habits.length > 0) {
+        console.log("Saving habits:", habits);
+        for (const habitEntry of habits) {
+          apiPromises.push(apiHabits.upsertHabitEntry(habitEntry));
+        }
+      }
 
       // 3. Save Todos (NEW INTEGRATION)
       // The Entry page should save the todos the user marked as completed or created for tomorrow
-      // if (todo.completed.length > 0 || todo.addition.length > 0) {
-      //    console.log("Saving todos:", todo);
-      //   // Assuming your backend supports a route to handle completed tasks and new additions
-      //   apiPromises.push(apiTodos.saveDayTodos({ 
-      //       completed: todo.completed, 
-      //       additions: todo.addition,
-      //       date: entry.date // Pass date if needed for context
-      //   }));
-      // }
+      if (todo.completed.length > 0 || todo.addition.length > 0) {
+         console.log("Saving todos:", todo);
+        // Assuming your backend supports a route to handle completed tasks and new additions
+        apiPromises.push(apiTodos.saveDayTodos({ 
+            completed: todo.completed, 
+            additions: todo.addition,
+            date: entry.date // Pass date if needed for context
+        }));
+      }
 
       // 4. Save Finance entries (NEW INTEGRATION)
       if (finance.length > 0) {
