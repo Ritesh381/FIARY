@@ -51,7 +51,7 @@ export const saveDailyEntry = createAsyncThunk(
       await Promise.all(apiPromises);
       
       // Update Redux state and reset form
-      // dispatch(addEntry(entryResponse)); // Use entryResponse which contains the saved entry ID
+      dispatch(addEntry(entryResponse)); // Use entryResponse which contains the saved entry ID
       dispatch(resetForm());
 
       // return entryResponse;
