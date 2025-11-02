@@ -16,6 +16,7 @@ export const saveDailyEntry = createAsyncThunk(
 
       // 1. Save the main Journal Entry (MANDATORY)
       const entryResponse = await api.saveEntry(entry);
+      // const entryResponse = entry;
       console.log("Saving journal entry: ", entryResponse);
 
       // 2. Save Habit entries (if they exist)
@@ -51,7 +52,7 @@ export const saveDailyEntry = createAsyncThunk(
       await Promise.all(apiPromises);
       
       // Update Redux state and reset form
-      dispatch(addEntry(entryResponse)); // Use entryResponse which contains the saved entry ID
+      dispatch(addEntry(entryResponse));
       dispatch(resetForm());
 
       // return entryResponse;

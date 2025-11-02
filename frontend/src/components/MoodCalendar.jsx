@@ -79,12 +79,13 @@ const Calendar = ({
       day
     );
     const year = dateToFormat.getFullYear();
-    const month = String(dateToFormat.getMonth() + 1).padStart(2, '0');
-    const formattedDay = String(dateToFormat.getDate()).padStart(2, '0');
+    const month = String(dateToFormat.getMonth() + 1).padStart(2, "0");
+    const formattedDay = String(dateToFormat.getDate()).padStart(2, "0");
     const dateToCheck = `${year}-${month}-${formattedDay}`;
 
     return markedDates.find((markedDate) => {
-      const entryDate = markedDate.date.split('T')[0];
+      if (!markedDate || !markedDate.date) return false;
+      const entryDate = String(markedDate.date).split("T")[0];
       return entryDate === dateToCheck;
     });
   };
@@ -171,30 +172,38 @@ const Calendar = ({
   );
 };
 
-
 const MoodCalendar = ({ onClick }) => {
   const allEntries = useSelector((state) => state.entry.entries);
   const dispatch = useDispatch();
 
- const handleDateClick = (date) => {
-  // Use a helper function to format the date to YYYY-MM-DD
-  const formatDate = (d) => {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  const handleDateClick = (date) => {
+    // Use a helper function to format the date to YYYY-MM-DD
+    const formatDate = (d) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+    const formattedDate = formatDate(date);
+    dispatch(setDate(formattedDate));
   };
-  const formattedDate = formatDate(date);
-  dispatch(setDate(formattedDate));
-};
+  const safeFormatEntryDate = (entry) => {
+    if (entry?.date) {
+      return String(entry.date).split("T")[0];
+    }
+    const createdAt = entry?.createdAt || entry?.created;
+    if (!createdAt) return null;
+    const d = new Date(createdAt);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString().split("T")[0];
+  };
 
   const markedDates = allEntries.map((entry) => {
-    const date = entry.date
-      ? entry.date
-      : new Date(entry.createdAt).toISOString().split("T")[0];
+    const date = safeFormatEntryDate(entry);
+    if (!date) return null;
     return {
-      date: date,
-      feelingScore: entry.feelingScore,
+      date,
+      feelingScore: entry?.feelingScore ?? null,
     };
   });
 

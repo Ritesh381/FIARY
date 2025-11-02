@@ -12,7 +12,7 @@ export const entrySlice = createSlice({
       state.entries = action.payload;
     },
     addEntry: (state, action) => {
-      state.entries.push(action.payload);
+      state.entries.push(action.payload['entry']);
     },
     editEntry: (state, action) => {
       const { id, updatedEntry } = action.payload;
