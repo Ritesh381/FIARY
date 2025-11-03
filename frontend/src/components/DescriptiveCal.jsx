@@ -9,23 +9,20 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  setDate,
-  toggleEditForm,
-} from "../redux/slices/formSlice";
+import { setDate, toggleEditForm } from "../redux/slices/formSlice";
 // --- NEW IMPORT ---
 import { setEntryDate } from "../redux/slices/entryFormSlice";
 import api from "../api/EntryCalls";
 import { RiSparklingLine } from "react-icons/ri";
 import { speakText, stopSpeaking } from "../config/speech";
 import { useNavigate } from "react-router-dom";
-
+import ReactMarkdown from "react-markdown";
 
 function DescriptiveCal() {
   const allEntries = useSelector((state) => state.entry.entries);
   const dateFromRedux = useSelector((state) => state.forms.date);
   const dispatch = useDispatch();
-  const navigator = useNavigate()
+  const navigator = useNavigate();
 
   const [speakingKey, setSpeakingKey] = useState(null);
   const utteranceRef = useRef(null);
@@ -42,7 +39,7 @@ function DescriptiveCal() {
     if (dateFromRedux) {
       return new Date(dateFromRedux);
     }
-    return new Date(); 
+    return new Date();
   });
 
   const [items, setItems] = useState({});
@@ -371,7 +368,10 @@ function DescriptiveCal() {
                         )}
                       </button>
                     </div>
-                    {insight}
+
+                    <div className="prose prose-invert max-w-none text-gray-200 mt-2">
+                      <ReactMarkdown>{String(insight)}</ReactMarkdown>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -447,7 +447,17 @@ function DescriptiveCal() {
                   )}
                 </button>
               </div>
-              <p className="text-gray-300">{items.diaryEntry}</p>
+              <div className="prose prose-invert max-w-none text-gray-300">
+                <ReactMarkdown
+                  components={{
+                    p: ({ node, children }) => (
+                      <p className="mb-2">{children}</p>
+                    ),
+                  }}
+                >
+                  {String(items.diaryEntry || "").replace(/\n/g, "  \n")}
+                </ReactMarkdown>
+              </div>
             </div>
           </motion.div>
         ) : (

@@ -3,6 +3,7 @@ import { RiSparklingLine } from "react-icons/ri";
 import { Volume2, VolumeX } from "lucide-react";
 import api from "../api/EntryCalls";
 import { speakText, stopSpeaking } from "../config/speech";
+import ReactMarkdown from "react-markdown";
 
 export default function MonthlyAIInsights() {
   const [status, setStatus] = useState("idle");
@@ -43,7 +44,7 @@ export default function MonthlyAIInsights() {
     if (typeof result === "string") {
       return (
         <div className="prose prose-invert max-w-none">
-          <pre className="whitespace-pre-wrap">{result}</pre>
+          <ReactMarkdown>{result}</ReactMarkdown>
         </div>
       );
     }
@@ -76,7 +77,11 @@ export default function MonthlyAIInsights() {
                   )}
                 </button>
               </div>
-              <p className="text-gray-200 mt-2">{String(body)}</p>
+
+              {/* Use a block container (div) so markdown can render lists/blocks safely */}
+              <div className="text-gray-200 mt-2 prose prose-invert max-w-none">
+                <ReactMarkdown>{String(body)}</ReactMarkdown>
+              </div>
             </div>
           ))}
         </div>
