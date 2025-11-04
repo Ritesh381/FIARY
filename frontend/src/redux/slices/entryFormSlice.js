@@ -117,6 +117,26 @@ const entryFormSlice = createSlice({
         state.habits.push({ habitId, ...entry });
       }
     },
+    // Load complete form data for editing an existing day
+    loadEntryData: (state, action) => {
+      const { entry, habits, todo, finance, _id } = action.payload || {};
+      // Ensure we don't accidentally share references
+      state.entry = {
+        date: entry?.date ?? state.entry.date,
+        feelingScore: entry?.feelingScore ?? state.entry.feelingScore,
+        achievement: entry?.achievement ?? state.entry.achievement,
+        sleepHours: entry?.sleepHours ?? state.entry.sleepHours,
+        sleepNotes: entry?.sleepNotes ?? state.entry.sleepNotes,
+        timeWastedMinutes: entry?.timeWastedMinutes ?? state.entry.timeWastedMinutes,
+        timeWastedNotes: entry?.timeWastedNotes ?? state.entry.timeWastedNotes,
+        diaryEntry: entry?.diaryEntry ?? state.entry.diaryEntry,
+        // keep other fields as-is if not provided
+      };
+      state.habits = Array.isArray(habits) ? habits : [];
+      state.todo = todo || { completed: [], addition: [] };
+      state.finance = Array.isArray(finance) ? finance : [];
+      state._id = _id;
+    },
     resetForm: () => ({
       ...initialState,
       entry: {
@@ -145,7 +165,7 @@ const entryFormSlice = createSlice({
   },
 });
 
-export const { setFormField, updateHabitEntry, resetForm, setEntryDate } =
+export const { setFormField, updateHabitEntry, resetForm, setEntryDate, loadEntryData } =
   entryFormSlice.actions;
 
 export default entryFormSlice.reducer;

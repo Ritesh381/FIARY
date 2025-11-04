@@ -10,7 +10,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { setDate, toggleEditForm } from "../redux/slices/formSlice";
-// --- NEW IMPORT ---
 import { setEntryDate } from "../redux/slices/entryFormSlice";
 import api from "../api/EntryCalls";
 import { RiSparklingLine } from "react-icons/ri";
@@ -76,38 +75,47 @@ function DescriptiveCal() {
     if (aiInsightsByDate[dateKey]) {
       setAiActive(true);
     } else {
-      setAiActive(false);
+      // If we switch to a new day, deactivate AI view unless data is pre-loaded
+      if (new Date(dateFromRedux).getTime() !== new Date(currentDate).getTime()) {
+        setAiActive(false);
+      }
     }
-  }, [dateFromRedux, allEntries, aiInsightsByDate, currentDate]); // Added currentDate
+  }, [dateFromRedux, allEntries, aiInsightsByDate, currentDate]);
 
   // Handle AIButton click toggle
   const handleAiToggle = async () => {
     const dateKey = formatDateKey(currentDate);
 
-    setAiActive(!aiActive);
-
-    if (!aiActive) {
-      if (aiInsightsByDate[dateKey]) {
-        return;
-      }
-
-      if (!items._id) {
-        return;
-      }
-
-      setLoadingAI(true);
-      try {
-        const data = await api.dailyInsights(items._id);
-        setAiInsightsByDate((prev) => ({
-          ...prev,
-          [dateKey]: data,
-        }));
-      } catch (err) {
-        console.error("Failed to fetch AI insight:", err);
+    // If AI is currently active, clicking the button should just toggle it off
+    if (aiActive) {
         setAiActive(false);
-      } finally {
-        setLoadingAI(false);
-      }
+        return;
+    }
+
+    // If AI is inactive and we click it, set it active first
+    setAiActive(true);
+
+    if (aiInsightsByDate[dateKey]) {
+      return;
+    }
+
+    if (!items._id) {
+      setAiActive(false); // Can't proceed, toggle back
+      return;
+    }
+
+    setLoadingAI(true);
+    try {
+      const data = await api.dailyInsights(items._id);
+      setAiInsightsByDate((prev) => ({
+        ...prev,
+        [dateKey]: data,
+      }));
+    } catch (err) {
+      console.error("Failed to fetch AI insight:", err);
+      setAiActive(false);
+    } finally {
+      setLoadingAI(false);
     }
   };
 
@@ -179,16 +187,6 @@ function DescriptiveCal() {
     }
   };
 
-  const truncateString = (str, num) => {
-    if (typeof str !== "string" || !str) {
-      return "";
-    }
-    if (str.length > num) {
-      return str.slice(0, num) + "...";
-    }
-    return str;
-  };
-
   const currentDateKey = formatDateKey(currentDate);
   const aiData = aiInsightsByDate[currentDateKey];
 
@@ -215,13 +213,20 @@ function DescriptiveCal() {
           ${aiActive ? "bg-white" : "bg-transparent"}
           hover:scale-110
         `}
+        title={
+          Object.keys(items).length === 0
+            ? "Log an entry to get AI insights"
+            : aiActive
+            ? "Show Daily Log"
+            : "Get AI Insights"
+        }
       >
         <RiSparklingLine
           className={`
-            relative z-10 transition-transform duration-500 ease-in-out
+            relative z-10 w-5 h-5 transition-transform duration-500 ease-in-out
             ${
               Object.keys(items).length > 0
-                ? "group-hover:rotate-360"
+                ? "group-hover:rotate-360 text-blue-500"
                 : "text-gray-500"
             }
           `}
@@ -236,91 +241,128 @@ function DescriptiveCal() {
     </div>
   );
 
+  const getDayOfWeek = (date) => {
+    return date.toLocaleDateString('en-US', { weekday: 'long' });
+  };
+  
+  const dayOfWeek = getDayOfWeek(currentDate);
+
+
   return (
-    <div className="relative p-8 text-white font-urbane w-full">
-      <nav className="flex items-center justify-between p-4 bg-gray-900 bg-opacity-50 rounded-lg shadow-lg">
-        <div className="flex space-x-2 items-center">
+    <div className="relative p-2 sm:p-8 text-white font-urbane w-full max-w-[100vw] overflow-hidden min-h-screen bg-gray-900">
+      {/* Mobile-optimized navigation */}
+      <nav className="flex flex-col sm:flex-row items-center gap-3 sm:gap-0 sm:justify-between p-2 sm:p-4 bg-gray-800 bg-opacity-90 rounded-xl shadow-xl backdrop-blur-md sticky top-0 z-20">
+        
+        {/* A. Action buttons (Left on desktop, order-2 on mobile) */}
+        <div className="flex space-x-2 items-center order-2 sm:order-none">
           <button
             disabled={Object.keys(items).length === 0}
-            className={`p-3 rounded-full shadow-lg transition-colors duration-300 z-10 text-white
-                      ${
-                        Object.keys(items).length > 0
-                          ? "bg-blue-600 hover:bg-blue-700 cursor-pointer"
-                          : "bg-gray-300 cursor-not-allowed"
-                      }`}
+            className={`p-2 sm:p-3 rounded-full shadow-lg transition-all duration-300 z-10 text-white transform hover:scale-105 ${
+              Object.keys(items).length > 0
+                ? "bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                : "bg-gray-700/50 cursor-not-allowed text-gray-400"
+            }`}
             onClick={() => {
-              if (Object.keys(items).length > 0) {
-                dispatch(toggleEditForm());
+              // Redirect to /entry in edit mode with the entry id, and set the entry date in the entry form state
+              if (items && items._id) {
+                // set the entry date in entry form (used by Entry page)
+                dispatch(setEntryDate(currentDate.toISOString()));
+                // navigate to Entry page with edit=true and id param
+                navigator(`/entry?edit=true&id=${items._id}`);
               }
             }}
+            title="Edit Entry"
           >
-            <Pencil size={24} />
+            <Pencil size={16} className="sm:w-5 sm:h-5" />
           </button>
           <AIButton />
         </div>
 
-        <div className="flex items-center space-x-4">
+        {/* B. Date Selection (Center on all screens, order-0 on mobile) */}
+        <div className="flex items-center justify-center space-x-1 sm:space-x-2 lg:space-x-4 order-0 sm:order-none w-full sm:w-auto">
           <button
             onClick={handlePrevDay}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="p-1.5 sm:p-2 lg:p-3 hover:bg-gray-700 rounded-lg transition-colors"
+            title="Previous Day"
           >
-            <ChevronLeft size={24} />
+            <ChevronLeft size={16} className="w-4 sm:w-5 lg:w-6 h-4 sm:h-5 lg:h-6" />
           </button>
-          {isDayEditing ? (
-            <input
-              type="number"
-              value={tempDayInput}
-              onChange={(e) => setTempDayInput(e.target.value)}
-              onBlur={handleDayUpdate}
-              onKeyDown={handleDayKeyDown}
-              className="bg-gray-800 text-white border-none py-2 px-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-16 text-center"
-              autoFocus
-            />
-          ) : (
-            <div onClick={() => setIsDayEditing(true)}>
-              <Counter value={currentDate.getDate()} places={[10, 1]} />
-            </div>
-          )}
-          <select
-            name="month"
-            id="month"
-            value={currentDate.getMonth()}
-            onChange={handleMonthChange}
-            className="bg-gray-800 text-white border-none py-2 px-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-2xl"
-          >
-            {getMonths().map((month) => (
-              <option key={month.value} value={month.value}>
-                {month.label}
-              </option>
-            ))}
-          </select>
-          {isYearEditing ? (
-            <input
-              type="number"
-              value={tempYearInput}
-              onChange={(e) => setTempYearInput(e.target.value)}
-              onBlur={handleYearUpdate}
-              onKeyDown={handleYearKeyDown}
-              className="bg-gray-800 text-white border-none py-2 px-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-24 text-center"
-              autoFocus
-            />
-          ) : (
-            <div onClick={() => setIsYearEditing(true)}>
-              <Counter
-                value={currentDate.getFullYear()}
-                places={[1000, 100, 10, 1]}
+
+          {/* Mobile-optimized date display */}
+          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3 bg-gray-700/80 px-2 sm:px-3 lg:px-4 py-1 sm:py-2 rounded-xl shadow-inner border border-gray-600">
+            {isDayEditing ? (
+              <input
+                type="number"
+                value={tempDayInput}
+                onChange={(e) => setTempDayInput(e.target.value)}
+                onBlur={handleDayUpdate}
+                onKeyDown={handleDayKeyDown}
+                className="w-10 sm:w-12 bg-transparent text-center text-sm sm:text-base lg:text-lg focus:outline-none border-b border-blue-500"
+                autoFocus
               />
-            </div>
-          )}
+            ) : (
+              <div
+                onClick={() => setIsDayEditing(true)}
+                className="w-8 sm:w-10 lg:w-12 text-center cursor-pointer hover:text-blue-400 transition"
+              >
+                <Counter
+                  value={currentDate.getDate()}
+                  places={[10, 1]}
+                  fontSize={window.innerWidth < 640 ? 16 : window.innerWidth < 1024 ? 20 : 24}
+                  padding={2}
+                />
+              </div>
+            )}
+
+            <select
+              value={currentDate.getMonth()}
+              onChange={handleMonthChange}
+              className="bg-transparent text-xs sm:text-sm lg:text-base font-medium cursor-pointer focus:outline-none appearance-none"
+            >
+              {getMonths().map((month) => (
+                <option key={month.value} value={month.value} className="bg-gray-800 text-white">
+                  {window.innerWidth < 640 ? month.label.substring(0, 3) : month.label}
+                </option>
+              ))}
+            </select>
+
+            {isYearEditing ? (
+              <input
+                type="number"
+                value={tempYearInput}
+                onChange={(e) => setTempYearInput(e.target.value)}
+                onBlur={handleYearUpdate}
+                onKeyDown={handleYearKeyDown}
+                className="w-14 sm:w-16 bg-transparent text-center text-sm sm:text-base lg:text-lg focus:outline-none border-b border-blue-500"
+                autoFocus
+              />
+            ) : (
+              <div onClick={() => setIsYearEditing(true)} className="cursor-pointer hover:text-blue-400 transition">
+                <Counter
+                  value={currentDate.getFullYear()}
+                  places={[1000, 100, 10, 1]}
+                  fontSize={window.innerWidth < 640 ? 16 : window.innerWidth < 1024 ? 20 : 24}
+                  padding={2}
+                />
+              </div>
+            )}
+          </div>
+
           <button
             onClick={handleNextDay}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="p-1.5 sm:p-2 lg:p-3 hover:bg-gray-700 rounded-lg transition-colors"
+            title="Next Day"
           >
-            <ChevronRight size={24} />
+            <ChevronRight size={16} className="w-4 sm:w-5 lg:w-6 h-4 sm:h-5 lg:h-6" />
           </button>
         </div>
-
-        <div></div>
+        
+        {/* C. Day of the Week Display - Responsive placement as requested */}
+        <div className="order-1 sm:order-none w-full sm:w-[88px] flex justify-center items-center py-1">
+            <span className="text-lg sm:text-base font-bold text-white tracking-wide">
+                {dayOfWeek}
+            </span>
+        </div>
       </nav>
 
       <AnimatePresence mode="wait">
@@ -331,10 +373,13 @@ function DescriptiveCal() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
-            className="mt-8 p-6 bg-gray-900 bg-opacity-50 rounded-lg shadow-lg min-h-[300px] text-white"
+            className="mt-4 sm:mt-8 p-3 sm:p-6 bg-gray-800 bg-opacity-90 rounded-xl shadow-2xl min-h-[300px] text-white max-w-4xl mx-auto backdrop-blur-sm border border-purple-600/50"
           >
+            <h2 className="text-2xl font-bold text-purple-400 mb-6 border-b border-purple-900 pb-2 flex items-center">
+              <RiSparklingLine className="w-6 h-6 mr-2" /> AI Daily Insights
+            </h2>
             {loadingAI ? (
-              <div className="flex justify-center items-center h-full text-xl text-gray-300">
+              <div className="flex justify-center items-center h-48 text-xl text-purple-300 animate-pulse">
                 Loading AI insights...
               </div>
             ) : aiData ? (
@@ -342,10 +387,10 @@ function DescriptiveCal() {
                 {Object.entries(aiData).map(([title, insight]) => (
                   <div
                     key={title}
-                    className="bg-gray-800 p-4 rounded-md shadow-inner relative"
+                    className="bg-gray-900/80 p-4 rounded-xl shadow-inner border border-gray-700"
                   >
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-bold text-gray-400 text-lg mb-1">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-bold text-purple-300 text-lg sm:text-xl">
                         {title}
                       </h3>
                       <button
@@ -353,13 +398,14 @@ function DescriptiveCal() {
                           speakingKey === title
                             ? stopSpeaking(setSpeakingKey, utteranceRef)
                             : speakText(
-                                insight,
+                                String(insight),
                                 title,
                                 setSpeakingKey,
                                 utteranceRef
                               )
                         }
                         className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition"
+                        title={speakingKey === title ? "Stop Reading" : "Read Insight"}
                       >
                         {speakingKey === title ? (
                           <VolumeX className="w-5 h-5 text-red-400" />
@@ -369,15 +415,15 @@ function DescriptiveCal() {
                       </button>
                     </div>
 
-                    <div className="prose prose-invert max-w-none text-gray-200 mt-2">
+                    <div className="prose prose-invert max-w-none text-gray-200 text-sm sm:text-base">
                       <ReactMarkdown>{String(insight)}</ReactMarkdown>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="flex justify-center items-center h-full text-xl text-gray-300">
-                No AI insights available.
+              <div className="flex justify-center items-center h-48 text-xl text-gray-400">
+                No AI insights available for this entry.
               </div>
             )}
           </motion.div>
@@ -388,45 +434,79 @@ function DescriptiveCal() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
-            className="flex flex-col md:flex-row justify-around mt-8 space-y-8 md:space-y-0 md:space-x-8"
+            className="flex flex-col mt-4 sm:mt-8 space-y-6 max-w-4xl mx-auto"
           >
-            <div className="md:w-1/2 p-6 bg-gray-900 bg-opacity-50 rounded-lg shadow-lg grid grid-cols-1 md:grid-cols-2 gap-4">
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
-                className="bg-gray-800 p-4 rounded-md shadow-inner"
-              >
-                <h3 className="font-bold text-gray-400">
-                  Achievement of the Day
+            {/* 1. Day of the Week Header (Removed from here, now in Nav for better user experience) */}
+            
+            {/* 2. Key Metrics Summary Block - STACKED DESIGN */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="w-full p-4 sm:p-6 bg-gray-800/90 rounded-xl shadow-2xl border border-gray-700/50 backdrop-blur-sm"
+            >
+              <h1 className="text-xl sm:text-2xl font-extrabold text-blue-400 mb-4 border-b pb-2 border-gray-700">
+                Day's Key Metrics
+              </h1>
+
+              {/* Achievement */}
+              <div className="mb-6 p-4 bg-gray-900/80 rounded-lg border border-gray-700 shadow-md">
+                <h3 className="font-bold text-yellow-400 text-lg sm:text-xl flex items-center mb-1">
+                  <RiSparklingLine className="w-5 h-5 mr-2 text-yellow-400" /> Achievement of the Day
                 </h3>
-                <p className="mt-1">{truncateString(items.achievement, 200)}</p>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
-                className="bg-gray-800 p-4 rounded-md shadow-inner"
-              >
-                <h3 className="font-bold text-gray-400">Time Not Utilized</h3>
-                <p className="mt-1">
-                  {Math.floor(items.timeWastedMinutes / 60)}h{" "}
-                  {items.timeWastedMinutes % 60}m
+                <p className="mt-2 text-gray-200 text-sm sm:text-base leading-relaxed">
+                  {/* Displaying full achievement text as requested */}
+                  {items.achievement}
                 </p>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 }}
-                className="bg-gray-800 p-4 rounded-md shadow-inner"
-              >
-                <h3 className="font-bold text-gray-400">Sleep</h3>
-                <p className="mt-1">{items.sleepHours} hours</p>
-              </motion.div>
-            </div>
-            <div className="md:w-1/2 p-6 bg-gray-900 bg-opacity-50 rounded-lg shadow-lg">
-              <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-bold">Journal Entry</h1>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Sleep & Notes (Combined) */}
+                <div className="p-4 bg-gray-900/80 rounded-lg border border-gray-700 shadow-md">
+                  <h3 className="font-bold text-blue-400 text-lg sm:text-xl mb-1">
+                    Sleep Summary
+                  </h3>
+                  <p className="mt-1 text-blue-300 text-xl font-mono">
+                    {items.sleepHours} hours
+                  </p>
+                  <h4 className="font-semibold text-gray-400 mt-3 mb-1 text-sm sm:text-base">
+                    Notes:
+                  </h4>
+                  <p className="text-gray-400 text-xs sm:text-sm">
+                    {items.sleepNotes || "No specific notes provided."}
+                  </p>
+                </div>
+
+                {/* Time Not Utilized & Notes (Combined) */}
+                <div className="p-4 bg-gray-900/80 rounded-lg border border-gray-700 shadow-md">
+                  <h3 className="font-bold text-red-400 text-lg sm:text-xl mb-1">
+                    Time Not Utilized
+                  </h3>
+                  <p className="mt-1 text-red-300 text-xl font-mono">
+                    {Math.floor(items.timeWastedMinutes / 60)}h{" "}
+                    {items.timeWastedMinutes % 60}m
+                  </p>
+                  <h4 className="font-semibold text-gray-400 mt-3 mb-1 text-sm sm:text-base">
+                    Notes:
+                  </h4>
+                  <p className="text-gray-400 text-xs sm:text-sm">
+                    {items.timeWastedNotes || "No specific notes provided."}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* 3. Journal Entry Block - STACKED DESIGN */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="w-full p-4 sm:p-6 bg-gray-800/90 rounded-xl shadow-2xl border border-gray-700/50 backdrop-blur-sm"
+            >
+              <div className="flex justify-between items-center mb-3 sm:mb-4 border-b pb-2 border-gray-700">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-white">
+                  Journal Deep Dive
+                </h1>
                 <button
                   onClick={() =>
                     speakingKey === "journal"
@@ -438,7 +518,8 @@ function DescriptiveCal() {
                           utteranceRef
                         )
                   }
-                  className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition"
+                  className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition"
+                  title={speakingKey === "journal" ? "Stop Reading" : "Read Journal"}
                 >
                   {speakingKey === "journal" ? (
                     <VolumeX className="w-5 h-5 text-red-400" />
@@ -447,18 +528,18 @@ function DescriptiveCal() {
                   )}
                 </button>
               </div>
-              <div className="prose prose-invert max-w-none text-gray-300">
+              <div className="prose prose-invert max-w-none text-gray-300 text-sm sm:text-base leading-relaxed">
                 <ReactMarkdown
                   components={{
-                    p: ({ node, children }) => (
-                      <p className="mb-2">{children}</p>
+                    p: ({ children }) => (
+                      <p className="mb-4">{children}</p>
                     ),
                   }}
                 >
                   {String(items.diaryEntry || "").replace(/\n/g, "  \n")}
                 </ReactMarkdown>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         ) : (
           <motion.div
@@ -467,9 +548,9 @@ function DescriptiveCal() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
-            className="flex flex-col md:flex-row justify-around mt-8 space-y-8 md:space-y-0 md:space-x-8"
+            className="flex flex-col mt-4 sm:mt-8 space-y-4 max-w-4xl mx-auto"
           >
-            <div className="md:w-full p-6 bg-gray-900 bg-opacity-50 rounded-lg shadow-lg min-h-[300px] flex items-center justify-center text-center">
+            <div className="w-full p-6 bg-gray-800 bg-opacity-90 rounded-xl shadow-2xl min-h-[300px] flex items-center justify-center text-center backdrop-blur-sm border border-gray-700">
               <AnimatePresence>
                 <motion.div
                   key="no-data"
@@ -479,12 +560,12 @@ function DescriptiveCal() {
                   transition={{ duration: 0.3 }}
                 >
                   {currentDate > new Date() ? (
-                    <p className="text-xl text-gray-400">
+                    <p className="text-xl sm:text-2xl text-gray-400 font-extralight">
                       🔮 Bro cannot see the future
                     </p>
                   ) : (
                     <div className="flex flex-col items-center">
-                      <p className="text-xl text-gray-400 mb-4">
+                      <p className="text-xl sm:text-2xl text-gray-400 mb-6 font-extralight">
                         📅 Haven't logged for this date
                       </p>
                       <button
@@ -492,9 +573,9 @@ function DescriptiveCal() {
                           dispatch(setEntryDate(currentDate.toISOString()));
                           navigator("/entry");
                         }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-xl transition-all duration-300 transform hover:scale-105"
                       >
-                        Log
+                        Log This Day
                       </button>
                     </div>
                   )}

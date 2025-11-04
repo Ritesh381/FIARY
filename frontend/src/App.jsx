@@ -3,7 +3,7 @@ import AppContent from "./AppContent";
 
 const App = () => {
   return (
-    <div className="min-h-screen p-8 font-urbane text-gray-100 flex flex-col ">
+    <div className="min-h-screen p-2 sm:p-8 font-urbane text-gray-100 flex flex-col">
       <BrowserRouter>
         <AppContent />
       </BrowserRouter>

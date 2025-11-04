@@ -117,7 +117,15 @@ function Counter({
 
   return (
     <div style={{ ...defaultContainerStyle, ...containerStyle }}>
-      <div style={{ ...defaultCounterStyle, ...counterStyle }} onClick={onClick}>
+      <div 
+        style={{ 
+          ...defaultCounterStyle, 
+          ...counterStyle,
+          fontSize: `${fontSize}px`,
+          lineHeight: `${fontSize}px`
+        }} 
+        onClick={onClick}
+      >
         {places.map(place => (
           <Digit key={place} place={place} value={value} height={height} digitStyle={digitStyle} />
         ))}

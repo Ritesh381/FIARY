@@ -173,24 +173,21 @@ function Hero() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row justify-center items-start gap-8 w-full p-4">
+    <div className="flex flex-col lg:flex-row justify-center items-start gap-4 lg:gap-8 w-full p-2 lg:p-4">
       {/* Calendar and Streak Container */}
-      <div className="flex-shrink-0 relative">
+      <div className="flex-shrink-0 relative w-full lg:w-auto">
         <MoodCalendar />
-        <div className="absolute top-5 left-1/2 -translate-x-1/2 z-10 flex items-center space-x-2 text-orange-500 text-2xl">
-          <SiFireship />
-          <span className="font-extrabold">{streak}</span>
-        </div>
+        
       </div>
 
       {/* Stats Card */}
-      <div className="w-full max-w-sm bg-gray-800/50 p-6 rounded-2xl shadow-lg border border-gray-700">
-        <div className="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
-          <h2 className="text-xl font-bold text-white">Stats</h2>
+      <div className="w-full max-w-sm bg-gray-800/50 p-4 lg:p-6 rounded-xl lg:rounded-2xl shadow-lg border border-gray-700">
+        <div className="flex justify-between items-center mb-3 lg:mb-4 border-b border-gray-600 pb-2">
+          <h2 className="text-lg lg:text-xl font-bold text-white">Stats</h2>
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2"
+            className="bg-gray-700 border border-gray-600 text-white text-xs lg:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-1.5 lg:p-2"
           >
             <option value="week">Past Week</option>
             <option value="month">Past Month</option>
@@ -214,27 +211,39 @@ function Hero() {
         </div>
       </div>
 
-      {/* New Graph Card */}
-      <div className="w-full max-w-lg bg-gray-800/50 p-6 rounded-2xl shadow-lg border border-gray-700">
-        <div className="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
-          <select
-            value={graphDataType}
-            onChange={(e) => setGraphDataType(e.target.value)}
-            className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg p-2"
-          >
-            <option value="sleep">Sleep</option>
-            <option value="timeWasted">Time Not Utilized</option>
-          </select>
-          <div className="text-center">
+      {/* Graph Card */}
+      <div className="w-full max-w-lg bg-gray-800/50 p-3 sm:p-6 rounded-xl lg:rounded-2xl shadow-lg border border-gray-700">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:justify-between items-stretch sm:items-center mb-3 lg:mb-4 border-b border-gray-600 pb-2">
+          {/* Simplified Mobile Controls */}
+          <div className="flex flex-row sm:flex-col items-center sm:items-start gap-2">
+            <select
+              value={graphDataType}
+              onChange={(e) => setGraphDataType(e.target.value)}
+              className="flex-1 min-w-[120px] bg-gray-700 border border-gray-600 text-white text-xs rounded-lg p-2 appearance-none cursor-pointer"
+            >
+              <option value="sleep">Sleep</option>
+              <option value="timeWasted">Time Not Utilized</option>
+            </select>
+            <div className="text-center sm:hidden">
+              <span className="text-gray-400 text-xs block">Average</span>
+              <p className="font-bold text-white text-sm">
+                {displayGraphAverage}
+              </p>
+            </div>
+          </div>
+
+          {/* Desktop Average */}
+          <div className="hidden sm:block text-center">
             <span className="text-gray-400 text-sm">Average</span>
             <p className="font-bold text-white text-lg">
               {displayGraphAverage}
             </p>
           </div>
+
           <select
             value={graphTimeRange}
             onChange={(e) => setGraphTimeRange(e.target.value)}
-            className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg p-2"
+            className="flex-1 sm:flex-initial min-w-[100px] bg-gray-700 border border-gray-600 text-white text-xs rounded-lg p-2 appearance-none cursor-pointer"
           >
             <option value="week">Week</option>
             <option value="month">Month</option>
@@ -242,19 +251,29 @@ function Hero() {
             <option value="all">All Time</option>
           </select>
         </div>
-        <div className="w-full h-56">
+
+        <div className="w-full h-40 sm:h-48 lg:h-56">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={graphData}
-              margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+              margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#4A5568" />
-              <XAxis dataKey="date" stroke="#A0AEC0" fontSize={12} />
-              <YAxis stroke="#A0AEC0" fontSize={12} />
-              <Tooltip
-                content={<CustomTooltip graphDataType={graphDataType} />}
+              <XAxis
+                dataKey="date"
+                stroke="#A0AEC0"
+                fontSize={10}
+                tick={{ fontSize: 10 }}
+                tickMargin={5}
               />
-              <Legend />
+              <YAxis
+                stroke="#A0AEC0"
+                fontSize={10}
+                tick={{ fontSize: 10 }}
+                tickMargin={5}
+              />
+              <Tooltip content={<CustomTooltip graphDataType={graphDataType} />} />
+              <Legend wrapperStyle={{ fontSize: "10px" }} />
               <Line
                 type="monotone"
                 dataKey="value"
@@ -263,8 +282,8 @@ function Hero() {
                 }
                 stroke={graphDataType === "sleep" ? "#38B2AC" : "#F6E05E"}
                 strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 8 }}
+                dot={{ r: 3 }}
+                activeDot={{ r: 6 }}
               />
             </LineChart>
           </ResponsiveContainer>

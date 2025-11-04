@@ -93,24 +93,24 @@ const Calendar = ({
   const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   return (
-    <div className="p-4 bg-gray-900 text-white rounded-lg shadow-xl font-urbane">
+    <div className="p-2 sm:p-4 bg-gray-900 text-white rounded-lg shadow-xl font-urbane w-full">
       {/* Month and Year Selectors */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col xs:flex-row gap-2 xs:gap-4 justify-between items-stretch xs:items-center mb-4">
         <select
           value={currentDate.getMonth()}
           onChange={handleMonthChange}
-          className="bg-gray-800 text-white p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 bg-gray-800 text-white py-2 px-3 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
         >
           {getMonths().map((month) => (
             <option key={month.value} value={month.value}>
-              {month.label}
+              {window.innerWidth < 640 ? month.label.substring(0, 3) : month.label}
             </option>
           ))}
         </select>
         <select
           value={currentDate.getFullYear()}
           onChange={handleYearChange}
-          className="bg-gray-800 text-white p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 bg-gray-800 text-white py-2 px-3 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
         >
           {getYears().map((year) => (
             <option key={year} value={year}>
@@ -123,14 +123,14 @@ const Calendar = ({
       {/* Day Names */}
       <div className="grid grid-cols-7 text-center text-gray-400 mb-2">
         {dayNames.map((day) => (
-          <div key={day} className="font-semibold text-sm">
-            {day}
+          <div key={day} className="text-xs sm:text-sm font-medium">
+            {window.innerWidth < 640 ? day.substring(0, 1) : day}
           </div>
         ))}
       </div>
 
       {/* Date Grid */}
-      <div className="grid grid-cols-7 gap-2 text-center">
+      <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center">
         {getDays().map((day, index) => {
           const markedData = getMarkedDateData(day);
           const isMarked = !!markedData;
@@ -145,22 +145,15 @@ const Calendar = ({
             <div
               key={index}
               className={`
-                w-10 h-10 flex items-center justify-center rounded-full text-lg cursor-pointer
-                transition-all duration-200
-                ${day ? `hover:bg-gray-700` : ``}
+                aspect-square w-full flex items-center justify-center rounded-full text-base sm:text-lg
+                transition-all duration-200 touch-manipulation
+                ${day ? `hover:bg-gray-700 active:bg-gray-600` : ``}
                 ${isMarked ? "text-white" : "text-gray-300"}
                 ${day ? "" : "pointer-events-none"}
               `}
               style={dayStyle}
               onClick={() =>
-                day &&
-                onClick(
-                  new Date(
-                    currentDate.getFullYear(),
-                    currentDate.getMonth(),
-                    day
-                  )
-                )
+                day && onClick(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))
               }
             >
               {day}
