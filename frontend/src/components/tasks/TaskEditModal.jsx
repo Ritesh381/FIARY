@@ -57,6 +57,7 @@ export default function TaskEditModal() {
         date: selectedTask.date
           ? new Date(selectedTask.date).toISOString().slice(0, 16)
           : "",
+        priority: selectedTask.priority || "medium", // <-- include priority
       });
       setFeedback({ type: null, message: null });
       setShowDeleteConfirm(false); // Reset confirmation state when task changes
@@ -94,6 +95,7 @@ export default function TaskEditModal() {
           updates: {
             ...updates,
             date: dateToSubmit,
+            priority: updates.priority, // <-- ensure priority goes through
           },
         })
       ).unwrap();
@@ -302,6 +304,26 @@ export default function TaskEditModal() {
               className="w-full p-2 rounded-lg bg-gray-900/50 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 border border-gray-600 transition-colors resize-none"
               disabled={submitting}
             />
+          </div>
+
+          {/* Priority Selector */}
+          <div>
+            <label className="block text-xs font-medium text-gray-300 mb-1">
+              <Tag size={12} /> Priority
+            </label>
+            <select
+              name="priority"
+              value={formData.priority || "medium"}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, priority: e.target.value }))
+              }
+              className="w-full p-2 rounded-lg bg-gray-900/50 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 border border-gray-600 transition-colors"
+              disabled={submitting}
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
           </div>
 
           {/* Action Buttons */}

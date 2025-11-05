@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import LightRays from "./ui/LightRays";
-import JournalFormModal from "./components/JournalFormModal";
 import {
   AiOutlineHome,
   AiOutlineStar,
@@ -25,7 +24,6 @@ import Finance from "./pages/Finance";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import fetchEntries from "./api/fetchEntries.js";
-import JournalEditFormModal from "./components/JournalEditFormModal.jsx";
 import LandingPage from "./pages/Landing.jsx";
 import SignIn from "./pages/SignIn.jsx";
 import SignUp from "./pages/SignUp.jsx";
@@ -41,8 +39,6 @@ const AppContent = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const isModalOpen = useSelector((state) => state.forms.saveForm);
-  const isEditFormOpen = useSelector((state) => state.forms.editForm);
 
   const items = [
     {
@@ -168,9 +164,6 @@ const AppContent = () => {
           <Route path="/entry" element={<Entry/>}></Route>
         </Routes>
       </div>
-
-      {isModalOpen && <JournalFormModal />}
-      {isEditFormOpen && <JournalEditFormModal />}
     </>
   );
 };

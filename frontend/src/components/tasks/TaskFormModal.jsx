@@ -39,6 +39,7 @@ export default function TaskFormModal({ isOpen, onClose }) {
     description: "",
     category: "",
     date: "", // The new field for the todo due date/time
+    priority: "medium", // <-- new priority field (low | medium | high)
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -67,8 +68,8 @@ export default function TaskFormModal({ isOpen, onClose }) {
       title: formData.title,
       description: formData.description,
       category: formData.category,
-      // Convert date string to Date object or null if empty
       date: formData.date ? new Date(formData.date).toISOString() : null,
+      priority: formData.priority, // <-- include priority
     };
 
     try {
@@ -81,6 +82,7 @@ export default function TaskFormModal({ isOpen, onClose }) {
         description: "",
         category: "",
         date: "",
+        priority: "medium",
       });
       setTimeout(onClose, 1000);
     } catch (error) {
@@ -200,6 +202,26 @@ export default function TaskFormModal({ isOpen, onClose }) {
               className="w-full p-2 rounded-lg bg-gray-900/50 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 border border-gray-600 transition-colors resize-none"
               disabled={submitting}
             />
+          </div>
+
+          {/* Priority Selector */}
+          <div>
+            <label className="block text-xs font-medium text-gray-300 mb-1">
+              Priority
+            </label>
+            <select
+              name="priority"
+              value={formData.priority}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, priority: e.target.value }))
+              }
+              className="w-full p-2 rounded-lg bg-gray-900/50 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 border border-gray-600 transition-colors"
+              disabled={submitting}
+            >
+              <option value="low">Low</option>
+              <option value="medium">medium</option>
+              <option value="high">High</option>
+            </select>
           </div>
 
           {/* Submit Button */}

@@ -8,7 +8,8 @@ const createTodo = async (req, res) => {
       title,
       description,
       category,
-      date, // New field to be included
+      date,
+      priority, // <-- accept priority
     } = req.body;
 
     // Check for required fields based on the new schema
@@ -23,6 +24,7 @@ const createTodo = async (req, res) => {
       description,
       category,
       date: date || null, // Save the optional date
+      priority: priority.toLowerCase() || "medium", // <-- persist priority (default medium)
     });
 
     await todo.save();
@@ -71,7 +73,7 @@ const updateTodo = async (req, res) => {
     const { id } = req.params;
     // We only pass fields present in the new schema
     const allowedUpdates = {};
-    const { title, description, status, category, date } = req.body;
+    const { title, description, status, category, date, priority } = req.body;
 
     if (title !== undefined) allowedUpdates.title = title;
     if (description !== undefined) allowedUpdates.description = description;
@@ -79,6 +81,9 @@ const updateTodo = async (req, res) => {
     if (category !== undefined) allowedUpdates.category = category;
     // Only update date if explicitly provided
     if (date !== undefined) allowedUpdates.date = date;
+    // Priority
+    if (priority !== undefined) allowedUpdates.priority = priority;
+    priority.toLowerCase();
 
     // Prevents accidentally setting empty updates if only removed fields were passed
     if (Object.keys(allowedUpdates).length === 0) {
@@ -203,6 +208,7 @@ const batchsave = async (req, res) => {
         description: task.description,
         category: task.category,
         date: task.date || null, // Include the optional date
+        priority: task.priority || "medium", // <-- include priority for new todos
       }));
 
       const createNewPromise = Todo.insertMany(newTodos);

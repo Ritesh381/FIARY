@@ -571,7 +571,7 @@ function DescriptiveCal() {
                       <button
                         onClick={() => {
                           dispatch(setEntryDate(currentDate.toISOString()));
-                          navigator("/entry");
+                          navigator(`/entry?date=${currentDate.toISOString().split('T')[0]}`);
                         }}
                         className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-xl transition-all duration-300 transform hover:scale-105"
                       >

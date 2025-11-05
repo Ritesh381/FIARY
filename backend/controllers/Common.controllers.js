@@ -64,33 +64,6 @@ const saveAll = async (req, res) => {
     const { entry, habits, todos, finance } = req.body;
     const userId = req.userId;
 
-    // --- Create Entry ---
-    if (entry) {
-      if (
-        !entry.date ||
-        !entry.feelingScore ||
-        entry.timeWastedMinutes === undefined ||
-        entry.sleepHours === undefined ||
-        !entry.diaryEntry
-      ) {
-        throw new Error("Missing required entry fields.");
-      }
-
-      const newEntry = new Entry({
-        user: userId,
-        date: entry.date,
-        feelingScore: entry.feelingScore,
-        achievement: entry.achievement || "",
-        timeWastedMinutes: entry.timeWastedMinutes,
-        timeWastedNotes: entry.timeWastedNotes || "",
-        sleepHours: entry.sleepHours,
-        sleepNotes: entry.sleepNotes || "",
-        diaryEntry: entry.diaryEntry,
-      });
-
-      await newEntry.save();
-    }
-
     // --- Create or Update Habit Entries ---
     if (habits && habits.length > 0) {
       for (const habit of habits) {
@@ -124,6 +97,7 @@ const saveAll = async (req, res) => {
           description: todo.description || "",
           category: todo.category || null,
           date: todo.date || null,
+          priority: todo.priority || "medium", // <-- include priority
           frequency: todo.frequency || "once",
         });
 
@@ -149,6 +123,33 @@ const saveAll = async (req, res) => {
 
         await financeDoc.save();
       }
+    }
+    
+    // --- Create Entry ---
+    if (entry) {
+      if (
+        !entry.date ||
+        !entry.feelingScore ||
+        entry.timeWastedMinutes === undefined ||
+        entry.sleepHours === undefined ||
+        !entry.diaryEntry
+      ) {
+        throw new Error("Missing required entry fields.");
+      }
+
+      const newEntry = new Entry({
+        user: userId,
+        date: entry.date,
+        feelingScore: entry.feelingScore,
+        achievement: entry.achievement || "",
+        timeWastedMinutes: entry.timeWastedMinutes,
+        timeWastedNotes: entry.timeWastedNotes || "",
+        sleepHours: entry.sleepHours,
+        sleepNotes: entry.sleepNotes || "",
+        diaryEntry: entry.diaryEntry,
+      });
+
+      await newEntry.save();
     }
 
     res.status(200).json({ message: "All data saved successfully.", success: true });
