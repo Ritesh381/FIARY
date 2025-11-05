@@ -267,8 +267,8 @@ function DescriptiveCal() {
               if (items && items._id) {
                 // set the entry date in entry form (used by Entry page)
                 dispatch(setEntryDate(currentDate.toISOString()));
-                // navigate to Entry page with edit=true and id param
-                navigator(`/entry?edit=true&id=${items._id}`);
+                // navigate to Entry page with edit=1 and id param
+                navigator(`/entry?edit=1&date=${currentDate.toISOString().split('T')[0]}`);
               }
             }}
             title="Edit Entry"

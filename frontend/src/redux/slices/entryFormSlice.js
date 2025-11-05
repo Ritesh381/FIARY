@@ -1,71 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { addEntry } from "./entrySlice";
-import api from "../../api/EntryCalls";
-import apiHabits from "../../api/HabitCalls";
-import apiTodos from '../../api/TodoCalls';
-import apiFinance from '../../api/FinanceCalls'; // Assuming you have this API client
-
-export const saveDailyEntry = createAsyncThunk(
-  "entryData/saveDailyEntry",
-  async (_, { getState, dispatch, rejectWithValue }) => {
-    try {
-      const state = getState().entryData;
-      const { entry, todo, habits, finance } = state;
-
-      const apiPromises = [];
-
-      // 1. Save the main Journal Entry (MANDATORY)
-      const entryResponse = await api.saveEntry(entry);
-      // const entryResponse = entry;
-      console.log("Saving journal entry: ", entryResponse);
-
-      // 2. Save Habit entries (if they exist)
-      if (habits && habits.length > 0) {
-        console.log("Saving habits:", habits);
-        for (const habitEntry of habits) {
-          apiPromises.push(apiHabits.upsertHabitEntry(habitEntry));
-        }
-      }
-
-      // 3. Save Todos (NEW INTEGRATION)
-      // The Entry page should save the todos the user marked as completed or created for tomorrow
-      if (todo.completed.length > 0 || todo.addition.length > 0) {
-         console.log("Saving todos:", todo);
-        // Assuming your backend supports a route to handle completed tasks and new additions
-        apiPromises.push(apiTodos.saveDayTodos({ 
-            completed: todo.completed, 
-            additions: todo.addition,
-            date: entry.date // Pass date if needed for context
-        }));
-      }
-
-      // 4. Save Finance entries (NEW INTEGRATION)
-      if (finance.length > 0) {
-         console.log("Saving finance transactions:", finance);
-         for(const transaction of finance) {
-             // Saving each transaction individually (assuming this simplified approach)
-             apiPromises.push(apiFinance.createFinance(transaction));
-         }
-      }
-
-      // Execute all optional API calls concurrently
-      await Promise.all(apiPromises);
-      
-      // Update Redux state and reset form
-      dispatch(addEntry(entryResponse));
-      dispatch(resetForm());
-
-      // return entryResponse;
-    } catch (error) {
-      console.error("Error in saveDailyEntry:", error);
-      return rejectWithValue(
-        error.response?.data?.message ||
-          error.message ||
-          "An unknown error occurred"
-      );
-    }
-  }
-);
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   entry: {
@@ -148,20 +81,6 @@ const entryFormSlice = createSlice({
     setEntryDate: (state, action) => {
       state.entry.date = action.payload;
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(saveDailyEntry.pending, (state) => {
-        state.status = "loading";
-        state.error = null;
-      })
-      .addCase(saveDailyEntry.fulfilled, (state) => {
-        state.status = "succeeded";
-      })
-      .addCase(saveDailyEntry.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-      });
   },
 });
 

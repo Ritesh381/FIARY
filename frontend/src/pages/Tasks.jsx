@@ -4,7 +4,7 @@ import {
     Plus, Check, X, Edit3, Trash2, Repeat, Calendar, Loader2, AlertTriangle, Clock, Tag
 } from 'lucide-react';
 import {
-    fetchTodos, fetchRepeatingTasks, toggleFormModal, openEditModal, markTodoCompleted
+    fetchTodos, toggleFormModal, openEditModal, markTodoCompleted
 } from '../redux/slices/todoSlice';
 import TaskFormModal from '../components/tasks/TaskFormModal';
 import TaskEditModal from '../components/tasks/TaskEditModal';
@@ -94,7 +94,6 @@ export default function TasksPage() {
     const dispatch = useDispatch();
     const { 
         todos, 
-        repeatingTasks, 
         status, 
         error, 
         isFormModalOpen, 
@@ -104,7 +103,6 @@ export default function TasksPage() {
     // Fetch data on component mount
     useEffect(() => {
         dispatch(fetchTodos());
-        dispatch(fetchRepeatingTasks());
     }, [dispatch]);
     
     // Group todos into pending/completed/expired
@@ -135,7 +133,6 @@ export default function TasksPage() {
 
 
     const totalActiveTasks = categorizedTodos.pending.length;
-    const totalRepeatingTemplates = repeatingTasks.length;
 
     return (
         <div className="p-4 md:p-8 min-h-screen max-w-4xl mx-auto">
@@ -147,7 +144,6 @@ export default function TasksPage() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <div>
                     <p className="text-sm text-gray-400">Active Todos: <span className="font-bold text-indigo-300">{totalActiveTasks}</span></p>
-                    <p className="text-sm text-gray-400">Repeating Templates: <span className="font-bold text-teal-300">{totalRepeatingTemplates}</span></p>
                 </div>
                 
                 <button
@@ -200,22 +196,6 @@ export default function TasksPage() {
                      </>
                 )}
             </GlassCard>
-
-            {/* --- Repeating Task Templates List --- */}
-            {/* <GlassCard className="p-0 overflow-hidden">
-                <h2 className="text-xl font-bold text-teal-400 p-4 border-b border-gray-700/50 flex items-center gap-2">
-                    <Repeat size={20} /> Repeating Templates ({totalRepeatingTemplates})
-                </h2>
-                <div className="divide-y divide-gray-700/50">
-                    {repeatingTasks.length === 0 ? (
-                        <p className="p-4 text-gray-500 italic">No task templates defined. Start building routines!</p>
-                    ) : (
-                        repeatingTasks.map(template => (
-                            <TaskItem key={template._id} task={template} onEdit={handleEditTask} />
-                        ))
-                    )}
-                </div>
-            </GlassCard> */}
             
             {/* Modals */}
             {isFormModalOpen && <TaskFormModal isOpen={isFormModalOpen} onClose={() => dispatch(toggleFormModal(false))} />}

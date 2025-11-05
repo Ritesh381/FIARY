@@ -1,5 +1,5 @@
 const Todo = require("../models/Todo.models");
-const RepeatingTask = require("../models/RepeatingTaskSchema.models");
+// const RepeatingTask = require("../models/RepeatingTaskSchema.models"); // Removed as it's no longer used
 
 // ✅ Create a new todo
 const createTodo = async (req, res) => {
@@ -7,25 +7,22 @@ const createTodo = async (req, res) => {
     const {
       title,
       description,
-      photoUrl,
-      frequency,
       category,
-      repeatingTaskId,
+      date, // New field to be included
     } = req.body;
 
-    if (!title || !frequency)
+    // Check for required fields based on the new schema
+    if (!title)
       return res
         .status(400)
-        .json({ message: "Title and frequency are required" });
+        .json({ message: "Title is required" });
 
     const todo = new Todo({
       userId: req.userId,
       title,
       description,
-      photoUrl,
-      frequency,
       category,
-      repeatingTaskId: repeatingTaskId || null,
+      date: date || null, // Save the optional date
     });
 
     await todo.save();
@@ -72,12 +69,26 @@ const getTodoById = async (req, res) => {
 const updateTodo = async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    // We only pass fields present in the new schema
+    const allowedUpdates = {};
+    const { title, description, status, category, date } = req.body;
+
+    if (title !== undefined) allowedUpdates.title = title;
+    if (description !== undefined) allowedUpdates.description = description;
+    if (status !== undefined) allowedUpdates.status = status;
+    if (category !== undefined) allowedUpdates.category = category;
+    // Only update date if explicitly provided
+    if (date !== undefined) allowedUpdates.date = date;
+
+    // Prevents accidentally setting empty updates if only removed fields were passed
+    if (Object.keys(allowedUpdates).length === 0) {
+      return res.status(400).json({ message: "No valid fields to update." });
+    }
 
     const todo = await Todo.findOneAndUpdate(
       { _id: id, userId: req.userId, isDeleted: false },
-      updates,
-      { new: true }
+      allowedUpdates,
+      { new: true, runValidators: true } // Added runValidators for schema validation
     );
 
     if (!todo) return res.status(404).json({ message: "Todo not found" });
@@ -124,6 +135,7 @@ const markTodoCompleted = async (req, res) => {
   }
 };
 
+// ✅ Get todos by date (using the new 'date' field)
 const getTodosByDate = async (req, res) => {
   try {
     const { date } = req.query; // Expecting date as YYYY-MM-DD from frontend
@@ -134,23 +146,23 @@ const getTodosByDate = async (req, res) => {
         .json({ message: "Date query parameter is required." });
     }
 
-    const targetDate = new Date(date);
-    targetDate.setHours(23, 59, 59, 999);
+    // Calculate start and end of the target day
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0); // Start of the day
 
-    // Find todos that meet all conditions:
-    // 1. Belong to the user
-    // 2. Are not soft-deleted
-    // 3. Are still 'pending'
-    // 4. Have an expiresAt time greater than the start of the current day AND less than or equal to the end of the target day.
-    //    (Since the `expiresAt` logic sets expiry to the end of the day, we check against the end of the target day.)
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999); // End of the day
 
+    // Find todos that belong to the user, are active, and fall within the date range
     const todos = await Todo.find({
       userId: req.userId,
       isDeleted: false,
-      status: "pending",
-      expiresAt: { $lte: targetDate },
+      date: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
     }).sort({
-      expiresAt: 1, // Sort by soonest expiration first
+      date: 1, // Sort by date ascending (if time is included)
       createdAt: -1, // Secondary sort by newest creation
     });
 
@@ -161,6 +173,7 @@ const getTodosByDate = async (req, res) => {
   }
 };
 
+// ✅ Batch update for completed tasks and creation of new todos
 const batchsave = async (req, res) => {
   try {
     const { completed, additions } = req.body;
@@ -181,16 +194,15 @@ const batchsave = async (req, res) => {
       batchPromises.push(updateCompletedPromise);
     }
 
-    // --- 2. Create new 'Tasks for Tomorrow' (Additions) ---
+    // --- 2. Create new Todos (Additions) ---
     if (additions && additions.length > 0) {
       // Map additions to full Mongoose documents, ensuring userId is set
       const newTodos = additions.map((task) => ({
         userId: userId,
         title: task.title,
         description: task.description,
-        frequency: task.frequency || "daily", // Default to daily if missing
         category: task.category,
-        // The Todo model's pre-save middleware will automatically set `expiresAt`
+        date: task.date || null, // Include the optional date
       }));
 
       const createNewPromise = Todo.insertMany(newTodos);

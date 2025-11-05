@@ -1,7 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import apiTodo from '../../api/TodoCalls'; // Assuming path
-
-// --- ASYNC THUNKS (Simplified for slice definition) ---
+import apiTodo from '../../api/TodoCalls';
 
 export const fetchTodos = createAsyncThunk(
     'todo/fetchTodos',
@@ -15,14 +13,41 @@ export const fetchTodos = createAsyncThunk(
     }
 );
 
-export const fetchRepeatingTasks = createAsyncThunk(
-    'todo/fetchRepeatingTasks',
-    async (_, { rejectWithValue }) => {
+export const createTodoEntry = createAsyncThunk(
+    'todo/createTodoEntry',
+    async (todoData, { dispatch, rejectWithValue }) => {
         try {
-            const tasks = await apiTodo.getRepeatingTasks();
-            return tasks;
+            const newTodo = await apiTodo.createTodo(todoData);
+            dispatch(fetchTodos());
+            return newTodo;
         } catch (error) {
-            return rejectWithValue(error.message || 'Failed to fetch repeating tasks.');
+            return rejectWithValue(error.response?.data?.message || error.message || 'Failed to create todo.');
+        }
+    }
+);
+
+export const updateTodoEntry = createAsyncThunk(
+    'todo/updateTodoEntry', 
+    async ({ id, updates }, { dispatch, rejectWithValue }) => {
+        try {
+            const updatedTodo = await apiTodo.updateTodo({ id, updates }); // Using updated API function
+            dispatch(fetchTodos());
+            return updatedTodo;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || error.message || 'Failed to update todo.');
+        }
+    }
+);
+
+export const deleteTodoEntry = createAsyncThunk(
+    'todo/deleteTodoEntry', 
+    async (id, { dispatch, rejectWithValue }) => {
+        try {
+            await apiTodo.deleteTodo(id); 
+            dispatch(fetchTodos()); // Refresh list
+            return id;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || error.message || 'Failed to delete todo.');
         }
     }
 );
@@ -40,25 +65,12 @@ export const markTodoCompleted = createAsyncThunk(
     }
 );
 
-// (Placeholder thunks used by TaskEditModal)
-export const updateTodoEntry = createAsyncThunk('todo/updateTodoEntry', async ({ id, updates }) => { /* ... */ });
-export const deleteTodoEntry = createAsyncThunk('todo/deleteTodoEntry', async (id) => { /* ... */ });
-export const updateRepeatingTaskEntry = createAsyncThunk('todo/updateRepeatingTaskEntry', async ({ id, updates }) => { /* ... */ });
-export const deleteRepeatingTaskEntry = createAsyncThunk('todo/deleteRepeatingTaskEntry', async (id) => { /* ... */ });
-export const toggleRepeatingTaskStatus = createAsyncThunk('todo/toggleRepeatingTaskStatus', async (id) => { /* ... */ });
-export const createTodoEntry = createAsyncThunk('todo/createTodoEntry', async (data) => { /* ... */ });
-export const createRepeatingTaskEntry = createAsyncThunk('todo/createRepeatingTaskEntry', async (data) => { /* ... */ });
-
-
-// --- SLICE DEFINITION ---
-
 const initialState = {
     todos: [],
-    repeatingTasks: [],
     status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
     error: null,
     
-    // UI Modal States (NEW ADDITIONS)
+    // UI Modal States
     isFormModalOpen: false, 
     isEditModalOpen: false,
     selectedTask: null, // Holds data for the task being edited
@@ -101,20 +113,15 @@ const todoSlice = createSlice({
                 state.error = action.payload;
             })
             
-            // Fetch Repeating Tasks
-            .addCase(fetchRepeatingTasks.pending, (state) => {
-                state.status = 'loading';
-            })
-            .addCase(fetchRepeatingTasks.fulfilled, (state, action) => {
-                state.status = 'succeeded';
-                state.repeatingTasks = action.payload;
-            })
-            .addCase(fetchRepeatingTasks.rejected, (state, action) => {
-                state.status = 'failed';
-                state.error = action.payload;
+            // Optimistic update for completion (full list refresh will confirm)
+            .addCase(markTodoCompleted.fulfilled, (state, action) => {
+                const index = state.todos.findIndex(todo => todo._id === action.payload);
+                if (index !== -1) {
+                    state.todos[index].status = 'completed';
+                }
             });
             
-            // Add case for other thunks if required (e.g., refreshing state after update)
+            // Removed: Fetch Repeating Tasks cases
     }
 });
 
