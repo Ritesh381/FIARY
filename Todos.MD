@@ -1,0 +1,8 @@
+- So many bugs in Updaing a entry
+    - Fiancial data not showing up properly
+    - Not able to save the entry
+- Make the memories page
+- Make the profile page
+- Make the shelf
+- Merge setting and profile page
+- Make the current Nav bar usable

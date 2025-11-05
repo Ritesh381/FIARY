@@ -16,15 +16,48 @@ const getAll = async (date) => {
   }
 };
 
+const isInvalid = (value) => {
+    if (value === null || value === undefined) {
+        return true;
+    }
+    if (typeof value === 'string' && value.trim() === '') {
+        return true;
+    }
+    return false;
+};
+
 const saveAll = async (entryData) => {
   try {
+    const entry = entryData.entry;
+    if (!entry) {
+      throw new Error("Entry data is required.");
+    }
+    const requiredFields = [
+        { key: 'date', name: 'Date' },
+        { key: 'feelingScore', name: 'Mood Score' },
+        { key: 'achievement', name: 'Achievement of the Day' },
+        { key: 'diaryEntry', name: 'Diary Entry' },
+        { key: 'sleepHours', name: 'Sleep Hours' }, 
+        { key: 'timeWastedMinutes', name: 'Time Wasted Minutes' }, 
+    ];
+
+    for (const { key, name } of requiredFields) {
+        const value = entry[key];
+        if (isInvalid(value)) {
+            throw new Error(`The '${name}' field is required.`);
+        }
+        if ((key === 'sleepHours' || key === 'timeWastedMinutes') && Number(value) < 0) {
+             throw new Error(`The '${name}' must be a non-negative number.`);
+        }
+    }
+
     const response = await axios.post(
       `${API_BASE_URL}/common/save-entry`,
       entryData
     );
     return response.data;
   } catch (error) {
-    console.error("Error saving entry:", error);
+    console.error("Error saving entry:", error.message || error);
     throw error;
   }
 };

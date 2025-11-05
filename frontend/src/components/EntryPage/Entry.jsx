@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Check } from "lucide-react";
+import { Check, AlertTriangle } from "lucide-react"; // Added AlertTriangle
 import { useSelector, useDispatch } from "react-redux";
 import {
   setFormField,
@@ -13,7 +13,7 @@ import { addEntry } from "../../redux/slices/entrySlice.js";
 // API Imports
 import apiHabits from "../../api/HabitCalls.js";
 import apiTodo from "../../api/TodoCalls.js";
-import EntryPageCalls from "../../api/EntryPageCalls";
+import EntryPageCalls from "../../api/EntryPageCalls"; // Ensure this file has the validation logic
 
 // Component Imports
 import JournalAndMoodForm from "./JournalAndMoodForm.jsx";
@@ -48,7 +48,7 @@ const StatusOverlay = ({ state }) => {
 
 
 const getDayOfWeek = (date) => {
-    return date.toLocaleDateString('en-US', { weekday: 'long' });
+    return new Date(date + "T00:00:00").toLocaleDateString('en-US', { weekday: 'long' });
 };
 
 export const getCurrentTime = () => {
@@ -71,7 +71,6 @@ function EntryPage() {
   const isEditMode = params.get("edit") === "1";
 
   // --- Redux State ---
-  // Ensure date uses queryDate if present, otherwise fall back to Redux state
   const reduxDate = useSelector((state) => state.entryData.entry.date);
   const selDate = queryDate || reduxDate;
   
@@ -87,16 +86,20 @@ function EntryPage() {
   const [userHabits, setUserHabits] = useState([]);
   const [overlayState, setOverlayState] = useState("hidden");
   const [todaysTodos, setTodaysTodos] = useState([]);
+  // NEW: State for showing validation errors
+  const [validationError, setValidationError] = useState(null); 
+  // NEW: State to signal required fields in JournalAndMoodForm
+  const [attemptedSave, setAttemptedSave] = useState(false);
 
 
   // --- Universal Dispatch Handler ---
-  // This function is key for communicating with the Redux store from children.
   const handleEntryChange = useCallback((section, field, value) => {
-    // Special handling for the habit update action type defined in the slice
+    // Clear validation error when the user starts typing/changing input
+    setValidationError(null); 
+    
     if (section === "habits" && field === null) {
         dispatch({ type: 'entryData/updateHabitEntry', payload: value });
     } else {
-        // Normal setFormField action
         dispatch(setFormField({ section, field, value }));
     }
   }, [dispatch]);
@@ -106,7 +109,6 @@ function EntryPage() {
   
   useEffect(() => {
     window.scrollTo(0, 0);
-    // Set date in form state if needed (using setFormField for consistency)
     if (selDate && entry.date !== selDate) {
       handleEntryChange("entry", "date", selDate);
     }
@@ -115,7 +117,6 @@ function EntryPage() {
   useEffect(() => {
     dispatch(fetchCategoriesAndSubcategories());
     
-    // Fetch habits and todos for UI display
     const fetchData = async () => {
       try {
         const habits = await apiHabits.getAllHabits();
@@ -157,9 +158,12 @@ function EntryPage() {
     }
   }, [overlayState, navigate, dispatch]);
 
-  // --- Save/Update Logic (Unchanged) ---
+  // --- Save Logic with Validation Catch ---
   const handleSave = async () => {
+    setAttemptedSave(true); // Signal to child components to show required fields
+    setValidationError(null); // Clear previous errors
     setOverlayState("loading");
+    
     try {
       const resp = await EntryPageCalls.saveAll({
         entry, habits, todos: todo, finance,
@@ -177,12 +181,22 @@ function EntryPage() {
       setOverlayState("hidden");
     } catch (error) {
       setOverlayState("hidden");
-      console.error("Failed to save entry:", error);
+      
+      if (error.message && error.message.includes("required")) {
+        setValidationError(error.message);
+      } else {
+        setValidationError(`Failed to save entry: ${error.message || 'Server error.'}`);
+      }
+      
+      console.error("Save error:", error);
     }
   };
 
   const handleUpdate = async () => {
+    setAttemptedSave(true); // Signal to child components to show required fields
+    setValidationError(null);
     setOverlayState("loading");
+    
     try {
       const resp = await EntryPageCalls.updateAll({
         entry, habits, todos: todo, finance,
@@ -208,7 +222,14 @@ function EntryPage() {
       setOverlayState("hidden");
     } catch (error) {
       setOverlayState("hidden");
-      console.error("Failed to update entry:", error);
+      
+      if (error.message && error.message.includes("required")) {
+        setValidationError(error.message);
+      } else {
+        setValidationError(`Failed to update entry: ${error.message || 'Server error.'}`);
+      }
+
+      console.error("Update error:", error);
     }
   };
 
@@ -227,15 +248,17 @@ function EntryPage() {
             </h1>
             <div className="order-1 sm:order-none w-full sm:w-[88px] flex justify-center items-center py-1">
             <span className="text-lg sm:text-base font-bold text-white tracking-wide">
-                {getDayOfWeek(new Date(selDate + "T00:00:00"))}
+                {getDayOfWeek(selDate)}
             </span>
         </div>
           </div>
           
           {/* --- JOURNAL & MOOD --- */}
+          {/* Pass the attemptedSave state to JournalAndMoodForm */}
           <JournalAndMoodForm 
             entry={entry}
             handleEntryChange={handleEntryChange}
+            attemptedSave={attemptedSave} 
           />
         </div>
 
@@ -266,6 +289,15 @@ function EntryPage() {
 
         {/* --- SAVE BUTTON --- */}
         <div className="flex flex-col items-center justify-center pt-4">
+          
+          {/* NEW: Display Validation Error Message */}
+          {validationError && (
+             <div className="bg-red-900/50 border border-red-600 text-red-300 p-3 rounded-lg flex items-center gap-3 mb-4 w-full max-w-xs text-sm text-center font-medium">
+                <AlertTriangle size={20} className="flex-shrink-0" />
+                <p className="flex-1 text-left">{validationError}</p>
+             </div>
+          )}
+
           {isEditMode ? (
             <button
               onClick={handleUpdate}
