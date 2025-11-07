@@ -267,8 +267,8 @@ function EntryPage() {
         <TodoSection 
             todo={todo}
             todaysTodos={todaysTodos}
-            userId={userId}
             handleEntryChange={handleEntryChange}
+            date={selDate}
         />
 
         {/* --- HABITS SECTION --- */}

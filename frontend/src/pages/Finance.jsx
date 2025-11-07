@@ -46,9 +46,9 @@ const formatAmount = (amount) => {
 // Helper function to format date to YYYY-MM-DD
 const formatDateKey = (date) => {
   if (!date) return "";
-  const y = date.getFullYear();
-  const m = (date.getMonth() + 1).toString().padStart(2, "0");
-  const d = date.getDate().toString().padStart(2, "0");
+  const y = date.getUTCFullYear();
+  const m = (date.getUTCMonth() + 1).toString().padStart(2, "0");
+  const d = date.getUTCDate().toString().padStart(2, "0");
   return `${y}-${m}-${d}`;
 };
 
