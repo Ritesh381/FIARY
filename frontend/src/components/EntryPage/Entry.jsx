@@ -8,7 +8,7 @@ import {
 } from "../../redux/slices/entryFormSlice.js";
 import { useNavigate, useLocation } from "react-router";
 import { fetchCategoriesAndSubcategories } from "../../redux/slices/financeSlice";
-import { addEntry } from "../../redux/slices/entrySlice.js";
+import { addEntry, editEntry as updateEntryInState } from "../../redux/slices/entrySlice.js";
 import {
   startEditing,
   editTodo,
@@ -90,6 +90,7 @@ function EntryPage() {
   const userId = user?._id;
   const formData = useSelector((state) => state.entryData);
   const { entry, todo, habits, finance, status, error } = formData;
+  const entryEdit = useSelector((state) => state.entryEdit);
 
   // --- Local State ---
   const [userHabits, setUserHabits] = useState([]);
@@ -206,19 +207,38 @@ function EntryPage() {
     setAttemptedSave(true);
     setValidationError(null);
     setOverlayState("loading");
-    
+
     try {
-      // First log all tracked changes
-      dispatch(commitEdits());
-      
-      // For now, just simulate success
-      setOverlayState("success");
-      setTimeout(() => {
-        navigate("/");
-        dispatch(resetForm());
-        dispatch(cancelEditing());
-      }, 500);
-      
+      // Prepare payload from entryEdit.changes
+      const { entry, habits, todos, finance } = entryEdit.changes;
+      const payload = {
+        entryData: entry,
+        habitsData: habits,
+        todosData: todos,
+        financeData: finance,
+        date: selDate,
+      };
+
+      const resp = await EntryPageCalls.updateAll(payload);
+
+      // Log for debugging
+      console.log("Sent update payload:", payload);
+
+      if (resp && resp.entry && resp.entry._id) {
+        // Update the entry in the entries state (editEntry expects {id, updatedEntry})
+        dispatch(updateEntryInState({ id: resp.entry._id, updatedEntry: resp.entry }));
+        // Also update the form state for immediate UI update
+        dispatch(loadEntryData(await EntryPageCalls.getAll(selDate)));
+        setOverlayState("success");
+        setTimeout(() => {
+          navigate("/");
+          dispatch(resetForm());
+          dispatch(cancelEditing());
+        }, 500);
+        return;
+      }
+
+      setOverlayState("hidden");
     } catch (error) {
       setOverlayState("hidden");
       setValidationError(`Failed to update entry: ${error.message || 'Server error.'}`);

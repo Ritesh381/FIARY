@@ -14,6 +14,7 @@ const todoRoutes = require("./routes/todo.routes");
 const repeatingTaskRoutes = require("./routes/repeatingTask.routes");
 const thoughtRoutes = require("./routes/Thoughts.routes.js")
 const commonRouter = require("./routes/Common.routes.js");
+const memoryRoutes = require("./routes/Memories.routes.js");
 
 const PORT = 8080;
 const app = express();
@@ -43,6 +44,7 @@ app.use("/api/todos", todoRoutes);
 app.use("/api/repeating-tasks", repeatingTaskRoutes);
 app.use("/api/thoughts", thoughtRoutes)
 app.use("/api/common", commonRouter);
+app.use("/api/memories", memoryRoutes);
 
 // Start server
 app.listen(PORT, () =>

@@ -14,11 +14,11 @@ import {
   Repeat, // Added Repeat for Tasks
   IndianRupee, // Added IndianRupee for Finance
 } from "lucide-react";
-import AIInsight from "../assets/AI-insight.png"; // Mock AI image
-import HabitImage from "../assets/Habit-Tracker.png"; // Mock Habit image
-import Founder from "../assets/founder.png"; // Founder image
-// import AnalyticsGraph from "../assets/AnalyticsGraph.png" // Using a generic graph name
-import FinDashboard from "../assets/FinDashboard.png"
+import AIInsight from "../assets/landing/AI-insight.png"; // Mock AI image
+import HabitImage from "../assets/landing/Habit-Tracker.png"; // Mock Habit image
+import Founder from "../assets/landing/founder.png"; // Founder image
+import FinDashboard from "../assets/landing/FinDashboard.png"
+import Memories from "../assets/landing/Memories.png"
 
 export default function App() {
   const navigate = useNavigate();
@@ -41,65 +41,85 @@ export default function App() {
     </div>
   );
 
-  const features = [
-  {
-    name: "AI-Powered Journaling",
-    description:
-      "Powered by Gemini, AI analyzes your mood, sleep, and entries to generate personalized insights. Understand your emotional and productivity patterns and get actionable advice to build a better you.",
-    icon: <BrainCircuit className="w-6 h-6" />,
-    visual: (
-      <img
-        src={AIInsight}
-        alt="AI Insights Mockup"
-        className="w-full h-auto rounded-lg border border-white/10"
-        onError={(e) =>
-          (e.target.src =
-            "https://placehold.co/600x400/111827/4f46e5?text=AI+Insights")
-        }
-      />
-    ),
-  },
-  {
-    name: "Effortless Habit Tracking",
-    description:
-      "Log the habits that matter, whether you are developing a new skill or trying to quit a bad pattern. Build streaks and visualize your commitment with clear analytics and progress heatmaps.",
-    icon: <CheckCircle2 className="w-6 h-6" />,
-    visual: (
-      <img
-        src={HabitImage}
-        alt="Habit Tracker Mockup"
-        className="w-full h-auto rounded-lg border border-white/10"
-        onError={(e) =>
-          (e.target.src =
-            "https://placehold.co/600x400/0f172a/14b8a6?text=Habit+Tracker")
-        }
-      />
-    ),
-  },
-  {
-    name: "Integrated Tasks & Finance",
-    description:
-      "Manage daily priorities with one-time Todos and set up automated 'Repeating Tasks'. Log all your financial transactions (Income/Expense) directly alongside your daily journal, centralizing your entire life log.",
-    icon: <Repeat className="w-6 h-6" />,
-    visual: (
-      <img
-        src={FinDashboard}
-        alt="Habit Tracker Mockup"
-        className="w-full h-auto rounded-lg border border-white/10"
-        onError={(e) =>
-          (e.target.src =
-            "https://placehold.co/600x400/0f172a/14b8a6?text=Habit+Tracker")
-        }
-      />
-    ),
-  },
-];
+  // --- What's Live Features ---
+  const liveFeatures = [
+    {
+      name: "AI-Powered Journaling",
+      description:
+        "Gemini AI analyzes your mood, sleep, and entries to generate personalized insights. Understand your emotional and productivity patterns and get actionable advice.",
+      icon: <BrainCircuit className="w-6 h-6" />,
+      visual: (
+        <img
+          src={AIInsight}
+          alt="AI Insights Mockup"
+          className="w-full h-auto rounded-lg border border-white/10"
+          onError={(e) =>
+            (e.target.src =
+              "https://placehold.co/600x400/111827/4f46e5?text=AI+Insights")
+          }
+        />
+      ),
+    },
+    {
+      name: "Effortless Habit Tracking",
+      description:
+        "Track habits you want to build or quit. Visualize your streaks and progress with analytics and heatmaps.",
+      icon: <CheckCircle2 className="w-6 h-6" />,
+      visual: (
+        <img
+          src={HabitImage}
+          alt="Habit Tracker Mockup"
+          className="w-full h-auto rounded-lg border border-white/10"
+          onError={(e) =>
+            (e.target.src =
+              "https://placehold.co/600x400/0f172a/14b8a6?text=Habit+Tracker")
+          }
+        />
+      ),
+    },
+    {
+      name: "Integrated Tasks & Finance",
+      description:
+        "Manage daily priorities with one-time Todos and automated Repeating Tasks. Log all your financial transactions (Income/Expense) alongside your daily journal.",
+      icon: <Repeat className="w-6 h-6" />,
+      visual: (
+        <img
+          src={FinDashboard}
+          alt="Finance Dashboard Mockup"
+          className="w-full h-auto rounded-lg border border-white/10"
+          onError={(e) =>
+            (e.target.src =
+              "https://placehold.co/600x400/0f172a/14b8a6?text=Finance+Dashboard")
+          }
+        />
+      ),
+    },
+    {
+      name: "Memories",
+      description:
+        "Capture and revisit your favorite moments with photos, tags, and locations. Your personal memory vault.",
+      icon: <Book className="w-6 h-6" />,
+      visual: (
+        <img
+          src={Memories}
+          alt="Finance Dashboard Mockup"
+          className="w-auto h-auto rounded-lg border border-white/10"
+          onError={(e) =>
+            (e.target.src =
+              "https://placehold.co/600x400/0f172a/14b8a6?text=Finance+Dashboard")
+          }
+        />
+      ),
+    },
+  ];
 
+  // --- Roadmap Features ---
   const roadmapFeatures = [
-    { name: "Moments (Memories)", icon: <Lightbulb className="w-6 h-6" /> },
     { name: "Thoughts Vault", icon: <Smile className="w-6 h-6" /> },
     { name: "The Shelf (Media)", icon: <Book className="w-6 h-6" /> },
-    { name: "Personalization (Profile/Settings)", icon: <Wallet className="w-6 h-6" /> },
+    { name: "Profile & Personalization", icon: <Wallet className="w-6 h-6" /> },
+    { name: "Moments (Advanced Memories)", icon: <Lightbulb className="w-6 h-6" /> },
+    // Add more as needed
   ];
 
   const testimonials = [
@@ -218,13 +238,13 @@ export default function App() {
         </div>
       </section>
 
-      {/* --- Features Section (What's Live - UPDATED) --- */}
+      {/* --- What's Live Section --- */}
       <section id="features" className="py-24 container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-white">
-          Your Life in High-Res
+          What's Live in Fiary
         </h2>
         <div className="space-y-20">
-          {features.map((feature, index) => (
+          {liveFeatures.map((feature, index) => (
             <div
               key={index}
               className={`flex flex-col ${
@@ -250,19 +270,15 @@ export default function App() {
         </div>
       </section>
 
-      {/* --- Vision/Roadmap Section (UPDATED) --- */}
+      {/* --- Roadmap Section (Coming Soon) --- */}
       <section id="vision" className="py-24 bg-white/5">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
-            One App for Your Entire Life
+            Coming Soon to Fiary
           </h2>
           <p className="text-lg text-gray-300 max-w-3xl mx-auto mb-12">
-            We're building Fiary to be the single dashboard for your productivity. Stop switching between apps—your life, all in one place.
+            We're building Fiary to be the single dashboard for your productivity. These features are next on our roadmap.
           </p>
-          <h3 className="text-2xl font-semibold mb-8 text-white">
-            Next on the Roadmap
-          </h3>
-          {/* Updated grid for features in development */}
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 max-w-5xl mx-auto">
             {roadmapFeatures.map((feature) => (
               <GlassCard

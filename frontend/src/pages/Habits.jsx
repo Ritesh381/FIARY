@@ -183,6 +183,7 @@ const HabitGrid = ({
                 <div className="sticky left-0 bg-gray-800/50 p-2 font-semibold text-left truncate z-10">
                   {habit.title}
                 </div>
+
                 {daysArray.map((day) => {
                   const entry = habitEntries.find(
                     (e) => new Date(e.date).getUTCDate() === day
@@ -190,35 +191,43 @@ const HabitGrid = ({
 
                   let icon = (
                     <div className="w-6 h-6 rounded-full bg-gray-700/50 mx-auto"></div>
-                  );
-                  const entryExists = entry != null;
-                  const isDone = entry?.done === true;
+                  ); // default gray circle
 
-                  if (isQuitHabit) {
-                    if (entryExists && isDone) {
-                      icon = <X className="text-red-400 mx-auto" />;
-                    } else if (entryExists && !isDone) {
-                      icon = <Check className="text-green-400 mx-auto" />;
+                  if (entry) {
+                    const { done, notes } = entry;
+
+                    if (isQuitHabit) {
+                      // Quit habit → ❌ if done = true
+                      if (done) icon = <X className="text-red-400 mx-auto" />;
+                    } else {
+                      // Develop habit → ✅ if done = true
+                      if (done) icon = <Check className="text-green-400 mx-auto" />;
                     }
-                  } else {
-                    if (isDone) {
-                      icon = <Check className="text-green-400 mx-auto" />;
-                    }
+
+                    return (
+                      <div
+                        key={day}
+                        className="p-1 flex items-center justify-center"
+                      >
+                        {notes ? (
+                          <div className="tooltip">
+                            {icon}
+                            <span className="tooltip-text">{notes}</span>
+                          </div>
+                        ) : (
+                          icon
+                        )}
+                      </div>
+                    );
                   }
 
+                  // No entry → gray circle
                   return (
                     <div
                       key={day}
                       className="p-1 flex items-center justify-center"
                     >
-                      {entry?.notes ? (
-                        <div className="tooltip">
-                          {icon}
-                          <span className="tooltip-text">{entry.notes}</span>
-                        </div>
-                      ) : (
-                        icon
-                      )}
+                      <div className="w-6 h-6 rounded-full bg-gray-700/50 mx-auto"></div>
                     </div>
                   );
                 })}
@@ -230,6 +239,7 @@ const HabitGrid = ({
     </div>
   );
 };
+
 
 // --- REMOVED HabitManagementList component ---
 

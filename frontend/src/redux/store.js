@@ -8,6 +8,7 @@ import financeReducer from "./slices/financeSlice";
 import tasksReducer from "./slices/todoSlice";
 import thoughtReducer from "./slices/thoughtsSlice";
 import entryEditReducer from "./slices/entryEditSlice";
+import memoriesReducer from "./slices/memoriesSlice";
 
 const store = configureStore({
   reducer: {
@@ -20,6 +21,7 @@ const store = configureStore({
     todo: tasksReducer,
     thoughts: thoughtReducer,
     entryEdit: entryEditReducer,
+    memories: memoriesReducer,
   },
 });
 

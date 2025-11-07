@@ -143,50 +143,54 @@ const FinanceSection = ({
 
   const handleAddFinance = (e) => {
     e.preventDefault();
+    if (editingFinanceId) {
+      // If editing, update the existing entry instead of adding new
+      if (
+        !financeForm.amount ||
+        !financeForm.category_id ||
+        parseFloat(financeForm.amount) <= 0
+      )
+        return;
+      const updatedEntryDetails = getFinanceEntryDetails(financeForm.data);
+      const updatedFinanceList = finance.map((item) =>
+        (item.id || item._id) === editingFinanceId
+          ? { ...updatedEntryDetails, id: editingFinanceId }
+          : item
+      );
+      handleEntryChange("finance", "finance", updatedFinanceList);
+      // Track update in entryEdit
+      dispatch(editFinance({
+        _id: editingFinanceId,
+        action: "update",
+        data: updatedEntryDetails
+      }));
+      financeForm.reset();
+      setEditingFinanceId(null);
+      return;
+    }
     if (
       !financeForm.amount ||
       !financeForm.category_id ||
       parseFloat(financeForm.amount) <= 0
     )
       return;
-
     const newEntryDetails = getFinanceEntryDetails(financeForm.data);
     const id = Date.now();
-
     const newFinanceList = [...finance, { ...newEntryDetails, id }];
-    // Dispatch update to the 'finance' section, replacing the whole list
     handleEntryChange("finance", "finance", newFinanceList);
+    // Track add in entryEdit
+    dispatch(editFinance({
+      _id: id,
+      action: "add",
+      data: newEntryDetails
+    }));
     financeForm.reset();
-  };
-
-  const handleUpdateFinance = (e) => {
-    e.preventDefault();
-    if (
-      !editingFinanceId ||
-      !financeForm.amount ||
-      !financeForm.category_id ||
-      parseFloat(financeForm.amount) <= 0
-    )
-      return;
-
-    const updatedEntryDetails = getFinanceEntryDetails(financeForm.data);
-
-    const updatedFinanceList = finance.map((item) =>
-      item.id === editingFinanceId
-        ? { ...updatedEntryDetails, id: editingFinanceId }
-        : item
-    );
-
-    // Dispatch update to the 'finance' section, replacing the whole list
-    handleEntryChange("finance", "finance", updatedFinanceList);
-
-    financeForm.reset();
-    setEditingFinanceId(null);
   };
 
   const handleSelectFinanceForEdit = useCallback(
     (transaction) => {
-      setEditingFinanceId(transaction.id);
+      // Always enter edit mode for any finance item
+      setEditingFinanceId(transaction.id || transaction._id);
       financeForm.loadData(transaction);
     },
     [financeForm]
@@ -207,9 +211,7 @@ const FinanceSection = ({
   );
 
   // Determine the correct submit handler and button text
-  const financeSubmitHandler = editingFinanceId
-    ? handleUpdateFinance
-    : handleAddFinance;
+  const financeSubmitHandler = handleAddFinance;
   const financeButtonText = editingFinanceId
     ? "Update Transaction"
     : "Add Transaction to Log";

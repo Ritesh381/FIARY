@@ -1,19 +1,22 @@
 import React, { useCallback } from 'react';
-import { useDispatch } from "react-redux";
-import { editEntry } from "../../redux/slices/entryEditSlice"; // <-- new
+import { useDispatch, useSelector } from "react-redux";
+import { editEntry } from "../../redux/slices/entryEditSlice";
 import MoodSelector from "../MoodSelector.jsx";
 import { GlassCard } from "./GlassCard.jsx";
 
 const JournalAndMoodForm = ({ entry, handleEntryChange }) => {
   const dispatch = useDispatch();
+  const isEditing = useSelector(state => state.entryEdit.isEditing);
 
   const handleChange = useCallback((field, value) => {
     // Update visible form
     handleEntryChange("entry", field, value);
     
-    // Record diff if in edit mode
-    dispatch(editEntry({ field, value }));
-  }, [handleEntryChange, dispatch]);
+    // Track entry edits if in edit mode
+    if (isEditing) {
+      dispatch(editEntry({ field, value }));
+    }
+  }, [handleEntryChange, dispatch, isEditing]);
 
   return (
     <>

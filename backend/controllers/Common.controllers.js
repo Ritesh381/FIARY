@@ -170,18 +170,114 @@ const saveAll = async (req, res) => {
 
 const updateAll = async (req, res) => {
   try {
-    const { entryData, financeData, todosData, habitsData } = req.body;
+    const { entryData, financeData, todosData, habitsData, date } = req.body;
     const userId = req.user._id;
 
-    // Call already defined functions
-    await Promise.all([
-      updateEntry(entryData, userId),
-      updateFinance(financeData, userId),
-      updateTodos(todosData, userId),
-      updateHabits(habitsData, userId),
-    ]);
+    let updatedEntry = null;
 
-    res.status(200).json({ message: "All data updated successfully." });
+    // --- 1. Update Entry fields ---
+    if (entryData && Object.keys(entryData).length > 0) {
+      // Find entry for the date
+      const [year, month, day] = date.split("-").map(Number);
+      const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+      const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+      const entry = await Entry.findOne({
+        user: userId,
+        date: { $gte: startOfDay, $lte: endOfDay },
+      });
+      if (entry) {
+        Object.assign(entry, entryData);
+        updatedEntry = await entry.save();
+      }
+    }
+
+    // --- 2. Update Habits ---
+    if (Array.isArray(habitsData) && habitsData.length > 0) {
+      for (const habit of habitsData) {
+        if (!habit.habitId) continue;
+        const entryDate = new Date(date);
+        entryDate.setUTCHours(0, 0, 0, 0);
+        await HabitEntry.findOneAndUpdate(
+          {
+            habitId: habit.habitId,
+            userId: userId,
+            date: entryDate,
+          },
+          { $set: { done: habit.done, notes: habit.notes } },
+          { new: true, upsert: true, runValidators: true }
+        );
+      }
+    }
+
+    // --- 3. Update Todos ---
+    if (todosData) {
+      // Completed: [{_id, action}]
+      if (Array.isArray(todosData.completed)) {
+        for (const change of todosData.completed) {
+          if (change.action === "add") {
+            await Todo.findOneAndUpdate(
+              { _id: change._id, userId: userId },
+              { status: "completed" }
+            );
+          } else if (change.action === "remove") {
+            await Todo.findOneAndUpdate(
+              { _id: change._id, userId: userId },
+              { status: "pending" }
+            );
+          }
+        }
+      }
+      // Addition: [{id, action, data}]
+      if (Array.isArray(todosData.addition)) {
+        for (const change of todosData.addition) {
+          if (change.action === "add" && change.data) {
+            const newTodo = new Todo({
+              userId,
+              ...change.data,
+              status: "pending",
+            });
+            await newTodo.save();
+          } else if (change.action === "update" && change.data) {
+            await Todo.findOneAndUpdate(
+              { _id: change.id, userId: userId },
+              change.data,
+              { new: true }
+            );
+          } else if (change.action === "delete") {
+            await Todo.findOneAndUpdate(
+              { _id: change.id, userId: userId },
+              { isDeleted: true }
+            );
+          }
+        }
+      }
+    }
+
+    // --- 4. Update Finance ---
+    if (Array.isArray(financeData)) {
+      for (const change of financeData) {
+        if (change.action === "add" && change.data) {
+          const financeDoc = new Finance({
+            created_by: userId,
+            ...change.data,
+          });
+          await financeDoc.save();
+        } else if (change.action === "update" && change.data) {
+          await Finance.findOneAndUpdate(
+            { _id: change._id, created_by: userId },
+            change.data,
+            { new: true }
+          );
+        } else if (change.action === "delete") {
+          await Finance.findOneAndDelete({
+            _id: change._id,
+            created_by: userId,
+          });
+        }
+      }
+    }
+
+    res.status(200).json({ message: "All changes updated successfully.", entry: updatedEntry });
   } catch (error) {
     console.error("Error updating common data:", error);
     res.status(500).json({ message: "Server error updating data" });
