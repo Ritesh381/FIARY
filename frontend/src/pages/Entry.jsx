@@ -208,7 +208,7 @@
 //       try {
 //         const habits = await apiHabits.getAllHabits();
 //         setUserHabits(habits.filter((h) => !h.isDeleted));
-//         const todos = await apiTodo.getTodosByDate(selDate);
+//         const todos = await apiTodo.getPending(selDate);
 //         setTodaysTodos(todos || []);
 //       } catch (error) {
 //         console.error("Failed to fetch habits/todos:", error);

@@ -19,7 +19,7 @@ router.put("/:id", auth, updateTodo);
 router.delete("/:id", auth, deleteTodo);
 router.patch("/:id/complete", auth, markTodoCompleted);
 router.post("/batch-save", auth, batchsave)
-router.get("/by-date", auth, getTodosByDate);
+router.get("/pending", auth, getTodosByDate);
 
 
 module.exports = router;

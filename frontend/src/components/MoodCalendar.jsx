@@ -95,7 +95,7 @@ const Calendar = ({
   return (
     <div className="p-2 sm:p-4 bg-gray-900 text-white rounded-lg shadow-xl font-urbane w-full">
       {/* Month and Year Selectors */}
-      <div className="flex flex-col xs:flex-row gap-2 xs:gap-4 justify-between items-stretch xs:items-center mb-4">
+      <div className="flex flex-col md:flex-row gap-2 xs:gap-4 justify-between items-stretch xs:items-center mb-4">
         <select
           value={currentDate.getMonth()}
           onChange={handleMonthChange}

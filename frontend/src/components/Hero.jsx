@@ -173,7 +173,7 @@ function Hero() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row justify-center items-start gap-4 lg:gap-8 w-full p-2 lg:p-4">
+    <div className="flex flex-col md:flex-row justify-center items-start gap-4 lg:gap-8 w-full p-2 lg:p-4">
       {/* Calendar and Streak Container */}
       <div className="flex-shrink-0 relative w-full lg:w-auto">
         <MoodCalendar />

@@ -1,12 +1,19 @@
 import React, { useCallback } from 'react';
+import { useDispatch } from "react-redux";
+import { editEntry } from "../../redux/slices/entryEditSlice"; // <-- new
 import MoodSelector from "../MoodSelector.jsx";
 import { GlassCard } from "./GlassCard.jsx";
 
 const JournalAndMoodForm = ({ entry, handleEntryChange }) => {
-    
+  const dispatch = useDispatch();
+
   const handleChange = useCallback((field, value) => {
+    // Update visible form
     handleEntryChange("entry", field, value);
-  }, [handleEntryChange]);
+    
+    // Record diff if in edit mode
+    dispatch(editEntry({ field, value }));
+  }, [handleEntryChange, dispatch]);
 
   return (
     <>
@@ -26,6 +33,7 @@ const JournalAndMoodForm = ({ entry, handleEntryChange }) => {
               onChange={(e) => handleChange("achievement", e.target.value)}
             />
           </div>
+
           <div className="space-y-3 flex-shrink-0">
             <div className="flex items-center gap-3">
               <input
@@ -36,6 +44,7 @@ const JournalAndMoodForm = ({ entry, handleEntryChange }) => {
                 onChange={(e) => handleChange("sleepHours", e.target.value)}
               />
               <span className="text-xs text-gray-400">Hrs</span>
+
               <input
                 type="text"
                 placeholder="Sleep Notes"
@@ -44,6 +53,7 @@ const JournalAndMoodForm = ({ entry, handleEntryChange }) => {
                 onChange={(e) => handleChange("sleepNotes", e.target.value)}
               />
             </div>
+
             <div className="flex items-center gap-3">
               <input
                 type="number"
@@ -53,6 +63,7 @@ const JournalAndMoodForm = ({ entry, handleEntryChange }) => {
                 onChange={(e) => handleChange("timeWastedMinutes", e.target.value)}
               />
               <span className="text-xs text-gray-400">Min</span>
+
               <input
                 type="text"
                 placeholder="Unutilized time Notes"
@@ -63,6 +74,7 @@ const JournalAndMoodForm = ({ entry, handleEntryChange }) => {
             </div>
           </div>
         </div>
+
         <textarea
           rows="10"
           placeholder="Start writing your beautiful day's story...."

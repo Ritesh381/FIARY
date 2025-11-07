@@ -143,38 +143,19 @@ const markTodoCompleted = async (req, res) => {
 // ✅ Get todos by date (using the new 'date' field)
 const getTodosByDate = async (req, res) => {
   try {
-    const { date } = req.query; // Expecting date as YYYY-MM-DD from frontend
-
-    if (!date) {
-      return res
-        .status(400)
-        .json({ message: "Date query parameter is required." });
-    }
-
-    // Calculate start and end of the target day
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0); // Start of the day
-
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999); // End of the day
-
-    // Find todos that belong to the user, are active, and fall within the date range
     const todos = await Todo.find({
       userId: req.userId,
       isDeleted: false,
-      date: {
-        $gte: startOfDay,
-        $lte: endOfDay,
-      },
+      status: "pending",
     }).sort({
-      date: 1, // Sort by date ascending (if time is included)
-      createdAt: -1, // Secondary sort by newest creation
+      date: 1,
+      createdAt: -1,
     });
 
     res.json(todos);
   } catch (err) {
-    console.error("Error fetching todos by date:", err);
-    res.status(500).json({ message: "Failed to fetch todos for the day." });
+    console.error("Error fetching previous day todos:", err);
+    res.status(500).json({ message: "Failed to fetch todos for the previous day." });
   }
 };
 

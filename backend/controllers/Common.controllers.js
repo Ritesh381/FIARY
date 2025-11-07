@@ -9,48 +9,51 @@ const mongoose = require("mongoose");
 const getAll = async (req, res) => {
   try {
     const queryDate = new Date(req.query.date);
-    
-    if (isNaN(queryDate.getTime())) {
-      return res.status(400).json({ message: "Invalid or missing date query parameter." });
-    }
-    
-    const dateForStart = new Date(queryDate); 
-    const startOfDay = new Date(dateForStart.setHours(0, 0, 0, 0));
-    
-    const dateForEnd = new Date(queryDate);
-    const endOfDay = new Date(dateForEnd.setHours(23, 59, 59, 999));
 
-    const entry = await Entry.findOne({ 
-        user: req.user._id, 
-        date: {
-            $gte: startOfDay,
-            $lte: endOfDay,
-        }
-    }).lean();
-    
-    const todos = await Todo.find({ 
-      userId: req.user._id, 
+    if (isNaN(queryDate.getTime())) {
+      return res
+        .status(400)
+        .json({ message: "Invalid or missing date query parameter." });
+    }
+
+    const [year, month, day] = req.query.date.split("-").map(Number);
+const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+
+
+    console.log({ startOfDay, endOfDay });
+
+    const entry = await Entry.findOne({
+      user: req.user._id,
       date: {
         $gte: startOfDay,
         $lte: endOfDay,
-      }
+      },
     }).lean();
-    
-    const habits = await HabitEntry.find({ 
-      userId: req.user._id, 
+
+    const todos = await Todo.find({
+      userId: req.user._id,
       date: {
         $gte: startOfDay,
         $lte: endOfDay,
-      }
+      },
+    }).lean();
+
+    const habits = await HabitEntry.find({
+      userId: req.user._id,
+      date: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
     }).lean();
 
     const finance = await Finance.find({
       created_by: req.user._id,
       when: {
         $gte: startOfDay,
-        $lt: endOfDay, 
+        $lt: endOfDay,
       },
-    }).lean();
+    }).lean({ getters: true });
 
     res.status(200).json({ entry, finance, todos, habits });
   } catch (error) {
@@ -124,7 +127,7 @@ const saveAll = async (req, res) => {
         await financeDoc.save();
       }
     }
-    
+
     // --- Create Entry ---
     if (entry) {
       if (
@@ -152,7 +155,9 @@ const saveAll = async (req, res) => {
       await newEntry.save();
     }
 
-    res.status(200).json({ message: "All data saved successfully.", success: true });
+    res
+      .status(200)
+      .json({ message: "All data saved successfully.", success: true });
   } catch (error) {
     console.error("Error saving all data:", error);
     res.status(500).json({
@@ -173,7 +178,7 @@ const updateAll = async (req, res) => {
       updateEntry(entryData, userId),
       updateFinance(financeData, userId),
       updateTodos(todosData, userId),
-      updateHabits(habitsData, userId)
+      updateHabits(habitsData, userId),
     ]);
 
     res.status(200).json({ message: "All data updated successfully." });
@@ -184,5 +189,7 @@ const updateAll = async (req, res) => {
 };
 
 module.exports = {
-  getAll, saveAll, updateAll
+  getAll,
+  saveAll,
+  updateAll,
 };

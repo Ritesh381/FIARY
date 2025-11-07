@@ -37,12 +37,14 @@ const FinanceSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.Decimal128,
       required: true,
       default: 0,
+      get: (v) => parseFloat(v?.toString()),
     },
 
     note: { type: String },
     upload_link: { type: String }, // Cloudinary link
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { getters: true }, toObject: { getters: true } },
+  
 );
 
 const Finance = mongoose.model("Finance", FinanceSchema);

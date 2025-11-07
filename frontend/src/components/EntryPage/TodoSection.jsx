@@ -1,6 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { Check, Plus, X as XIcon, Flag } from 'lucide-react';
 import { GlassCard } from "./GlassCard.jsx";
+import { useDispatch, useSelector } from "react-redux";
+import { editTodo } from "../../redux/slices/entryEditSlice";
 
 const initialTodoFormState = {
   title: "",
@@ -11,8 +13,14 @@ const initialTodoFormState = {
 };
 
 const TodoSection = ({ todo, todaysTodos, handleEntryChange, date }) => {
+  const dispatch = useDispatch();
+  const isEditing = useSelector(state => state.entryEdit.isEditing);
+  
   const [todoForm, setTodoForm] = useState(initialTodoFormState);
   const [editingTodoId, setEditingTodoId] = useState(null);
+
+  // const todaysTodos = todos?.past || [];
+  // const tomorrowsTodos = todos?.present || [];
 
   const BASE_CATEGORIES = ["Personal", "Work", "Health", "Finance", "Education", "Chores"];
 
@@ -103,14 +111,31 @@ const TodoSection = ({ todo, todaysTodos, handleEntryChange, date }) => {
   const todoButtonText = editingTodoId ? "Update Task" : "Add Task for Tomorrow";
 
   // Completing today's todos (unchanged)
-  const handleCompleteTodo = useCallback((task) => {
+  const handleCompleteTodo = useCallback(
+  (task) => {
     const isCompleted = (todo.completed || []).some((t) => t._id === task._id);
     let updatedCompleted;
-    if (isCompleted) updatedCompleted = (todo.completed || []).filter((t) => t._id !== task._id);
-    else updatedCompleted = [...(todo.completed || []), task];
 
+    if (isCompleted) {
+      // Remove from completed
+      updatedCompleted = (todo.completed || []).filter((t) => t._id !== task._id);
+      if (isEditing) {
+        dispatch(editTodo({ type: 'completed', id: task._id, action: 'remove' }));
+      }
+    } else {
+      // Add to completed
+      updatedCompleted = [...(todo.completed || []), task];
+      if (isEditing) {
+        dispatch(editTodo({ type: 'completed', id: task._id, action: 'add' }));
+      }
+    }
+
+    // Push the updated list to parent state
     handleEntryChange("todo", "completed", updatedCompleted);
-  }, [todo.completed, handleEntryChange]);
+  },
+  [todo.completed, handleEntryChange, dispatch, isEditing]
+);
+
 
   const getPriorityStyle = (priority) => {
     switch (priority) {

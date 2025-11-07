@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   entry: {
-    date: new Date().toISOString().split('T')[0], // Use YYYY-MM-DD
+    date: new Date().toISOString().split("T")[0], // Use YYYY-MM-DD
     feelingScore: null,
     achievement: "",
     sleepHours: "",
@@ -13,7 +13,7 @@ const initialState = {
   },
   todo: {
     completed: [], // Tasks marked as done today
-    addition: [],  // New tasks created for tomorrow
+    addition: [], // New tasks created for tomorrow
   },
   habits: [], // Habit entries for the day
   finance: [], // Temporary finance transactions for the day
@@ -31,7 +31,7 @@ const entryFormSlice = createSlice({
       if (state[section] && typeof state[section][field] !== "undefined") {
         state[section][field] = value;
       } else if (state[section]) {
-         // Handle direct object replacement if field is the section itself (e.g., finance list)
+        // Handle direct object replacement if field is the section itself (e.g., finance list)
         state[section] = value;
       }
     },
@@ -52,7 +52,15 @@ const entryFormSlice = createSlice({
     },
     // Load complete form data for editing an existing day
     loadEntryData: (state, action) => {
-      const { entry, habits, todo, finance, _id } = action.payload || {};
+      const normalizeFinance = (list = []) =>
+        list.map((item) => ({
+          ...item,
+          amount:
+            typeof item.amount === "object" && item.amount?.$numberDecimal
+              ? item.amount.$numberDecimal // extract the actual numeric string
+              : String(item.amount ?? "0"), // fallback
+        }));
+      const { entry, habits, todos, finance, _id } = action.payload || {};
       // Ensure we don't accidentally share references
       state.entry = {
         date: entry?.date ?? state.entry.date,
@@ -60,21 +68,23 @@ const entryFormSlice = createSlice({
         achievement: entry?.achievement ?? state.entry.achievement,
         sleepHours: entry?.sleepHours ?? state.entry.sleepHours,
         sleepNotes: entry?.sleepNotes ?? state.entry.sleepNotes,
-        timeWastedMinutes: entry?.timeWastedMinutes ?? state.entry.timeWastedMinutes,
+        timeWastedMinutes:
+          entry?.timeWastedMinutes ?? state.entry.timeWastedMinutes,
         timeWastedNotes: entry?.timeWastedNotes ?? state.entry.timeWastedNotes,
         diaryEntry: entry?.diaryEntry ?? state.entry.diaryEntry,
         // keep other fields as-is if not provided
       };
       state.habits = Array.isArray(habits) ? habits : [];
-      state.todo = todo || { completed: [], addition: [] };
-      state.finance = Array.isArray(finance) ? finance : [];
+      state.todo = { completed: [], addition: todos? todos : [] };
+      state.finance = Array.isArray(finance) ? normalizeFinance(finance) : [];
       state._id = _id;
+
     },
     resetForm: () => ({
       ...initialState,
       entry: {
         ...initialState.entry,
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toISOString().split("T")[0],
       },
     }),
 
@@ -84,7 +94,12 @@ const entryFormSlice = createSlice({
   },
 });
 
-export const { setFormField, updateHabitEntry, resetForm, setEntryDate, loadEntryData } =
-  entryFormSlice.actions;
+export const {
+  setFormField,
+  updateHabitEntry,
+  resetForm,
+  setEntryDate,
+  loadEntryData,
+} = entryFormSlice.actions;
 
 export default entryFormSlice.reducer;

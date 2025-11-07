@@ -7,6 +7,7 @@ import entryFormSlice from "./slices/entryFormSlice";
 import financeReducer from "./slices/financeSlice";
 import tasksReducer from "./slices/todoSlice";
 import thoughtReducer from "./slices/thoughtsSlice";
+import entryEditReducer from "./slices/entryEditSlice";
 
 const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ const store = configureStore({
     finance: financeReducer,
     todo: tasksReducer,
     thoughts: thoughtReducer,
+    entryEdit: entryEditReducer,
   },
 });
 

@@ -13,6 +13,7 @@ const {
   monthly: monthlyPrompt,
 } = prompts;
 
+// ---------------- DAILY INSIGHT ----------------
 const dailyInsight = async (req, res) => {
   try {
     const { id } = req.params;
@@ -24,54 +25,24 @@ const dailyInsight = async (req, res) => {
 
     // Find the entry by its ID and ensure it belongs to the authenticated user
     const entry = await Entry.findOne({ _id: id, user: userId });
-
     if (!entry)
       return res
         .status(404)
         .json({ message: "Entry not found or access denied" });
 
-    const response = await callModel(
-      dailyPrompt + dailyInsightFormatter(entry, user)
-    );
-    res.status(200).json(response);
-  } catch (error) {
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-};
+    // ---------------- Fetch Context (Last 7 Entries) ----------------
+    const currentDate = new Date(entry.date);
+    const startDate = new Date(currentDate);
+    startDate.setDate(currentDate.getDate() - 6); // past 7 days (including current)
 
-// WEEKLY
-const weeklyInsight = async (req, res) => {
-  try {
-    const userId = req.userId; // Get userId from request
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
-
-    const today = new Date();
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() - 6); // 7 days window
-
-    // Base query to filter by user and date range
-    const baseQuery = {
+    const context = await Entry.find({
       user: userId,
-      date: { $gte: startDate, $lte: today },
-    };
+      date: { $gte: startDate, $lte: currentDate },
+    }).sort({ date: 1 });
 
-    const consecutiveEntries = await Entry.find(baseQuery).sort({ date: 1 });
-
-    let entriesToUse = [];
-
-    if (consecutiveEntries.length === 7) {
-      entriesToUse = consecutiveEntries;
-    } else {
-      entriesToUse = await Entry.find(baseQuery).sort({ date: -1 }).limit(7);
-
-      entriesToUse = entriesToUse.reverse();
-    }
-
-    if (!entriesToUse.length)
-      return res.status(404).json({ message: "No weekly entries found" });
-
+    // ---------------- AI Call ----------------
     const response = await callModel(
-      weeklyPrompt + weeklyInsightFormatter(entriesToUse, req.user)
+      dailyPrompt + dailyInsightFormatter(entry, user, context)
     );
 
     res.status(200).json(response);
@@ -81,25 +52,67 @@ const weeklyInsight = async (req, res) => {
   }
 };
 
-// MONTHLY
-const monthlyInsight = async (req, res) => {
+// ---------------- WEEKLY INSIGHT ----------------
+const weeklyInsight = async (req, res) => {
   try {
-    const userId = req.userId; // Get userId from request
+    const userId = req.userId;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
     const today = new Date();
     const startDate = new Date(today);
-    startDate.setDate(today.getDate() - 29); // last 30 days window
+    startDate.setDate(today.getDate() - 6); // last 7 days (this week)
 
-    // Find the last 30 entries for this user in the window
+    // Current week data
+    const currentWeekEntries = await Entry.find({
+      user: userId,
+      date: { $gte: startDate, $lte: today },
+    }).sort({ date: 1 });
+
+    if (!currentWeekEntries.length)
+      return res.status(404).json({ message: "No weekly entries found" });
+
+    // ---------------- Fetch Context (Previous Week) ----------------
+    const prevWeekEnd = new Date(startDate);
+    prevWeekEnd.setDate(startDate.getDate() - 1);
+    const prevWeekStart = new Date(prevWeekEnd);
+    prevWeekStart.setDate(prevWeekEnd.getDate() - 6);
+
+    const context = await Entry.find({
+      user: userId,
+      date: { $gte: prevWeekStart, $lte: prevWeekEnd },
+    }).sort({ date: 1 });
+
+    // ---------------- AI Call ----------------
+    const response = await callModel(
+      weeklyPrompt +
+        weeklyInsightFormatter(currentWeekEntries, req.user, context)
+    );
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// ---------------- MONTHLY INSIGHT (UNCHANGED) ----------------
+const monthlyInsight = async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - 29); // last 30 days
+
     let entriesToUse = await Entry.find({
-      user: userId, // Filter by user ID
+      user: userId,
       date: { $gte: startDate, $lte: today },
     })
       .sort({ date: -1 })
       .limit(30);
 
-    entriesToUse = entriesToUse.reverse(); // oldest → newest order
+    entriesToUse = entriesToUse.reverse();
 
     if (!entriesToUse.length)
       return res.status(404).json({ message: "No monthly entries found" });

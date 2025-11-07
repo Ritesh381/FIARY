@@ -9,6 +9,15 @@ import {
 import { useNavigate, useLocation } from "react-router";
 import { fetchCategoriesAndSubcategories } from "../../redux/slices/financeSlice";
 import { addEntry } from "../../redux/slices/entrySlice.js";
+import {
+  startEditing,
+  editTodo,
+  editFinance,
+  toggleHabit,
+  commitEdits,
+  cancelEditing,
+} from "../../redux/slices/entryEditSlice";
+
 
 // API Imports
 import apiHabits from "../../api/HabitCalls.js";
@@ -121,7 +130,7 @@ function EntryPage() {
       try {
         const habits = await apiHabits.getAllHabits();
         setUserHabits(habits.filter((h) => !h.isDeleted));
-        const todos = await apiTodo.getTodosByDate(selDate);
+        const todos = await apiTodo.getPending(selDate);
         setTodaysTodos(todos || []);
       } catch (error) {
         console.error("Failed to fetch habits/todos:", error);
@@ -137,6 +146,7 @@ function EntryPage() {
           setOverlayState("loading");
           const data = await EntryPageCalls.getAll(selDate);
           dispatch(loadEntryData(data));
+          dispatch(startEditing(data));
           setOverlayState("hidden");
         } catch (error) {
           setOverlayState("hidden");
@@ -193,42 +203,25 @@ function EntryPage() {
   };
 
   const handleUpdate = async () => {
-    setAttemptedSave(true); // Signal to child components to show required fields
+    setAttemptedSave(true);
     setValidationError(null);
     setOverlayState("loading");
     
     try {
-      const resp = await EntryPageCalls.updateAll({
-        entry, habits, todos: todo, finance,
-      });
-
-      const updated =
-        resp?.entry ||
-        resp?.data?.entry ||
-        resp?.updatedEntry ||
-        resp?.data?.updatedEntry ||
-        (resp?.success && resp?.data) ||
-        null;
-
-      if (updated) {
-        try {
-          dispatch(addEntry({ entry: updated }));
-        } catch (err) {
-          console.warn("Failed to dispatch addEntry for update:", err);
-        }
-        setOverlayState("success");
-        return;
-      }
-      setOverlayState("hidden");
+      // First log all tracked changes
+      dispatch(commitEdits());
+      
+      // For now, just simulate success
+      setOverlayState("success");
+      setTimeout(() => {
+        navigate("/");
+        dispatch(resetForm());
+        dispatch(cancelEditing());
+      }, 500);
+      
     } catch (error) {
       setOverlayState("hidden");
-      
-      if (error.message && error.message.includes("required")) {
-        setValidationError(error.message);
-      } else {
-        setValidationError(`Failed to update entry: ${error.message || 'Server error.'}`);
-      }
-
+      setValidationError(`Failed to update entry: ${error.message || 'Server error.'}`);
       console.error("Update error:", error);
     }
   };

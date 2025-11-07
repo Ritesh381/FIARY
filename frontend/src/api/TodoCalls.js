@@ -48,10 +48,10 @@ const apiTodos = {
     }
   },
   
-  getTodosByDate: async (date) => {
+  getPending: async (date) => {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/todos/by-date?date=${date}`
+        `${API_BASE_URL}/todos/pending`
       );
       return response.data;
     } catch (error) {
