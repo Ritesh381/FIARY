@@ -52,7 +52,7 @@ function Hero() {
 
   const [markedDates, setMarkedDates] = useState([]);
   const [timeRange, setTimeRange] = useState("week");
-  const [stats, setStats] = useState({ avgSleep: 0, avgTimeWasted: 0 });
+  const [stats, setStats] = useState({ avgSleep: 0, avgTimeWasted: 0, avgMoodScore: 0, });
 
   // State for the new graph component
   const [graphDataType, setGraphDataType] = useState("sleep");
@@ -98,12 +98,14 @@ function Hero() {
           (sum, e) => sum + e.timeWastedMinutes,
           0
         );
+        const totalMood = filtered.reduce((sum, e) => sum + e.feelingScore, 0)
         setStats({
           avgSleep: totalSleep / filtered.length,
           avgTimeWasted: totalTimeWasted / filtered.length,
+          avgMoodScore: totalMood / filtered.length,
         });
       } else {
-        setStats({ avgSleep: 0, avgTimeWasted: 0 });
+        setStats({ avgSleep: 0, avgTimeWasted: 0, avgMoodScore: 0 });
       }
     }
   }, [allEntries, timeRange]);
@@ -173,7 +175,7 @@ function Hero() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row justify-center items-start gap-4 lg:gap-8 w-full p-2 lg:p-4">
+    <div className="flex flex-col md:flex-row justify-center items-start gap-4 lg:gap-8 w-full ">
       {/* Calendar and Streak Container */}
       <div className="flex-shrink-0 relative w-full lg:w-auto">
         <MoodCalendar />
@@ -206,6 +208,12 @@ function Hero() {
             <span className="text-gray-400">Avg Fun Time</span>
             <span className="font-semibold text-amber-400 bg-amber-900/50 px-3 py-1 rounded-full">
               {avgTimeHours}h {avgTimeMinutes}m
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-400">Average Feeling Score</span>
+            <span className="font-semibold text-cyan-400 bg-cyan-900/50 px-3 py-1 rounded-full">
+              {stats.avgMoodScore.toFixed(2)} / 10
             </span>
           </div>
         </div>

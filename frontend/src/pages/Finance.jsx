@@ -2,11 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   IndianRupee,
-  TrendingUp,
-  TrendingDown,
-  Clock,
   Tag,
-  NotepadText,
   Loader2,
   AlertTriangle,
   Plus,
@@ -22,6 +18,7 @@ import {
 } from "../redux/slices/financeSlice";
 import FinanceFormModal from "../components/finance/FinanceFormModal";
 import FinanceEditModal from "../components/finance/FinanceEditModal";
+import { setNavItems } from "../redux/slices/NavItems";
 
 const GlassCard = ({ children, className = "" }) => (
   <div
@@ -124,6 +121,16 @@ export default function FinancePage() {
     dispatch(fetchCategoriesAndSubcategories());
   }, [dispatch]);
 
+  useEffect(() => {
+    dispatch(
+      setNavItems([
+        { id:0, type: "link", name: "Dashboard", link: "/finance" },
+        { id:1, type: "link", name: "Stats", link: "/finance?page=1" },
+        { id:2, type: "link", name: "Configurations", link: "/finance?page=2" },
+      ])
+    );
+  }, [dispatch]);
+
   // --- Data Filtering and Grouping Logic ---
   const { monthlyTotals, groupedEntries } = useMemo(() => {
     const currentMonthEntries = entries
@@ -216,7 +223,7 @@ export default function FinancePage() {
   };
 
   return (
-    <div className="p-4 md:p-8 min-h-screen max-w-4xl mx-auto">
+    <div className="min-h-screen max-w-4xl mx-auto">
       <div className="flex sm:flex-row justify-between items-center mb-6 gap-4">
         <h1 className="text-4xl font-extrabold text-white mb-6 flex items-center gap-3">
           <IndianRupee size={32} className="text-green-400" /> Finance Dashboard

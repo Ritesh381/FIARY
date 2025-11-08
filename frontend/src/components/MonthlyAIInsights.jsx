@@ -9,7 +9,6 @@ export default function MonthlyAIInsights() {
   const [status, setStatus] = useState("idle");
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
-
   const [speakingKey, setSpeakingKey] = useState(null);
   const utteranceRef = useRef(null);
 
@@ -30,20 +29,18 @@ export default function MonthlyAIInsights() {
   };
 
   const renderLoading = () => (
-    <div className="w-full max-w-2xl mx-auto p-6 bg-gray-900 bg-opacity-60 rounded-2xl shadow-lg flex flex-col items-center justify-center space-y-4">
-      <RiSparklingLine className="w-12 h-12 animate-spin text-white" />
+    <div className="w-full max-w-2xl mx-auto p-6 bg-gray-900/60 rounded-2xl shadow-lg flex flex-col items-center justify-center space-y-4">
+      <RiSparklingLine className="w-10 h-10 animate-spin text-pink-400" />
       <p className="text-gray-300 text-lg">Generating monthly insights…</p>
     </div>
   );
 
   const renderResult = () => {
-    if (!result) {
-      return <p className="text-gray-300">No insights returned.</p>;
-    }
+    if (!result) return <p className="text-gray-400">No insights returned.</p>;
 
     if (typeof result === "string") {
       return (
-        <div className="prose prose-invert max-w-none">
+        <div className="prose prose-invert max-w-none text-gray-200">
           <ReactMarkdown>{result}</ReactMarkdown>
         </div>
       );
@@ -51,19 +48,24 @@ export default function MonthlyAIInsights() {
 
     if (typeof result === "object") {
       return (
-        <div className="w-full grid gap-4">
+        <div className="w-full grid gap-5">
           {Object.entries(result).map(([title, body]) => (
             <div
               key={title}
-              className="p-4 bg-gray-800 rounded-md shadow-inner relative"
+              className="p-5 bg-gray-800/70 rounded-xl border border-white/10 shadow-md hover:shadow-lg transition"
             >
-              <div className="flex justify-between items-center">
-                <h3 className="text-white font-semibold">{title}</h3>
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-semibold text-white">{title}</h3>
                 <button
                   onClick={() =>
                     speakingKey === title
                       ? stopSpeaking(setSpeakingKey, utteranceRef)
-                      : speakText(String(body), title, setSpeakingKey, utteranceRef)
+                      : speakText(
+                          String(body),
+                          title,
+                          setSpeakingKey,
+                          utteranceRef
+                        )
                   }
                   className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition"
                   aria-label={`${
@@ -78,8 +80,7 @@ export default function MonthlyAIInsights() {
                 </button>
               </div>
 
-              {/* Use a block container (div) so markdown can render lists/blocks safely */}
-              <div className="text-gray-200 mt-2 prose prose-invert max-w-none">
+              <div className="text-gray-300 leading-relaxed whitespace-pre-line">
                 <ReactMarkdown>{String(body)}</ReactMarkdown>
               </div>
             </div>
@@ -94,25 +95,42 @@ export default function MonthlyAIInsights() {
   };
 
   const renderError = () => (
-    <div className="w-full max-w-2xl mx-auto p-6 bg-red-900 bg-opacity-60 rounded-2xl shadow-lg flex flex-col items-center space-y-3">
-      <p className="text-white font-semibold">Failed to generate insights</p>
+    <div className="w-full max-w-2xl mx-auto p-6 bg-red-900/60 rounded-2xl shadow-lg flex flex-col items-center space-y-3">
+      <p className="text-white font-semibold text-lg">
+        Failed to generate insights
+      </p>
       <p className="text-red-200 text-sm">{error}</p>
     </div>
   );
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className="w-full max-w-3xl mx-auto mt-4 sm:mt-8 px-4">
+      {/* Section Heading */}
+      <div className="flex flex-col items-center mb-6">
+        <h2 className="text-2xl sm:text-3xl font-bold text-center bg-gradient-to-r from-purple-400 to-pink-500 text-transparent bg-clip-text flex items-center gap-2">
+          <RiSparklingLine className="text-pink-400 w-6 h-6 animate-pulse" />
+          Monthly AI Insights
+        </h2>
+        <p className="text-gray-400 text-sm sm:text-base mt-2 text-center max-w-md">
+          Your monthly reflection powered by AI — get deep insights about your
+          progress, mindset, and patterns.
+        </p>
+      </div>
+
+      {/* Generate Button */}
       {status === "idle" && (
         <div className="flex justify-center">
           <button
             onClick={handleGenerate}
-            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full shadow-lg hover:scale-[1.02] transform transition"
+            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full shadow-lg hover:scale-[1.03] transform transition"
             aria-label="Generate Monthly AI Insights"
           >
             Generate Monthly AI Insights
           </button>
         </div>
       )}
+
+      {/* States */}
       {status === "loading" && <div className="mt-6">{renderLoading()}</div>}
       {status === "done" && <div className="mt-6 p-4">{renderResult()}</div>}
       {status === "error" && <div className="mt-6">{renderError()}</div>}

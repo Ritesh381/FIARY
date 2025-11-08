@@ -9,6 +9,7 @@ import tasksReducer from "./slices/todoSlice";
 import thoughtReducer from "./slices/thoughtsSlice";
 import entryEditReducer from "./slices/entryEditSlice";
 import memoriesReducer from "./slices/memoriesSlice";
+import navReducer from "./slices/NavItems";
 
 const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ const store = configureStore({
     thoughts: thoughtReducer,
     entryEdit: entryEditReducer,
     memories: memoriesReducer,
+    nav: navReducer,
   },
 });
 

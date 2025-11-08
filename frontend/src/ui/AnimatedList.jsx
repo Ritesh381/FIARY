@@ -163,7 +163,6 @@ export default AnimatedList;
   
 // <AnimatedList
 //   items={items}
-//   onItemSelect={(item, index) => console.log(item, index)}
 //   showGradients={true}
 //   enableArrowNavigation={true}
 //   displayScrollbar={true}

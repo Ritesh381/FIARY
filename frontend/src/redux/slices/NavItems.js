@@ -1,18 +1,23 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-export const navItemsSlice = createSlice({
-  name: "streak",
-  initialState: [{ type:"msg", label:"Consistency is the key to success" }],
+const initialState = {
+  items: [
+    { type: "text", content: "Stay consistent 🔥" }
+  ],
+};
+
+const navSlice = createSlice({
+  name: "nav",
+  initialState,
   reducers: {
-    addItem: (state, action) => {
-        state.push(action.payload)
+    setNavItems: (state, action) => {
+      state.items = action.payload;
     },
-    setArr : (state, action) => {
-        state = action.payload
-    }
+    clearNavItems: (state) => {
+      state.items = [];
+    },
   },
 });
 
-export const { setStreak, setMessage } = navItemsSlice.actions;
-
-export default navItemsSlice.reducer;
+export const { setNavItems, clearNavItems } = navSlice.actions;
+export default navSlice.reducer;

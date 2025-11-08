@@ -86,11 +86,6 @@ export default function MemoryForm({ memory = null, onClose }) {
     submitData.append('photos', file);
   });
 
-  // Debug log
-  for (let [key, value] of submitData.entries()) {
-    console.log(key, value);
-  }
-
   try {
     if (memory?._id) {
       await dispatch(updateMemory({ id: memory._id, formData: submitData })).unwrap();

@@ -85,7 +85,6 @@ const entryEditSlice = createSlice({
     },
     
     commitEdits: (state) => {
-      console.log('Changes to be committed:', state.changes);
       return initialState;
     },
     

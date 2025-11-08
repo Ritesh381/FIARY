@@ -15,6 +15,8 @@ import { useHabitAnalytics } from "../hooks/useHabitAnalytics";
 import OverallDashboard from "../components/habits/OverallDashboard";
 import HabitAnalytics from "../components/habits/HabitAnalytics";
 import Calendar from "../components/Calendar";
+import { setNavItems } from "../redux/slices/NavItems";
+import { useDispatch } from "react-redux";
 
 const GlobalStyles = () => (
   <style>{`
@@ -201,7 +203,8 @@ const HabitGrid = ({
                       if (done) icon = <X className="text-red-400 mx-auto" />;
                     } else {
                       // Develop habit → ✅ if done = true
-                      if (done) icon = <Check className="text-green-400 mx-auto" />;
+                      if (done)
+                        icon = <Check className="text-green-400 mx-auto" />;
                     }
 
                     return (
@@ -240,7 +243,6 @@ const HabitGrid = ({
   );
 };
 
-
 // --- REMOVED HabitManagementList component ---
 
 // --- Main App Component ---
@@ -253,6 +255,8 @@ export default function HabitTracker() {
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState(null);
+
+  const dispatch = useDispatch();
 
   // Fetch all master habits
   useEffect(() => {
@@ -269,6 +273,15 @@ export default function HabitTracker() {
     };
     fetchAllHabits();
   }, []);
+
+  useEffect(() => {
+    dispatch(
+      setNavItems([
+        { id: 0, type: "link", name: "Habit Tracker", link: "/habits" },
+        { id: 1, type: "link", name: "Hobbie Tracker", link: "/habits?page=1" },
+      ])
+    );
+  }, [dispatch]);
 
   // Fetch entries for the current habits and month
   const fetchAllEntries = useCallback(async () => {
@@ -355,7 +368,7 @@ export default function HabitTracker() {
 
   // --- EDITED RENDER SECTION ---
   return (
-    <div className="p-4 md:p-8 min-h-screen text-gray-300">
+    <div className="min-h-screen text-gray-300">
       <GlobalStyles />
       <HeaderControls
         onAddNew={() => setAddModalOpen(true)}
@@ -399,31 +412,36 @@ export default function HabitTracker() {
           />
 
           {/* --- Individual Habit Calendars --- */}
-<div className="mt-12 w-full max-w-6xl mx-auto flex flex-wrap justify-center gap-8">
-  {habits.filter(h => !h.isDeleted).map((habit) => {
-    const habitEntries = entries[habit._id] || [];
-    const markedDates = habitEntries
-      .filter(e => e.done)
-      .map(e => e.date);
+          <div className="mt-12 w-full max-w-6xl mx-auto flex flex-wrap justify-center gap-8">
+            {habits
+              .filter((h) => !h.isDeleted)
+              .map((habit) => {
+                const habitEntries = entries[habit._id] || [];
+                const markedDates = habitEntries
+                  .filter((e) => e.done)
+                  .map((e) => e.date);
 
-    return (
-      <div
-        key={habit._id}
-        className="glass-card flex flex-col items-center justify-start p-6 w-full sm:w-[300px] md:w-[320px] lg:w-[340px] text-center rounded-2xl transition-transform hover:scale-[1.02]"
-      >
-        <h2 className="text-white text-lg font-semibold mb-4">
-          {habit.title}
-        </h2>
-        <Calendar
-          markedDates={markedDates}
-          markedColor={habit.habitType === "quit" ? "#E63946" : "#6CAA67"}
-          onClick={(date) => console.log(`Clicked ${habit.title} date:`, date)}
-        />
-      </div>
-    );
-  })}
-</div>
-
+                return (
+                  <div
+                    key={habit._id}
+                    className="glass-card flex flex-col items-center justify-start p-6 w-full sm:w-[300px] md:w-[320px] lg:w-[340px] text-center rounded-2xl transition-transform hover:scale-[1.02]"
+                  >
+                    <h2 className="text-white text-lg font-semibold mb-4">
+                      {habit.title}
+                    </h2>
+                    <Calendar
+                      markedDates={markedDates}
+                      markedColor={
+                        habit.habitType === "quit" ? "#E63946" : "#6CAA67"
+                      }
+                      onClick={(date) =>
+                        console.log(`Clicked ${habit.title} date:`, date)
+                      }
+                    />
+                  </div>
+                );
+              })}
+          </div>
         </div>
       )}
       <AddHabitModal

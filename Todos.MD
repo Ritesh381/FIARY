@@ -2,7 +2,6 @@
 
 - So many bugs in Updaing a entry
     - Not able to update pre loaded todos.
-- Make the memories page
 - Make the profile page
 - Make the shelf
 - Merge setting and profile page

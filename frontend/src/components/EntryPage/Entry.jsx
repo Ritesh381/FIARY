@@ -221,9 +221,6 @@ function EntryPage() {
 
       const resp = await EntryPageCalls.updateAll(payload);
 
-      // Log for debugging
-      console.log("Sent update payload:", payload);
-
       if (resp && resp.entry && resp.entry._id) {
         // Update the entry in the entries state (editEntry expects {id, updatedEntry})
         dispatch(updateEntryInState({ id: resp.entry._id, updatedEntry: resp.entry }));
