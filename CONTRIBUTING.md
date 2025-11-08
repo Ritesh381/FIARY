@@ -1,72 +1,193 @@
-# Contributing to FIARY 📝
+# 🧑‍💻 Contributing to FIARY
 
-First off, thank you for considering contributing to FIARY! We welcome contributions from everyone. Whether it's reporting a bug, suggesting a new feature, improving documentation, or writing code, your help is appreciated.
+First off, thank you for your interest in contributing to **FIARY** — an integrated life dashboard built on the MERN stack.
 
-## 🌱 How Can I Contribute?
+We welcome developers, designers, and enthusiasts who want to help make FIARY smarter, cleaner, and more powerful.  
+This document explains how to set up your environment, follow project conventions, and contribute effectively.
 
-There are many ways to contribute to FIARY:
+---
 
-### 🐛 Reporting Bugs
+## ⚙️ Local Development Setup
 
-If you find a bug, please check if it has already been reported in the [Issues](https://www.google.com/search?q=https://github.com/your-username/fiary/issues) section. If not, please open a new issue. Be sure to include:
+### 🪜 Prerequisites
+- **Node.js** v18 or newer  
+- **MongoDB** (local or cloud cluster)  
+- **Git** for version control  
 
-* A clear and descriptive title.
+### 🚀 Getting Started
+```bash
+# 1. Fork and clone the repository
+git clone https://github.com/<your-username>/fiary.git
+cd fiary
 
-* Steps to reproduce the bug.
+# 2. Install frontend dependencies
+cd frontend
+npm install
 
-* What you expected to happen.
+# 3. Run the frontend dev server
+npm run dev
 
-* What actually happened (screenshots are helpful!).
+# 4. In a new terminal, start the backend server
+cd ../backend
+npm install
+npm run dev
+```
 
-* Your environment details (Browser, OS, etc.).
+> Ensure that your backend \`.env\` file is correctly configured with your MongoDB URI, JWT secret, and any required API keys.
 
-### How to setup Locally ? 
-* Refer setup.md
+For detailed setup steps, refer to [\`setup.md\`](./setup.md).
 
-### ✨ Suggesting Enhancements
+---
 
-Have an idea for a new feature or an improvement to an existing one? We'd love to hear it! Please open an issue and:
+## 🧩 Project Structure Overview
 
-* Use a clear and descriptive title.
+```
+fiary/
+├── frontend/
+│   ├── src/
+│   │   ├── api/              # API call modules (Auth, Entries, Habits, Finance, etc.)
+│   │   ├── components/       # Shared UI components (Nav, Cards, Modals, etc.)
+│   │   ├── pages/            # Feature pages (Journal, Tasks, Habits, Finance, etc.)
+│   │   ├── redux/            # Redux slices and store setup
+│   │   ├── config/           # Speech synthesis, constants, theme
+│   │   └── AppContent.jsx    # Main routing logic
+└── backend/
+    ├── models/               # Mongoose schemas
+    ├── routes/               # API routes
+    ├── controllers/          # Business logic
+    └── server.js             # Express app entry point
+```
 
-* Provide a detailed description of the proposed enhancement.
+---
 
-* Explain why this enhancement would be useful.
+## 🔧 Coding Standards & Conventions
 
-* (Optional) Suggest how it might be implemented.
+To maintain consistency and readability, please follow these conventions:
 
-### 💻 Code Contributions
+### 🧱 Frontend (React + Redux)
+- Use **functional components** with hooks (\`useState\`, \`useEffect\`, etc.)
+- Maintain **clean component structure**: logic → JSX → styles
+- Follow **PascalCase** for components and **camelCase** for functions
+- Prefer **Tailwind CSS utility classes** for styling
+- Keep Redux slices focused and reusable — one slice per domain (e.g., \`streakSlice\`, \`navSlice\`, \`habitsSlice\`)
+- Use **async thunks** for API calls where side effects are involved
 
-If you'd like to contribute code:
+### ⚙️ Backend (Node.js + Express + MongoDB)
+- Use **async/await** for all database operations
+- Follow **controller-service-model** separation
+- Validate all incoming requests using middleware or validation libraries
+- Return **standardized JSON responses**:
+  ```json
+  { "success": true, "data": {...}, "message": "optional" }
+  ```
+- Keep error handling consistent using Express middleware
 
-1. **Fork the repository** on GitHub.
+### 🧭 Routing & Nav Logic
+- Every page dispatches its navigation items to Redux:
+  ```js
+  dispatch(setNavItems([
+    { id: 1, type: "link", name: "Movies", link: "/shelf?page=1" },
+    { id: 2, type: "link", name: "Books", link: "/shelf?page=2" },
+  ]));
+  ```
+- Use \`?page=\` query parameters for tabbed sections.  
+  The \`Nav\` component automatically detects and highlights the active section.
 
-2. **Clone your fork** locally: \`git clone https://github.com/your-username/fiary.git\`
+---
 
-3. **Create a new branch** for your feature or bugfix: \`git checkout -b feature/your-feature-name\` or \`git checkout -b fix/your-bug-fix\`.
+## 🧠 Branching & Workflow
 
-4. **Make your changes.** Please try to follow the existing code style.
+Follow the **feature-branch workflow**:
 
-5. **Test your changes** locally.
+```bash
+# Create a feature branch
+git checkout -b feature/profile-page
 
-6. **Commit your changes** with a clear commit message: \`git commit -m "feat: Add feature X"\` or \`git commit -m "fix: Resolve bug Y"\`.
+# Work on your feature
+# Commit with a clear, conventional message
+git commit -m "feat: add profile edit form and avatar upload"
 
-7. **Push your branch** to your fork: \`git push origin feature/your-feature-name\`.
+# Push and open a pull request
+git push origin feature/profile-page
+```
 
-8. **Open a Pull Request (PR)** from your fork's branch to the \`main\` branch of the original FIARY repository.
+### 🧾 Commit Message Format
+Follow **Conventional Commits**:
+- \`feat:\` → new feature
+- \`fix:\` → bug fix
+- \`refactor:\` → code cleanup or re-architecture
+- \`docs:\` → documentation updates
+- \`style:\` → minor UI/styling changes
+- \`chore:\` → misc, config, or dependency changes
 
-9. Provide a clear description of your PR, explaining the changes and linking to any relevant issues.
+Example:
+```
+feat: add monthly AI insights section
+fix: resolve habit streak sync issue
+refactor: optimize finance transaction queries
+```
 
-### 📖 Documentation Improvements
+---
 
-If you notice areas where the documentation (like the README) could be clearer or more detailed, feel free to suggest changes by opening an issue or submitting a PR.
+## 🧪 Testing Your Changes
+
+Before submitting a PR:
+- Verify app runs without console errors (\`npm run dev\`)
+- Test API calls for correct backend responses
+- Check UI responsiveness on both desktop and mobile
+- Ensure Redux states update correctly
+- Run lint check if enabled (\`npm run lint\`)
+
+---
+
+## 📬 Submitting Pull Requests
+
+When your changes are ready:
+1. Ensure your branch is **up to date** with \`main\`
+2. Push your branch to your fork
+3. Open a **Pull Request (PR)** to the main FIARY repository
+4. Provide:
+   - A clear summary of changes
+   - Any relevant screenshots or videos
+   - Linked issue numbers (if any)
+5. A maintainer will review your PR and provide feedback or merge it
+
+---
+
+## 🧱 Developer Tips
+
+- 🧠 Use \`console.warn\` and \`console.error\` for debugging — not \`alert()\`
+- 🪶 Keep components small; extract repetitive UI into reusable ones (e.g., \`GlassCard\`)
+- 🧩 Write **semantic commit messages** to keep history readable
+- ⚡ Optimize state updates — avoid unnecessary Redux re-renders
+- 📦 Use \`.env\` files for all secrets and API URLs
+
+---
 
 ## 🤝 Code of Conduct
 
-Please note that this project is released with a Contributor Code of Conduct. By participating in this project, you agree to abide by its terms. (We can add a link to a Code of Conduct file later if you create one).
+All contributors are expected to adhere to FIARY’s **Code of Conduct**.  
+We foster a friendly, respectful, and inclusive developer community.  
+A full version will be added as \`CODE_OF_CONDUCT.md\`.
 
-## 💬 Questions?
+---
 
-If you have questions about contributing, feel free to open an issue or reach out.
+## 💬 Need Help?
 
-Thank you for helping make FIARY better! ✨
+- For setup or environment issues: check [\`setup.md\`](./setup.md)
+- For bugs or feature discussions: open an [Issue](https://github.com/your-username/fiary/issues)
+- For quick clarification: comment on the relevant PR or issue thread
+
+---
+
+### 🪄 TL;DR
+
+- Fork → Branch → Code → Commit → PR ✅  
+- Follow the **existing structure and conventions**
+- Keep your PRs small, clean, and focused  
+- Always test before submitting
+
+---
+
+Thank you for contributing to **FIARY** —  
+you’re helping build the most complete personal life dashboard. 🧠🔥

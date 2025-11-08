@@ -62,3 +62,19 @@ It provides **context-aware insights**, **data-backed reflections**, and **actio
 | **AI / Insights** | Gemini API integration (planned for “The Mirror”) |
 
 ---
+
+## 🏁 Summary
+
+**FIARY** transforms the traditional diary into a holistic life dashboard — connecting your daily reflections, habits, tasks, and financial decisions into one intelligent system.
+
+It’s not just about recording your life — it’s about understanding it.
+
+> 💬 “Track everything. Connect the dots. Understand yourself.”
+
+---
+
+## 👤 Author
+
+**Ritesh**  
+Student & Developer passionate about building self-improvement tools.  
+📍 Bangalore, India
