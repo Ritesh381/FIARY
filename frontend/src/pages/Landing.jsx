@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useDispatch } from "react-redux"; // added
 import { useNavigate } from "react-router-dom";
 import {
   Menu,
@@ -17,12 +18,29 @@ import {
 import AIInsight from "../assets/landing/AI-insight.png"; // Mock AI image
 import HabitImage from "../assets/landing/Habit-Tracker.png"; // Mock Habit image
 import Founder from "../assets/landing/founder.png"; // Founder image
-import FinDashboard from "../assets/landing/FinDashboard.png"
-import Memories from "../assets/landing/Memories.png"
+import FinDashboard from "../assets/landing/FinDashboard.png";
+import Memories from "../assets/landing/Memories.png";
+
+import { setNavItems } from "../redux/slices/NavItems"; // added
 
 export default function App() {
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // added
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    // show a short progress message in the top nav when on the landing page
+    dispatch(
+      setNavItems([
+        {
+          type: "text",
+          content:
+            "Most features live — Only <strong>Profile</strong> & <strong>The Shelf</strong> remain",
+        },
+      ])
+    );
+    // clear on unmount could be added by pages themselves when needed
+  }, [dispatch]);
 
   const ctaButton = (text, className = "") => (
     <a
@@ -115,11 +133,12 @@ export default function App() {
 
   // --- Roadmap Features ---
   const roadmapFeatures = [
-    { name: "Thoughts Vault", icon: <Smile className="w-6 h-6" /> },
     { name: "The Shelf (Media)", icon: <Book className="w-6 h-6" /> },
     { name: "Profile & Personalization", icon: <Wallet className="w-6 h-6" /> },
-    { name: "Moments (Advanced Memories)", icon: <Lightbulb className="w-6 h-6" /> },
-    // Add more as needed
+    {
+      name: "Moments (Advanced Memories)",
+      icon: <Lightbulb className="w-6 h-6" />,
+    },
   ];
 
   const testimonials = [
@@ -230,9 +249,10 @@ export default function App() {
               knowing.
             </span>
           </h1>
-          <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-10">
+          <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-6">
             Fiary is more than a journal. It’s your personal dashboard, turning
-            your daily entries, habits, and finances into powerful, actionable insights.
+            your daily entries, habits, and finances into powerful, actionable
+            insights.
           </p>
           {ctaButton("Start Your Journey")}
         </div>
@@ -277,9 +297,10 @@ export default function App() {
             Coming Soon to Fiary
           </h2>
           <p className="text-lg text-gray-300 max-w-3xl mx-auto mb-12">
-            We're building Fiary to be the single dashboard for your productivity. These features are next on our roadmap.
+            We're building Fiary to be the single dashboard for your
+            productivity. These features are next on our roadmap.
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 max-w-5xl mx-auto">
             {roadmapFeatures.map((feature) => (
               <GlassCard
                 key={feature.name}
