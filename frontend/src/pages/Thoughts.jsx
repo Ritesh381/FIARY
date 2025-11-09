@@ -313,9 +313,7 @@ export default function ThoughtsPage() {
     // Only allow setting edit mode if the form is currently in 'Quick Capture' mode
     // OR if the user is clicking the same thought they are already editing.
     if (editingThought && editingThought._id !== thought._id) {
-      // Optional: Add a subtle prompt/modal warning here about unsaved changes
       console.log("Warning: Clear current edit first.");
-      // For now, we'll just set the new thought for editing, implicitly abandoning the unsaved changes of the previous one.
     }
     setEditingThought(thought);
   };

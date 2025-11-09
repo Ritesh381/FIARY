@@ -13,7 +13,7 @@ const FormInput = ({ id, label, value, onChange, placeholder, type = 'text', req
             placeholder={placeholder} 
             required={required}
             className="w-full bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors" 
-        />
+            />
     </div>
 );
 

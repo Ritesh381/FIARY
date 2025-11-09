@@ -17,12 +17,13 @@ const getUserById = async (req, res) => {
 
 const getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select("-password");
+    const user = await User.findById(req.userId).select("-password -isDeleted -__v -createdAt -updatedAt");
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({ user });
+    res.status(200).json(user);
   } catch (error) {
     console.error("Error fetching current user:", error);
     res.status(500).json({ message: "Server error" });
@@ -31,45 +32,53 @@ const getCurrentUser = async (req, res) => {
 
 const updateUserProfile = async (req, res) => {
   try {
-    const { name, email, profilePic } = req.body;
+    const { name, dob, bio } = req.body;
 
-    // Validate input
-    if (!name && !email && !profilePic) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "At least one field (name, email, or profilePic) is required for update.",
-        });
+    // Handle uploaded profile photo(s)
+    const photos = req.files?.map((file) => file.path) || [];
+    const profilePic = photos.length > 0 ? photos[0] : undefined;
+    console.log(photos)
+
+    // Validate: at least one field should be updated
+    if (!name && !dob && !bio && !profilePic) {
+      return res.status(400).json({
+        message:
+          "At least one field (name, dob, bio, or profilePic) is required for update.",
+      });
     }
 
-    // Check if email is being updated and if it's already taken
-    if (email) {
-      const existingUser = await User.findOne({ email });
-      if (existingUser && existingUser._id.toString() !== req.userId) {
-        return res.status(409).json({ message: "Email is already in use." });
-      }
-    }
+    // Build update object dynamically (only include provided fields)
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (dob) updateData.dob = dob;
+    if (bio) updateData.bio = bio;
+    if (profilePic) updateData.profilePic = profilePic;
 
+    // Update user in DB
     const updatedUser = await User.findByIdAndUpdate(
       req.userId,
-      { name, email, profilePic },
+      updateData,
       { new: true, runValidators: true }
-    ).select("-password");
+    ).select("-password -isDeleted");
 
     if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found." });
     }
 
     res.status(200).json({
-      message: "Profile updated successfully",
+      message: "Profile updated successfully.",
       user: updatedUser,
     });
   } catch (error) {
     console.error("Error updating user profile:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({
+      message: "Server error.",
+      error: error.message,
+    });
   }
 };
+
+
 
 const deleteUser = async (req, res) => {
   try {

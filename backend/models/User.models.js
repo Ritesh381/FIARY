@@ -6,6 +6,12 @@ const UserSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     profilePic: { type: String, default: "" },
+    dob: {
+      type: Date
+      , default: null
+    },
+    bio: { type: String, default: "" },
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

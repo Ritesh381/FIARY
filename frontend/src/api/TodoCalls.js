@@ -65,7 +65,6 @@ const apiTodos = {
           ...task,
       }));
       
-      console.log(`API call: Saving ${completed.length} completions and ${processedAdditions.length} new tasks for ${date}`);
       const response = await axios.post(`${API_BASE_URL}/todos/batch-save`, { 
         completed: completed,
         additions: processedAdditions, 
