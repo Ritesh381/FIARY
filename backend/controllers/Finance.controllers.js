@@ -54,8 +54,8 @@ const createFinance = async (req, res) => {
 const getAllFinance = async (req, res) => {
   try {
     const finances = await Finance.find({ created_by: req.userId })
-      .populate("category_id", "name")
-      .populate("sub_category_id", "name")
+      .populate({ path: "category_id", model: "Finance_Category" })
+      .populate({ path: "sub_category_id", model: "Finance_SubCategory" })
       .sort({ when: -1 });
     res.json(finances);
   } catch (err) {
@@ -71,8 +71,8 @@ const getFinanceById = async (req, res) => {
       _id: req.params.id,
       created_by: req.userId,
     })
-      .populate("category_id", "name")
-      .populate("sub_category_id", "name");
+      .populate({ path: "category_id", model: "Finance_Category" })
+      .populate({ path: "sub_category_id", model: "Finance_SubCategory" });
 
     if (!finance)
       return res.status(404).json({ message: "Finance entry not found" });

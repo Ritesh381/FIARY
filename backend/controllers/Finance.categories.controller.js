@@ -19,7 +19,7 @@ const getCategoriesWithSubcategories = async (userId) => {
     },
     {
       $lookup: {
-        from: "subcategories",
+        from: "finance_subcategories",
         localField: "_id",
         foreignField: "category",
         as: "subcategories"
@@ -49,6 +49,7 @@ const getCategoriesWithSubcategories = async (userId) => {
 
   return categories;
 };
+
 
 
 

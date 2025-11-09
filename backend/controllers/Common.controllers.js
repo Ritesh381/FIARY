@@ -17,8 +17,8 @@ const getAll = async (req, res) => {
     }
 
     const [year, month, day] = req.query.date.split("-").map(Number);
-const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
-const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+    const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
 
 
     console.log({ startOfDay, endOfDay });

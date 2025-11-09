@@ -8,7 +8,7 @@ const SubCategorySchema = new mongoose.Schema({
   isGlobal: { type: Boolean, default: false },
 });
 
-const SubCategory = mongoose.model("SubCategory", SubCategorySchema);
+const SubCategory = mongoose.model("Finance_SubCategory", SubCategorySchema);
 
 // Category model
 const CategorySchema = new mongoose.Schema({
@@ -18,6 +18,6 @@ const CategorySchema = new mongoose.Schema({
   isGlobal: { type: Boolean, default: false },
 });
 
-const Category = mongoose.model("Category", CategorySchema);
+const Category = mongoose.model("Finance_Category", CategorySchema);
 
 module.exports = { Category, SubCategory };
