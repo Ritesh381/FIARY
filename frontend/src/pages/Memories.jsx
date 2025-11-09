@@ -1,12 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Plus,
   MapPin,
   Calendar,
   Tag,
   Image as ImageIcon,
-  Edit3,
-  Trash2,
   Loader2,
   AlertTriangle,
 } from "lucide-react";
@@ -18,6 +16,8 @@ import {
 } from "../redux/slices/memoriesSlice";
 import MemoryForm from "../components/memories/MemoryForm";
 import { setNavItems } from "../redux/slices/NavItems";
+import MemoryViewer from "../components/memories/MemoryViewer";
+
 
 // Glass Card Component (reused pattern)
 const GlassCard = ({ children, className = "" }) => (
@@ -38,6 +38,8 @@ export default function Memories() {
     isEditModalOpen,
     selectedMemory,
   } = useSelector((state) => state.memories);
+  const [selectedForView, setSelectedForView] = useState(null);
+
 
   // Load memories on component mount
   useEffect(() => {
@@ -105,21 +107,6 @@ export default function Memories() {
 
         <p className="text-gray-400 line-clamp-2 mt-2">{memory.description}</p>
       </div>
-
-      <div className="flex justify-end gap-2 mt-4">
-        <button
-          onClick={() => dispatch(toggleEditModal(memory))}
-          className="p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700/50 transition-colors"
-        >
-          <Edit3 size={16} />
-        </button>
-        <button
-          onClick={() => handleDelete(memory._id)}
-          className="p-2 rounded-full text-gray-400 hover:text-red-400 hover:bg-gray-700/50 transition-colors"
-        >
-          <Trash2 size={16} />
-        </button>
-      </div>
     </GlassCard>
   );
 
@@ -147,6 +134,14 @@ export default function Memories() {
 
   return (
     <div className="min-h-screen mx-auto my-auto">
+      {selectedForView && (
+        <MemoryViewer
+          memory={selectedForView}
+          onClose={() => setSelectedForView(null)}
+        />
+      )}
+
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -173,7 +168,10 @@ export default function Memories() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {memories.map((memory) => (
-              <MemoryCard key={memory._id} memory={memory} />
+              <div onClick={() => setSelectedForView(memory)}>
+                <MemoryCard key={memory._id} memory={memory} />
+              </div>
+
             ))}
           </div>
         )}
