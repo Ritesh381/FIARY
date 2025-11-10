@@ -1,13 +1,9 @@
-import axios from "axios";
-
-axios.defaults.withCredentials = true;
-
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+import apiClient from "./apiClient";
 
 const apiTodos = {
   getTodos: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/todos`);
+      const response = await apiClient.get("/todos");
       return response.data;
     } catch (error) {
       console.error("Error fetching todos:", error);
@@ -17,7 +13,7 @@ const apiTodos = {
 
   createTodo: async (todoData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/todos`, todoData);
+      const response = await apiClient.post("/todos", todoData);
       return response.data;
     } catch (error) {
       console.error("Error creating todo:", error);
@@ -27,9 +23,7 @@ const apiTodos = {
 
   markTodoCompleted: async (id) => {
     try {
-      const response = await axios.patch(
-        `${API_BASE_URL}/todos/${id}/complete`
-      );
+      const response = await apiClient.patch(`/todos/${id}/complete`);
       return response.data;
     } catch (error) {
       console.error("Error marking todo completed:", error);
@@ -37,22 +31,19 @@ const apiTodos = {
     }
   },
 
-
   deleteTodo: async (id) => {
     try {
-      await axios.delete(`${API_BASE_URL}/todos/${id}`);
+      await apiClient.delete(`/todos/${id}`);
       return id;
     } catch (error) {
       console.error("Error deleting todo:", error);
       throw error;
     }
   },
-  
+
   getPending: async (date) => {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/todos/pending`
-      );
+      const response = await apiClient.get("/todos/pending");
       return response.data;
     } catch (error) {
       console.error("Error fetching todos by date:", error);
@@ -61,30 +52,29 @@ const apiTodos = {
   },
 
   saveDayTodos: async ({ completed, additions, date }) => {
-      const processedAdditions = additions.map(task => ({
-          ...task,
-      }));
-      
-      const response = await axios.post(`${API_BASE_URL}/todos/batch-save`, { 
-        completed: completed,
-        additions: processedAdditions, 
-        date
+    try {
+      const processedAdditions = additions.map((task) => ({ ...task }));
+      const response = await apiClient.post("/todos/batch-save", {
+        completed,
+        additions: processedAdditions,
+        date,
       });
       return response.data;
+    } catch (error) {
+      console.error("Error saving day todos:", error);
+      throw error;
+    }
   },
 
   updateTodo: async ({ id, updates }) => {
     try {
-      const response = await axios.put(
-        `${API_BASE_URL}/todos/${id}`,
-        updates
-      );
+      const response = await apiClient.put(`/todos/${id}`, updates);
       return response.data;
     } catch (error) {
       console.error("Error updating todo:", error);
       throw error;
     }
-  }
+  },
 };
 
 export default apiTodos;

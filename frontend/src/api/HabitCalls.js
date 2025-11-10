@@ -1,15 +1,9 @@
-import axios from "axios";
-
-axios.defaults.withCredentials = true;
-
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+import apiClient from "./apiClient";
 
 const apiHabits = {
-  // --- HABIT-LEVEL FUNCTIONS ---
-
   getAllHabits: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/habit`);
+      const response = await apiClient.get("/habit");
       return response.data.habits;
     } catch (error) {
       console.error("Error fetching habits:", error);
@@ -19,7 +13,7 @@ const apiHabits = {
 
   createHabit: async (habitData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/habit`, habitData);
+      const response = await apiClient.post("/habit", habitData);
       return response.data;
     } catch (error) {
       console.error("Error creating habit:", error);
@@ -29,10 +23,7 @@ const apiHabits = {
 
   updateHabit: async (id, updatedData) => {
     try {
-      const response = await axios.patch(
-        `${API_BASE_URL}/habit/${id}`,
-        updatedData
-      );
+      const response = await apiClient.patch(`/habit/${id}`, updatedData);
       return response.data;
     } catch (error) {
       console.error("Error updating habit:", error);
@@ -42,7 +33,7 @@ const apiHabits = {
 
   deleteHabit: async (id) => {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/habit/${id}`);
+      const response = await apiClient.delete(`/habit/${id}`);
       return response.data;
     } catch (error) {
       console.error("Error deleting habit:", error);
@@ -50,16 +41,12 @@ const apiHabits = {
     }
   },
 
-  // --- HABIT ENTRY-LEVEL FUNCTIONS ---
-
-  // This function is now correct, as the backend controller matches
   getEntriesForHabit: async (habitId, startDate, endDate) => {
     try {
-      const response = await axios.post(
-        // The controller now expects habitId in the URL
-        `${API_BASE_URL}/habit/entry/${habitId}`, 
-        { startDate, endDate }
-      );
+      const response = await apiClient.post(`/habit/entry/${habitId}`, {
+        startDate,
+        endDate,
+      });
       return response.data;
     } catch (error) {
       console.error("Error fetching habit entries:", error);
@@ -67,17 +54,9 @@ const apiHabits = {
     }
   },
 
-  // *** NEW FUNCTION ***
-  // Replaces createHabitEntries and updateHabitEntry
-  // This will create or update a single entry for a given day
   upsertHabitEntry: async (entryData) => {
-    // { habitId, date, done, notes }
     try {
-      // We'll use a new route for this, POST /habit/entry
-      const response = await axios.post(
-        `${API_BASE_URL}/habit/entry`,
-        entryData
-      );
+      const response = await apiClient.post("/habit/entry", entryData);
       return response.data;
     } catch (error) {
       console.error("Error upserting habit entry:", error);

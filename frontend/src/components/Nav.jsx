@@ -9,7 +9,6 @@ function Nav() {
   const streak = useSelector((state) => state.streak.value);
   const navItems = useSelector((state) => state.nav.items);
   const user = useSelector((state) => state.user.user);
-  console.log(user)
 
   const dispatch = useDispatch();
   const navigate = useNavigate();

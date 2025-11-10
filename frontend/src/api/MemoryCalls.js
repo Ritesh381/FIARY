@@ -1,12 +1,9 @@
-import axios from "axios";
-
-axios.defaults.withCredentials = true;
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+import apiClient from "./apiClient";
 
 const apiMemories = {
   getAllMemories: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/memories`);
+      const response = await apiClient.get("/memories");
       return response.data;
     } catch (error) {
       console.error("Error fetching memories:", error);
@@ -16,7 +13,7 @@ const apiMemories = {
 
   createMemory: async (formData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/memories`, formData, {
+      const response = await apiClient.post("/memories", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       return response.data;
@@ -28,7 +25,7 @@ const apiMemories = {
 
   updateMemory: async (id, formData) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/memories/${id}`, formData, {
+      const response = await apiClient.put(`/memories/${id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       return response.data;
@@ -40,7 +37,7 @@ const apiMemories = {
 
   deleteMemory: async (id) => {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/memories/${id}`);
+      const response = await apiClient.delete(`/memories/${id}`);
       return response.data;
     } catch (error) {
       console.error("Error deleting memory:", error);

@@ -1,6 +1,7 @@
 const User = require("../models/User.models");
 const bcrypt = require("bcrypt");
 const generateToken = require("../config/token")
+const UserShelf = require("../models/shelf/UserShelf.models")
 
 const saltRounds = 10;
 
@@ -68,8 +69,8 @@ const register = async (req, res) => {
 
     // Validate password strength
     if (!validatePassword(password)) {
-        return res.status(400).json({ 
-            message: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number." 
+        return res.status(400).json({
+            message: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number."
         });
     }
 
@@ -88,6 +89,36 @@ const register = async (req, res) => {
         });
 
         await user.save();
+        await UserShelf.create({
+            userId: user._id,
+            shelves: [
+                {
+                    name: "Books",
+                    type: "book",
+                    schema: [
+                        { key: "title", type: "text", required: true },
+                        { key: "cover_image", type: "photo", required: true },
+                        { key: "id", type: "text", required: true },
+                        { key: "user_notes", type: "text" },
+                        { key: "rating", type: "number" },
+                        { key: "url", type: "url" }
+                    ],
+                },
+                {
+                    name: "Movies",
+                    type: "movie",
+                    schema: [
+                        { key: "title", type: "text", required: true },
+                        { key: "cover_image", type: "photo", required: true },
+                        { key: "id", type: "text", required: true },
+                        { key: "user_notes", type: "text" },
+                        { key: "rating", type: "number" },
+                        { key: "url", type: "url" }
+                    ],
+                },
+            ],
+        });
+
 
         const token = generateToken(user._id);
 
@@ -114,8 +145,8 @@ const logout = async (req, res) => {
     res.status(200).json({ message: "Logout successful." });
 };
 
-const check = async (req,res) => {
-    res.status(200).json({message: "Authenticated"})
+const check = async (req, res) => {
+    res.status(200).json({ message: "Authenticated" })
 }
 
 module.exports = {

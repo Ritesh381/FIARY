@@ -15,6 +15,7 @@ const repeatingTaskRoutes = require("./routes/repeatingTask.routes");
 const thoughtRoutes = require("./routes/Thoughts.routes.js")
 const commonRouter = require("./routes/Common.routes.js");
 const memoryRoutes = require("./routes/Memories.routes.js");
+const { shelfRouter, itemRouter } = require("./routes/Shelf.routes.js")
 
 const PORT = 8080;
 const app = express();
@@ -45,6 +46,8 @@ app.use("/api/repeating-tasks", repeatingTaskRoutes);
 app.use("/api/thoughts", thoughtRoutes)
 app.use("/api/common", commonRouter);
 app.use("/api/memories", memoryRoutes);
+app.use("/shelf", shelfRouter);
+app.use("/shelfitem", itemRouter);
 
 // Start server
 app.listen(PORT, () =>

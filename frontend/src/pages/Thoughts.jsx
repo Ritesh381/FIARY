@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Tag,
+  X
 } from "lucide-react";
 import { setNavItems } from "../redux/slices/NavItems";
 
@@ -38,22 +39,26 @@ const ThoughtForm = ({
   const [formData, setFormData] = useState({
     title: initialData.title || "",
     body: initialData.body || "",
-    tags: (initialData.tags || []).join(", "),
   });
+
+  const [tags, setTags] = useState(initialData.tags || []);
+  const [tagInput, setTagInput] = useState("");
+  const [editingTagIndex, setEditingTagIndex] = useState(null);
+  const [editingTagValue, setEditingTagValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ type: null, message: null });
 
-  // FIX: Load initialData into formData when isEditing state changes.
+  // Load initialData when switching edit/create
   useEffect(() => {
     if (isEditing && initialData._id) {
       setFormData({
         title: initialData.title || "",
         body: initialData.body || "",
-        tags: (initialData.tags || []).join(", "),
       });
+      setTags(initialData.tags || []);
     } else if (!isEditing) {
-      // Clear the form completely when switching from edit mode to create mode
-      setFormData({ title: "", body: "", tags: "" });
+      setFormData({ title: "", body: "" });
+      setTags([]);
     }
   }, [isEditing, initialData]);
 
@@ -62,21 +67,67 @@ const ThoughtForm = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Add new tag
+  const handleTagKeyDown = (e) => {
+    if (e.key === "Enter" && tagInput.trim()) {
+      e.preventDefault();
+      if (!tags.includes(tagInput.trim())) {
+        setTags((prev) => [...prev, tagInput.trim()]);
+      }
+      setTagInput("");
+    }
+  };
+
+  // Remove tag
+  const handleRemoveTag = (tagToRemove) => {
+    setTags((prev) => prev.filter((tag) => tag !== tagToRemove));
+  };
+
+  // --- Editable tag logic ---
+  const handleTagClick = (index) => {
+    setEditingTagIndex(index);
+    setEditingTagValue(tags[index]);
+  };
+
+  const handleEditTagChange = (e) => {
+    setEditingTagValue(e.target.value);
+  };
+
+  const handleEditTagKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveEditedTag();
+    } else if (e.key === "Escape") {
+      cancelEditTag();
+    }
+  };
+
+  const saveEditedTag = () => {
+    if (!editingTagValue.trim()) return cancelEditTag();
+    setTags((prev) =>
+      prev.map((tag, i) => (i === editingTagIndex ? editingTagValue.trim() : tag))
+    );
+    setEditingTagIndex(null);
+    setEditingTagValue("");
+  };
+
+  const cancelEditTag = () => {
+    setEditingTagIndex(null);
+    setEditingTagValue("");
+  };
+
+  // --- Submit form ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFeedback({ type: null, message: null });
+
     if (!formData.title || !formData.body) {
       setFeedback({ type: "error", message: "Title and body are required." });
       return;
     }
 
     setSubmitting(true);
-    const processedTags = formData.tags
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter((tag) => tag.length > 0);
-
-    const payload = { ...formData, tags: processedTags };
+    const payload = { ...formData, tags };
 
     try {
       if (isEditing) {
@@ -87,9 +138,8 @@ const ThoughtForm = ({
       } else {
         await dispatch(createThought(payload)).unwrap();
         setFeedback({ type: "success", message: "Thought captured!" });
-        // We no longer manually clear here, rely on the useEffect when onSuccess sets isEditing=false
       }
-      onSuccess(); // Triggers parent to refresh list and potentially clear editingThought state
+      onSuccess();
     } catch (error) {
       setFeedback({
         type: "error",
@@ -104,6 +154,7 @@ const ThoughtForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
+      {/* Feedback */}
       {feedback.message && (
         <div
           className={`flex items-center gap-2 p-2 rounded-lg text-xs font-medium ${
@@ -120,6 +171,8 @@ const ThoughtForm = ({
           <p>{feedback.message}</p>
         </div>
       )}
+
+      {/* Title */}
       <input
         type="text"
         name="title"
@@ -130,6 +183,8 @@ const ThoughtForm = ({
         disabled={submitting}
         required
       />
+
+      {/* Body */}
       <textarea
         name="body"
         value={formData.body}
@@ -140,16 +195,61 @@ const ThoughtForm = ({
         disabled={submitting}
         required
       />
-      <input
-        type="text"
-        name="tags"
-        value={formData.tags}
-        onChange={handleChange}
-        placeholder="Tags (e.g., idea, work, future) - separated by comma"
-        className="w-full p-2 rounded-lg bg-gray-900/50 text-sm text-white focus:ring-teal-400 border border-gray-600 transition-colors"
-        disabled={submitting}
-      />
 
+      {/* Tags */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Tag className="text-gray-400" size={18} />
+          <input
+            type="text"
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            onKeyDown={handleTagKeyDown}
+            placeholder="Type tag and press Enter"
+            className="bg-gray-900/50 rounded-lg px-3 py-2 text-sm text-white flex-1 border border-gray-600"
+            disabled={submitting}
+          />
+        </div>
+
+        {/* Tag Chips (Editable) */}
+        <div className="flex flex-wrap gap-2">
+          {tags.map((tag, index) => (
+            <span
+              key={index}
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-indigo-900/50 text-indigo-300"
+            >
+              {editingTagIndex === index ? (
+                <input
+                  type="text"
+                  value={editingTagValue}
+                  onChange={handleEditTagChange}
+                  onKeyDown={handleEditTagKeyDown}
+                  onBlur={saveEditedTag}
+                  autoFocus
+                  className="bg-transparent border-b border-indigo-400 text-indigo-100 outline-none text-xs w-20"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleTagClick(index)}
+                  className="hover:text-indigo-200 cursor-pointer"
+                >
+                  {tag}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => handleRemoveTag(tag)}
+                className="hover:text-red-400"
+              >
+                <X size={14} />
+              </button>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Buttons */}
       <div className="flex justify-end space-x-3">
         {isEditing && (
           <button

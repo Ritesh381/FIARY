@@ -1,14 +1,9 @@
-import axios from "axios";
-
-axios.defaults.withCredentials = true;
-
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+import apiClient from "./apiClient";
 
 const apiFinance = {
-  // Function to fetch all finance entries for the user
   getAllFinance: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/finance`);
+      const response = await apiClient.get("/finance");
       return response.data;
     } catch (error) {
       console.error("Error fetching finance entries:", error);
@@ -16,11 +11,9 @@ const apiFinance = {
     }
   },
 
-  // Function to fetch all categories and their subcategories
   getFinanceCategories: async () => {
     try {
-      // Hitting the new router endpoint: /api/fincat
-      const response = await axios.get(`${API_BASE_URL}/fincat`);
+      const response = await apiClient.get("/fincat");
       return response.data;
     } catch (error) {
       console.error("Error fetching finance categories:", error);
@@ -28,10 +21,9 @@ const apiFinance = {
     }
   },
 
-  // Function to create a new finance entry
   createFinance: async (entryData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/finance`, entryData);
+      const response = await apiClient.post("/finance", entryData);
       return response.data;
     } catch (error) {
       console.error("Error creating finance entry:", error);
@@ -39,10 +31,9 @@ const apiFinance = {
     }
   },
 
-  // Function to update an existing finance entry
   updateFinance: async (id, updatedData) => {
     try {
-      const response = await axios.put(`${API_BASE_URL}/finance/${id}`, updatedData);
+      const response = await apiClient.put(`/finance/${id}`, updatedData);
       return response.data;
     } catch (error) {
       console.error("Error updating finance entry:", error);
@@ -50,23 +41,19 @@ const apiFinance = {
     }
   },
 
-  // Function to delete a finance entry
   deleteFinance: async (id) => {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/finance/${id}`);
+      const response = await apiClient.delete(`/finance/${id}`);
       return response.data;
     } catch (error) {
       console.error("Error deleting finance entry:", error);
       throw error;
     }
   },
-  
-  // --- NEW CATEGORY/SUBCATEGORY CRUD FUNCTIONS ---
 
-  // Category CRUD
   createCategory: async (categoryData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/fincat`, categoryData);
+      const response = await apiClient.post("/fincat", categoryData);
       return response.data;
     } catch (error) {
       console.error("Error creating category:", error);
@@ -76,17 +63,17 @@ const apiFinance = {
 
   updateCategory: async (id, categoryData) => {
     try {
-      const response = await axios.patch(`${API_BASE_URL}/fincat/${id}`, categoryData);
+      const response = await apiClient.patch(`/fincat/${id}`, categoryData);
       return response.data;
     } catch (error) {
       console.error("Error updating category:", error);
       throw error;
     }
   },
-  
+
   deleteCategory: async (id) => {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/fincat/${id}`);
+      const response = await apiClient.delete(`/fincat/${id}`);
       return response.data;
     } catch (error) {
       console.error("Error deleting category:", error);
@@ -94,30 +81,29 @@ const apiFinance = {
     }
   },
 
-  // SubCategory CRUD
   createSubCategory: async (subCategoryData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/fincat/sub`, subCategoryData);
+      const response = await apiClient.post("/fincat/sub", subCategoryData);
       return response.data;
     } catch (error) {
       console.error("Error creating subcategory:", error);
       throw error;
     }
   },
-  
+
   updateSubCategory: async (id, subCategoryData) => {
     try {
-      const response = await axios.patch(`${API_BASE_URL}/fincat/sub/${id}`, subCategoryData);
+      const response = await apiClient.patch(`/fincat/sub/${id}`, subCategoryData);
       return response.data;
     } catch (error) {
       console.error("Error updating subcategory:", error);
       throw error;
     }
   },
-  
+
   deleteSubCategory: async (id) => {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/fincat/sub/${id}`);
+      const response = await apiClient.delete(`/fincat/sub/${id}`);
       return response.data;
     } catch (error) {
       console.error("Error deleting subcategory:", error);

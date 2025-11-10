@@ -1,14 +1,10 @@
-import axios from "axios";
+import apiClient from "./apiClient";
 import { setUser, logout } from "../redux/slices/userSlice";
-
-axios.defaults.withCredentials = true;
-
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const api = {
   signIn: async (credentials, dispatch) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/signin`, credentials);
+      const response = await apiClient.post("/auth/signin", credentials);
       localStorage.setItem("userId", response.data.user.id);
       if (response.status === 200) {
         dispatch(setUser(response.data.user));
@@ -22,7 +18,7 @@ const api = {
 
   signUp: async (userData, dispatch) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/signup`, userData);
+      const response = await apiClient.post("/auth/signup", userData);
       localStorage.setItem("userId", response.data.user.id);
       if (response.status === 200) {
         dispatch(setUser(response.data.user));
@@ -36,7 +32,7 @@ const api = {
 
   signOut: async (dispatch) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/logout`);
+      const response = await apiClient.post("/auth/logout");
       localStorage.removeItem("userId");
       dispatch(logout());
       return response.data;
@@ -45,9 +41,10 @@ const api = {
       throw error;
     }
   },
+
   checkAuth: async (dispatch) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/auth/checkauth`);
+      const response = await apiClient.get("/auth/checkauth");
       if (response.status === 200 && response.data.user) {
         dispatch(setUser(response.data.user));
         return true;
