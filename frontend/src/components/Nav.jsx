@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, use } from "react";
 import { Flame, UserCircle } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -8,6 +8,8 @@ function Nav() {
   const message = useSelector((state) => state.streak.message);
   const streak = useSelector((state) => state.streak.value);
   const navItems = useSelector((state) => state.nav.items);
+  const user = useSelector((state) => state.user.user);
+  console.log(user)
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -122,7 +124,11 @@ function Nav() {
           hover:bg-white hover:bg-opacity-10 active:scale-95 shrink-0 h-[42px] w-[42px]
           bg-opacity-10 backdrop-blur-sm"
         >
-          <UserCircle size={24} />
+          {user?.profilePic ? <img
+      src={user.profilePic}
+      alt="Profile"
+      className="h-full w-full object-cover rounded-full"
+    /> : <UserCircle size={24} />}
         </button>
 
         {isDropdownOpen && (
