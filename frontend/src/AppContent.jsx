@@ -27,7 +27,7 @@ import fetchEntries from "./api/fetchEntries.js";
 import LandingPage from "./pages/Landing.jsx";
 import SignIn from "./pages/SignIn.jsx";
 import SignUp from "./pages/SignUp.jsx";
-import userApi from "./api/userCalls.js";
+import userApi from "./api/UserCalls.js";
 import TheShelf from "./pages/TheShelf.jsx";
 import Memories from "./pages/Memories.jsx";
 import Tasks from "./pages/Tasks.jsx";
