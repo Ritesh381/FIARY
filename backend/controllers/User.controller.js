@@ -108,7 +108,7 @@ const deleteUser = async (req, res) => {
     // Clear the authentication cookie
     res.clearCookie("token", {
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "Lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
     });
