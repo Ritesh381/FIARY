@@ -118,7 +118,7 @@ const getShelves = async (req, res) => {
     const functionName = "getShelves";
     console.log(`[LOG] [${FILE}] [${functionName}] [${req.user?._id || req.userId || "unknown"}] Getting shelves for user id=${req.params.userId}`);
     try {
-        const { userId } = req.params;
+        const userId = req.user._id;
         const shelves = await UserShelf.findOne({ userId }, { shelves: 1, _id: 0 });
         if (!shelves) {
             console.log(`[LOG] [${FILE}] [${functionName}] [${req.user?._id || req.userId || "unknown"}] No shelves found for user id=${userId}`);

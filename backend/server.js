@@ -46,8 +46,8 @@ app.use("/api/repeating-tasks", repeatingTaskRoutes);
 app.use("/api/thoughts", thoughtRoutes)
 app.use("/api/common", commonRouter);
 app.use("/api/memories", memoryRoutes);
-app.use("/shelf", shelfRouter);
-app.use("/shelfitem", itemRouter);
+app.use("/api/shelf", shelfRouter);
+app.use("/api/shelfitem", itemRouter);
 
 // Start server
 app.listen(PORT, () =>

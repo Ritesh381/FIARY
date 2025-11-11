@@ -13,7 +13,7 @@ const shelfApi = {
 
   createShelf: async (data) => {
     try {
-      const res = await apiClient.post("/shelf", data);
+      const res = await apiClient.post("/shelf/create", data);
       return res.data;
     } catch (error) {
       console.error("Error creating shelf:", error);
@@ -23,7 +23,7 @@ const shelfApi = {
 
   updateShelf: async (shelfId, data) => {
     try {
-      const res = await apiClient.put(`/shelf/${shelfId}`, data);
+      const res = await apiClient.put(`/shelf/update/${shelfId}`, data);
       return res.data;
     } catch (error) {
       console.error("Error updating shelf:", error);
@@ -33,7 +33,7 @@ const shelfApi = {
 
   deleteShelf: async (shelfId) => {
     try {
-      const res = await apiClient.delete(`/shelf/${shelfId}`);
+      const res = await apiClient.delete(`/shelf/delete/${shelfId}`);
       return res.data;
     } catch (error) {
       console.error("Error deleting shelf:", error);
@@ -63,7 +63,7 @@ const shelfApi = {
 
   createItem: async (data) => {
     try {
-      const res = await apiClient.post("/shelfitem", data);
+      const res = await apiClient.post("/shelfitem/create", data);
       return res.data;
     } catch (error) {
       console.error("Error creating shelf item:", error);
@@ -73,7 +73,7 @@ const shelfApi = {
 
   updateItem: async (itemId, data) => {
     try {
-      const res = await apiClient.put(`/shelfitem/${itemId}`, data);
+      const res = await apiClient.put(`/shelfitem/update/${itemId}`, data);
       return res.data;
     } catch (error) {
       console.error("Error updating shelf item:", error);
@@ -83,7 +83,7 @@ const shelfApi = {
 
   deleteItem: async (itemId) => {
     try {
-      const res = await apiClient.delete(`/shelfitem/${itemId}`);
+      const res = await apiClient.delete(`/shelfitem/delete/${itemId}`);
       return res.data;
     } catch (error) {
       console.error("Error deleting shelf item:", error);
@@ -102,6 +102,28 @@ const shelfApi = {
       throw error;
     }
   },
+
+  getMovieSearch: async (query, type) => {
+    try {
+      const res = await apiClient.get(`/shelfitem/movie/search?q=${query}&type=${type}`);
+      return res.data;
+    }
+    catch (error) {
+      console.error("Error searching movies :", error);
+      throw error;
+    }
+  },
+
+  getBookSearch: async (query) => {
+    try {
+      const res = await apiClient.get(`/shelfitem/books/search?q=${query}`);
+      return res.data;
+    }
+    catch (error) {
+      console.error("Error searching movies :", error);
+      throw error;
+    }
+  }
 };
 
 export default shelfApi;

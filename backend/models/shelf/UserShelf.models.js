@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 
 const FieldSchema = new mongoose.Schema({
     key: { type: String, required: true },          // e.g. "Platform"
-    type: { type: String, enum: ["text", "number", "boolean", "photo", "date", "url"], required: true },
+    type: { type: String, enum: ["text", "number", "boolean", "photo", "date", "url", "array"], required: true },
     required: { type: Boolean, default: false },
 });
 

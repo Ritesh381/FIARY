@@ -52,15 +52,21 @@ function Nav() {
   const currentPage = query.get("page");
 
   const getSelectedLink = () => {
-    if (!navItems || navItems.length === 0) return null;
+    if (!Array.isArray(navItems) || navItems.length === 0) return null;
+
     if (currentPage) {
-      return navItems.find((item) => {
-        const linkPage = new URLSearchParams(item.link.split("?")[1]).get("page");
+      const matched = navItems.find((item) => {
+        if (!item?.link || typeof item.link !== "string") return false;
+        const queryPart = item.link.includes("?") ? item.link.split("?")[1] : "";
+        const linkPage = new URLSearchParams(queryPart).get("page");
         return linkPage === currentPage;
-      })?.id;
+      });
+      return matched?.id || null;
     }
-    return navItems[0]?.id;
+
+    return navItems[0]?.id || null;
   };
+
 
   const selectedId = getSelectedLink();
 
@@ -88,16 +94,19 @@ function Nav() {
               dangerouslySetInnerHTML={{ __html: navItems[0].content }}
             />
           ) : (
-            <div className="flex justify-center items-center gap-3 sm:gap-6">
+            <div
+              className="flex items-center gap-3 sm:gap-6 overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent px-2 max-w-[60vw] sm:max-w-[70vw] lg:max-w-[50vw]"
+              style={{ scrollBehavior: "smooth" }}
+            >
+
               {navItems.map((item, index) => (
                 <React.Fragment key={item.id || index}>
                   <button
                     onClick={() => navigate(item.link)}
                     className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-md transition-all duration-200
-                      ${
-                        selectedId === item.id
-                          ? "bg-white/10 shadow-md border border-white/10 text-white"
-                          : "text-gray-300 hover:text-white hover:bg-white/5"
+                      ${selectedId === item.id
+                        ? "bg-white/10 shadow-md border border-white/10 text-white"
+                        : "text-gray-300 hover:text-white hover:bg-white/5"
                       }`}
                   >
                     {item.name}
@@ -124,10 +133,10 @@ function Nav() {
           bg-opacity-10 backdrop-blur-sm"
         >
           {user?.profilePic ? <img
-      src={user.profilePic}
-      alt="Profile"
-      className="h-full w-full object-cover rounded-full"
-    /> : <UserCircle size={24} />}
+            src={user.profilePic}
+            alt="Profile"
+            className="h-full w-full object-cover rounded-full"
+          /> : <UserCircle size={24} />}
         </button>
 
         {isDropdownOpen && (
