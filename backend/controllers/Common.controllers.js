@@ -5,12 +5,17 @@ const Habit = require("../models/Habit.models");
 const HabitEntry = require("../models/Habit.models").HabitEntry;
 const mongoose = require("mongoose");
 
+const FILE = "Common.controllers.js";
+
 // Fetch all common data for a specific date
 const getAll = async (req, res) => {
+  const functionName = "getAll";
+  console.log(`[LOG] [${FILE}] [${functionName}] [${req.user?._id || req.userId || "unknown"}] Fetching common data for date=${req.query.date}`);
   try {
     const queryDate = new Date(req.query.date);
 
     if (isNaN(queryDate.getTime())) {
+      console.log(`[LOG] [${FILE}] [${functionName}] [${req.user?._id || req.userId || "unknown"}] Invalid date`);
       return res
         .status(400)
         .json({ message: "Invalid or missing date query parameter." });
@@ -20,9 +25,7 @@ const getAll = async (req, res) => {
     const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
     const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
 
-
-    console.log({ startOfDay, endOfDay });
-
+    console.log(`[LOG] [${FILE}] [${functionName}] [${req.user?._id || req.userId || "unknown"}] Querying Entry/Todo/Habit/Finance`);
     const entry = await Entry.findOne({
       user: req.user._id,
       date: {
@@ -55,20 +58,24 @@ const getAll = async (req, res) => {
       },
     }).lean({ getters: true });
 
+    console.log(`[LOG] [${FILE}] [${functionName}] [${req.user?._id || req.userId || "unknown"}] Returning entry/finance/todos/habits counts: ${entry ? 1 : 0}/${finance.length}/${todos.length}/${habits.length}`);
     res.status(200).json({ entry, finance, todos, habits });
   } catch (error) {
-    console.error("Error fetching common data:", error);
+    console.error(`[ERROR] [${FILE}] [getAll] [${req.user?._id || req.userId || "unknown"}]`, error && error.stack ? error.stack : error);
     res.status(500).json({ message: "Server error fetching data" });
   }
 };
 
 const saveAll = async (req, res) => {
+  const functionName = "saveAll";
+  console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Saving all data`);
   try {
     const { entry, habits, todos, finance } = req.body;
     const userId = req.userId;
 
     // --- Create or Update Habit Entries ---
     if (habits && habits.length > 0) {
+      console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Processing ${habits.length} habit entries`);
       for (const habit of habits) {
         if (!habit.habitId || !habit.date || habit.done === undefined) {
           throw new Error("Missing required habit entry fields.");
@@ -91,6 +98,7 @@ const saveAll = async (req, res) => {
 
     // --- Create Todos (only additions) ---
     if (todos && todos.addition && todos.addition.length > 0) {
+      console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Creating ${todos.addition.length} todos`);
       for (const todo of todos.addition) {
         if (!todo.title) throw new Error("Todo title is required.");
 
@@ -110,6 +118,7 @@ const saveAll = async (req, res) => {
 
     // --- Create Finance Entries ---
     if (finance && finance.length > 0) {
+      console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Creating ${finance.length} finance entries`);
       for (const fin of finance) {
         const financeDoc = new Finance({
           created_by: userId,
@@ -153,13 +162,15 @@ const saveAll = async (req, res) => {
       });
 
       await newEntry.save();
+      console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Created entry id=${newEntry._id}`);
     }
 
+    console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] All saves complete`);
     res
       .status(200)
       .json({ message: "All data saved successfully.", success: true });
   } catch (error) {
-    console.error("Error saving all data:", error);
+    console.error(`[ERROR] [${FILE}] [saveAll] [${req.userId || "unknown"}]`, error && error.stack ? error.stack : error);
     res.status(500).json({
       message: "Server error while saving all data",
       details: error.message,
@@ -169,6 +180,8 @@ const saveAll = async (req, res) => {
 };
 
 const updateAll = async (req, res) => {
+  const functionName = "updateAll";
+  console.log(`[LOG] [${FILE}] [${functionName}] [${req.user?._id || req.userId || "unknown"}] Updating common data`);
   try {
     const { entryData, financeData, todosData, habitsData, date } = req.body;
     const userId = req.user._id;
@@ -177,6 +190,7 @@ const updateAll = async (req, res) => {
 
     // --- 1. Update Entry fields ---
     if (entryData && Object.keys(entryData).length > 0) {
+      console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Updating entry for date=${date}`);
       // Find entry for the date
       const [year, month, day] = date.split("-").map(Number);
       const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
@@ -188,11 +202,13 @@ const updateAll = async (req, res) => {
       if (entry) {
         Object.assign(entry, entryData);
         updatedEntry = await entry.save();
+        console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Updated entry id=${updatedEntry._id}`);
       }
     }
 
     // --- 2. Update Habits ---
     if (Array.isArray(habitsData) && habitsData.length > 0) {
+      console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Updating ${habitsData.length} habits`);
       for (const habit of habitsData) {
         if (!habit.habitId) continue;
         const entryDate = new Date(date);
@@ -211,6 +227,7 @@ const updateAll = async (req, res) => {
 
     // --- 3. Update Todos ---
     if (todosData) {
+      console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Processing todos changes`);
       // Completed: [{_id, action}]
       if (Array.isArray(todosData.completed)) {
         for (const change of todosData.completed) {
@@ -255,6 +272,7 @@ const updateAll = async (req, res) => {
 
     // --- 4. Update Finance ---
     if (Array.isArray(financeData)) {
+      console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Processing ${financeData.length} finance changes`);
       for (const change of financeData) {
         if (change.action === "add" && change.data) {
           const financeDoc = new Finance({
@@ -277,9 +295,10 @@ const updateAll = async (req, res) => {
       }
     }
 
+    console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] UpdateAll completed`);
     res.status(200).json({ message: "All changes updated successfully.", entry: updatedEntry });
   } catch (error) {
-    console.error("Error updating common data:", error);
+    console.error(`[ERROR] [${FILE}] [updateAll] [${req.user?._id || req.userId || "unknown"}]`, error && error.stack ? error.stack : error);
     res.status(500).json({ message: "Server error updating data" });
   }
 };
