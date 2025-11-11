@@ -93,7 +93,9 @@ const Calendar = ({
   const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   return (
-    <div className="p-2 sm:p-4 bg-gray-900 text-white rounded-lg shadow-xl font-urbane w-full">
+    <div className="p-3 sm:p-4 bg-gray-900 text-white rounded-lg shadow-xl font-urbane
+    w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-sm
+    mx-auto">
       {/* Month and Year Selectors */}
       <div className="flex flex-col md:flex-row gap-2 xs:gap-4 justify-between items-stretch xs:items-center mb-4">
         <select
@@ -130,7 +132,8 @@ const Calendar = ({
       </div>
 
       {/* Date Grid */}
-      <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center">
+      <div className="grid grid-cols-7 gap-[2px] sm:gap-1 text-center">
+
         {getDays().map((day, index) => {
           const markedData = getMarkedDateData(day);
           const isMarked = !!markedData;
@@ -145,8 +148,9 @@ const Calendar = ({
             <div
               key={index}
               className={`
-                aspect-square w-full flex items-center justify-center rounded-full text-base sm:text-lg
-                transition-all duration-200 touch-manipulation
+                aspect-square w-full flex items-center justify-center rounded-full
+  text-sm sm:text-base md:text-sm
+  transition-all duration-200 touch-manipulation
                 ${day ? `hover:bg-gray-700 active:bg-gray-600` : ``}
                 ${isMarked ? "text-white" : "text-gray-300"}
                 ${day ? "" : "pointer-events-none"}
