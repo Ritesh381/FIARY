@@ -189,22 +189,39 @@ const updateAll = async (req, res) => {
     let updatedEntry = null;
 
     // --- 1. Update Entry fields ---
-    if (entryData && Object.keys(entryData).length > 0) {
-      console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Updating entry for date=${date}`);
-      // Find entry for the date
-      const [year, month, day] = date.split("-").map(Number);
-      const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
-      const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
-      const entry = await Entry.findOne({
-        user: userId,
-        date: { $gte: startOfDay, $lte: endOfDay },
-      });
-      if (entry) {
-        Object.assign(entry, entryData);
-        updatedEntry = await entry.save();
-        console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Updated entry id=${updatedEntry._id}`);
-      }
-    }
+if (entryData && Object.keys(entryData).length > 0) {
+  console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Updating entry for date=${date}`);
+
+  // Validate date format
+  if (!date || typeof date !== "string" || !date.includes("-")) {
+    throw new Error("Invalid date format. Expected YYYY-MM-DD");
+  }
+
+  const [year, month, day] = date.split("-").map(Number);
+  const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+  const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+
+  // Try to find existing entry
+  let entry = await Entry.findOne({
+    user: userId,
+    date: { $gte: startOfDay, $lte: endOfDay },
+  });
+
+  if (entry) {
+    Object.assign(entry, entryData);
+    updatedEntry = await entry.save();
+    console.log(`[LOG] Updated existing entry id=${updatedEntry._id}`);
+  } else {
+    // Create a new entry if not found
+    updatedEntry = await Entry.create({
+      user: userId,
+      date: startOfDay,
+      ...entryData,
+    });
+    console.log(`[LOG] Created new entry id=${updatedEntry._id}`);
+  }
+}
+
 
     // --- 2. Update Habits ---
     if (Array.isArray(habitsData) && habitsData.length > 0) {
@@ -296,10 +313,10 @@ const updateAll = async (req, res) => {
     }
 
     console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] UpdateAll completed`);
-    res.status(200).json({ message: "All changes updated successfully.", entry: updatedEntry });
+    res.status(200).json({ message: "All changes updated successfully.", status:"ok", entry:updatedEntry });
   } catch (error) {
     console.error(`[ERROR] [${FILE}] [updateAll] [${req.user?._id || req.userId || "unknown"}]`, error && error.stack ? error.stack : error);
-    res.status(500).json({ message: "Server error updating data" });
+    res.status(500).json({ message: "Server error updating data" ,status:"error"});
   }
 };
 

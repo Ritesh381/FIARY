@@ -220,10 +220,11 @@ function EntryPage() {
       };
 
       const resp = await EntryPageCalls.updateAll(payload);
-
-      if (resp && resp.entry && resp.entry._id) {
+      if (resp.status == "ok") {
         // Update the entry in the entries state (editEntry expects {id, updatedEntry})
-        dispatch(updateEntryInState({ id: resp.entry._id, updatedEntry: resp.entry }));
+        if (resp.entry){
+          dispatch(updateEntryInState({ id: resp.entry._id, updatedEntry: resp.entry }));
+        }
         // Also update the form state for immediate UI update
         dispatch(loadEntryData(await EntryPageCalls.getAll(selDate)));
         setOverlayState("success");
