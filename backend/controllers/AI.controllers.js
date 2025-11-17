@@ -64,6 +64,9 @@ const dailyInsight = async (req, res) => {
     res.status(200).json(response);
   } catch (error) {
     console.error(`[ERROR] [${FILE}] [dailyInsight] [${req.userId || "unknown"}]`, error && error.stack ? error.stack : error);
+    if (error.message?.includes('Model Busy')) {
+      return res.status(503).json({ message: error.message });
+    }
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -118,6 +121,9 @@ const weeklyInsight = async (req, res) => {
     res.status(200).json(response);
   } catch (error) {
     console.error(`[ERROR] [${FILE}] [weeklyInsight] [${req.userId || "unknown"}]`, error && error.stack ? error.stack : error);
+    if (error.message?.includes('Model Busy')) {
+      return res.status(503).json({ message: error.message });
+    }
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -161,6 +167,9 @@ const monthlyInsight = async (req, res) => {
     res.status(200).json(response);
   } catch (error) {
     console.error(`[ERROR] [${FILE}] [monthlyInsight] [${req.userId || "unknown"}]`, error && error.stack ? error.stack : error);
+    if (error.message?.includes('Model Busy')) {
+      return res.status(503).json({ message: error.message });
+    }
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

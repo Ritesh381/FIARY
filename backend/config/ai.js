@@ -22,6 +22,11 @@ async function callModel(prompt) {
     }
 
   } catch (error) {
+    // Check if it's a 529 error (model busy/overloaded)
+    if (error.status === 529 || error.message?.includes('529')) {
+      console.error("Gemini API error 529: Model is busy");
+      throw new Error("Model Busy: The AI model is currently overloaded. Please try again in a moment.");
+    }
     console.error("Error parsing JSON from AI response:", error);
     throw new Error("Failed to parse AI response as JSON.");
   }

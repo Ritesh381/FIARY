@@ -243,10 +243,10 @@ const TodoSection = ({ todo, todaysTodos, handleEntryChange, date }) => {
 
   return (
     <>
-      {/* --- TODAY'S TODOS (Completion Tracking) --- */}
+      {/* --- PENDING TODOS (Completion Tracking) --- */}
       <GlassCard className="p-4 md:p-6">
         <h2 className="text-lg md:text-xl font-bold mb-4 text-indigo-400 flex items-center gap-2">
-          <Check size={20} /> Today's Todos
+          <Check size={20} /> Pending Todos
         </h2>
         <div className="space-y-2 md:space-y-3">
           {!todaysTodos || todaysTodos.length === 0 ? (

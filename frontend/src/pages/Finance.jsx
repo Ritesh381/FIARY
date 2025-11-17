@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import {
   IndianRupee,
   Tag,
@@ -18,6 +19,8 @@ import {
 } from "../redux/slices/financeSlice";
 import FinanceFormModal from "../components/finance/FinanceFormModal";
 import FinanceEditModal from "../components/finance/FinanceEditModal";
+import FinanceStats from "../components/finance/FinanceStats";
+import FinanceConfig from "../components/finance/FinanceConfig";
 import { setNavItems } from "../redux/slices/NavItems";
 
 const GlassCard = ({ children, className = "" }) => (
@@ -103,6 +106,7 @@ const FinanceEntryItem = ({ entry, onEdit }) => {
 
 export default function FinancePage() {
   const dispatch = useDispatch();
+  const location = useLocation();
   const {
     entries,
     status,
@@ -110,10 +114,15 @@ export default function FinancePage() {
     isAddModalOpen,
     isEditModalOpen,
     isCategoryModalOpen,
+    categories,
   } = useSelector((state) => state.finance);
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [filterType, setFilterType] = useState("all");
+
+  // Get page parameter from URL
+  const queryParams = new URLSearchParams(location.search);
+  const page = queryParams.get("page");
 
   // Fetch data on component mount (Entries and Categories)
   useEffect(() => {
@@ -221,6 +230,37 @@ export default function FinancePage() {
 
     return { income, expense };
   };
+
+  // Handler to refresh categories after CRUD operations
+  const handleCategoriesUpdate = () => {
+    dispatch(fetchCategoriesAndSubcategories());
+  };
+
+  // Render different views based on page parameter
+  if (page === "1") {
+    return (
+      <div className="min-h-screen max-w-4xl mx-auto">
+        <h1 className="text-4xl font-extrabold text-white mb-6 flex items-center gap-3">
+          <IndianRupee size={32} className="text-green-400" /> Finance Stats
+        </h1>
+        <FinanceStats entries={entries} currentDate={currentDate} />
+      </div>
+    );
+  }
+
+  if (page === "2") {
+    return (
+      <div className="min-h-screen max-w-4xl mx-auto">
+        <h1 className="text-4xl font-extrabold text-white mb-6 flex items-center gap-3">
+          <Tag size={32} className="text-indigo-400" /> Finance Configurations
+        </h1>
+        <FinanceConfig
+          categories={categories}
+          onCategoriesUpdate={handleCategoriesUpdate}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen max-w-4xl mx-auto">

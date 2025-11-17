@@ -15,35 +15,46 @@ import {
 
 // Custom Tooltip Component to show notes
 const CustomTooltip = ({ active, payload, label, graphDataType }) => {
-  if (active && payload && payload.length) {
-    const dataPoint = payload[0].payload;
-    const value = dataPoint.value;
+  try {
+    if (active && payload && payload.length) {
+      const dataPoint = payload[0].payload;
+      const value = dataPoint.value;
 
-    // Format the value based on the data type
-    let displayValue;
-    if (graphDataType === "timeWasted") {
-      const hours = Math.floor(value);
-      const minutes = Math.round((value % 1) * 60);
-      displayValue = `${hours}h ${minutes}m`;
-    } else {
-      // For sleep, just format to 2 decimal places
-      displayValue = `${value.toFixed(2)}`;
+      // Validate that value is a number
+      if (typeof value !== "number" || isNaN(value)) {
+        console.warn("Invalid graph value:", value);
+        return null;
+      }
+
+      // Format the value based on the data type
+      let displayValue;
+      if (graphDataType === "timeWasted") {
+        const hours = Math.floor(value);
+        const minutes = Math.round((value % 1) * 60);
+        displayValue = `${hours}h ${minutes}m`;
+      } else {
+        // For sleep, just format to 2 decimal places
+        displayValue = `${value.toFixed(2)}`;
+      }
+
+      return (
+        <div className="p-3 bg-gray-700 border border-gray-600 rounded-lg shadow-xl text-white max-w-xs">
+          <p className="font-bold text-sm mb-1">{label}</p>
+          <p style={{ color: payload[0].color }} className="text-sm">
+            {/* Use the formatted displayValue */}
+            {`${payload[0].name}: ${displayValue}`}
+          </p>
+          <p className="text-xs text-gray-400 mt-2 whitespace-normal">
+            <span className="font-semibold">Notes:</span> {dataPoint.notes}
+          </p>
+        </div>
+      );
     }
-
-    return (
-      <div className="p-3 bg-gray-700 border border-gray-600 rounded-lg shadow-xl text-white max-w-xs">
-        <p className="font-bold text-sm mb-1">{label}</p>
-        <p style={{ color: payload[0].color }} className="text-sm">
-          {/* Use the formatted displayValue */}
-          {`${payload[0].name}: ${displayValue}`}
-        </p>
-        <p className="text-xs text-gray-400 mt-2 whitespace-normal">
-          <span className="font-semibold">Notes:</span> {dataPoint.notes}
-        </p>
-      </div>
-    );
+    return null;
+  } catch (error) {
+    console.error("Error rendering tooltip:", error);
+    return null;
   }
-  return null;
 };
 
 function Hero() {
@@ -142,7 +153,12 @@ function Hero() {
         const dataKey = isSleep ? "sleepHours" : "timeWastedMinutes";
         const notesKey = isSleep ? "sleepNotes" : "timeWastedNotes";
 
-        const formattedData = filtered.map((entry) => ({
+        // Sort by date (newest first) before mapping
+        const sortedFiltered = [...filtered].sort(
+          (a, b) => new Date(a.date || a.createdAt) - new Date(b.date || b.createdAt)
+        );
+
+        const formattedData = sortedFiltered.map((entry) => ({
           date: new Date(entry.date || entry.createdAt).toLocaleDateString(
             "en-US",
             { month: "short", day: "numeric" }

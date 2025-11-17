@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import {
   Plus,
   Check,
@@ -196,23 +197,35 @@ const TaskItem = ({ task, onEdit, onComplete }) => {
 // --- MAIN PAGE COMPONENT ---
 export default function TasksPage() {
   const dispatch = useDispatch();
+  const location = useLocation();
   const { todos, status, error, isFormModalOpen, isEditModalOpen } =
     useSelector((state) => state.todo);
+
+  // Get page parameter from URL
+  const params = new URLSearchParams(location.search);
+  const page = params.get("page");
+  const isCompletedPage = page === "1";
 
   // Fetch data on component mount
   useEffect(() => {
     dispatch(fetchTodos());
   }, [dispatch]);
 
-  // Group todos into pending/expired
+  // Group todos into pending/expired and completed
   const categorizedTodos = useMemo(() => {
     const now = new Date();
-    // Filter out completed and deleted items first
+    
+    // Separate completed and active todos
+    const completedTodos = todos.filter(
+      (t) => t.status === "completed" && !t.isDeleted
+    );
+    
+    // Filter out completed and deleted items
     const activeTodos = todos.filter(
       (t) => t.status !== "completed" && !t.isDeleted
     );
 
-    return activeTodos.reduce(
+    const activeCategorized = activeTodos.reduce(
       (acc, todo) => {
         // Treat repeating templates separately unless they are completed
         if (todo.repeatSchedule) {
@@ -226,6 +239,8 @@ export default function TasksPage() {
       },
       { pending: [], expired: [], repeating: [] }
     );
+
+    return { ...activeCategorized, completed: completedTodos };
   }, [todos]);
 
   // --- Handlers ---
@@ -263,26 +278,39 @@ export default function TasksPage() {
   return (
     <div className="min-h-screen max-w-4xl mx-auto">
       <h1 className="text-4xl font-extrabold text-white mb-6 flex items-center gap-3">
-        Tasks & Templates
+        {isCompletedPage ? "✓ Completed Tasks" : "Tasks & Templates"}
       </h1>
 
       {/* --- Status Bar and Action --- */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
           <p className="text-sm text-gray-400">
-            Total Active Items:{" "}
-            <span className="font-bold text-indigo-300">
-              {totalActiveTasks}
-            </span>
+            {isCompletedPage ? (
+              <>
+                Total Completed:{" "}
+                <span className="font-bold text-green-300">
+                  {categorizedTodos.completed.length}
+                </span>
+              </>
+            ) : (
+              <>
+                Total Active Items:{" "}
+                <span className="font-bold text-indigo-300">
+                  {totalActiveTasks}
+                </span>
+              </>
+            )}
           </p>
         </div>
 
-        <button
-          className="w-full sm:w-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-500 font-semibold text-white transition-colors flex items-center justify-center gap-2"
-          onClick={() => dispatch(toggleFormModal(true))}
-        >
-          <Plus size={20} /> Add New Item
-        </button>
+        {!isCompletedPage && (
+          <button
+            className="w-full sm:w-auto py-2 px-4 rounded-lg bg-teal-600 hover:bg-teal-500 font-semibold text-white transition-colors flex items-center justify-center gap-2"
+            onClick={() => dispatch(toggleFormModal(true))}
+          >
+            <Plus size={20} /> Add New Item
+          </button>
+        )}
       </div>
 
       {/* --- General Status Feedback --- */}
@@ -299,70 +327,95 @@ export default function TasksPage() {
         </div>
       )}
 
-      {/* --- Todo List: Pending, Expired, Repeating --- */}
-      <GlassCard className="mb-6 p-0 overflow-hidden">
-        {/* 1. Repeating Templates */}
-        {categorizedTodos.repeating.length > 0 && (
-          <>
-            <h2 className="text-xl font-bold text-teal-400 p-4 border-b border-gray-700/50 flex items-center gap-2">
-              <Repeat size={20} /> Repeating Templates (
-              {categorizedTodos.repeating.length})
-            </h2>
-            <div className="divide-y divide-gray-700/50 mb-4">
-              {categorizedTodos.repeating.map((todo) => (
+      {/* --- COMPLETED TASKS PAGE --- */}
+      {isCompletedPage ? (
+        <GlassCard className="mb-6 p-0 overflow-hidden">
+          <h2 className="text-xl font-bold text-green-400 p-4 border-b border-gray-700/50 flex items-center gap-2">
+            <Check size={20} /> Completed Tasks ({categorizedTodos.completed.length})
+          </h2>
+          <div className="divide-y divide-gray-700/50">
+            {categorizedTodos.completed.length === 0 ? (
+              <p className="p-4 text-gray-500 italic">
+                No completed tasks yet. Complete some tasks to see them here!
+              </p>
+            ) : (
+              categorizedTodos.completed.map((todo) => (
                 <TaskItem
                   key={todo._id}
                   task={todo}
                   onEdit={handleEditTask}
                   onComplete={handleMarkComplete}
                 />
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* 2. Pending Todos */}
-        <h2 className="text-xl font-bold text-indigo-400 p-4 border-b border-gray-700/50 flex items-center gap-2">
-          <Calendar size={20} /> Pending Todos (
-          {categorizedTodos.pending.length})
-        </h2>
-        <div className="divide-y divide-gray-700/50">
-          {categorizedTodos.pending.length === 0 ? (
-            <p className="p-4 text-gray-500 italic">
-              No single-occurrence tasks pending.
-            </p>
-          ) : (
-            categorizedTodos.pending.map((todo) => (
-              <TaskItem
-                key={todo._id}
-                task={todo}
-                onEdit={handleEditTask}
-                onComplete={handleMarkComplete}
-              />
-            ))
+              ))
+            )}
+          </div>
+        </GlassCard>
+      ) : (
+        /* --- ACTIVE TASKS PAGE --- */
+        <GlassCard className="mb-6 p-0 overflow-hidden">
+          {/* 1. Repeating Templates */}
+          {categorizedTodos.repeating.length > 0 && (
+            <>
+              <h2 className="text-xl font-bold text-teal-400 p-4 border-b border-gray-700/50 flex items-center gap-2">
+                <Repeat size={20} /> Repeating Templates (
+                {categorizedTodos.repeating.length})
+              </h2>
+              <div className="divide-y divide-gray-700/50 mb-4">
+                {categorizedTodos.repeating.map((todo) => (
+                  <TaskItem
+                    key={todo._id}
+                    task={todo}
+                    onEdit={handleEditTask}
+                    onComplete={handleMarkComplete}
+                  />
+                ))}
+              </div>
+            </>
           )}
-        </div>
 
-        {/* 3. Missed/Expired Todos */}
-        {categorizedTodos.expired.length > 0 && (
-          <>
-            <h3 className="text-lg font-bold text-red-400 p-4 border-t border-gray-700/50 flex items-center gap-2">
-              <Clock size={18} /> Missed/Expired (
-              {categorizedTodos.expired.length})
-            </h3>
-            <div className="divide-y divide-gray-700/50">
-              {categorizedTodos.expired.map((todo) => (
+          {/* 2. Pending Todos */}
+          <h2 className="text-xl font-bold text-indigo-400 p-4 border-b border-gray-700/50 flex items-center gap-2">
+            <Calendar size={20} /> Pending Todos (
+            {categorizedTodos.pending.length})
+          </h2>
+          <div className="divide-y divide-gray-700/50">
+            {categorizedTodos.pending.length === 0 ? (
+              <p className="p-4 text-gray-500 italic">
+                No single-occurrence tasks pending.
+              </p>
+            ) : (
+              categorizedTodos.pending.map((todo) => (
                 <TaskItem
                   key={todo._id}
                   task={todo}
                   onEdit={handleEditTask}
                   onComplete={handleMarkComplete}
                 />
-              ))}
-            </div>
-          </>
-        )}
-      </GlassCard>
+              ))
+            )}
+          </div>
+
+          {/* 3. Missed/Expired Todos */}
+          {categorizedTodos.expired.length > 0 && (
+            <>
+              <h3 className="text-lg font-bold text-red-400 p-4 border-t border-gray-700/50 flex items-center gap-2">
+                <Clock size={18} /> Missed/Expired (
+                {categorizedTodos.expired.length})
+              </h3>
+              <div className="divide-y divide-gray-700/50">
+                {categorizedTodos.expired.map((todo) => (
+                  <TaskItem
+                    key={todo._id}
+                    task={todo}
+                    onEdit={handleEditTask}
+                    onComplete={handleMarkComplete}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </GlassCard>
+      )}
 
       {/* Modals */}
       {isFormModalOpen && (

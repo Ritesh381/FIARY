@@ -182,7 +182,9 @@ function EntryPage() {
 
       if (resp.success) {
         try {
-          dispatch(addEntry({ entry }));
+          // Use the entry returned from backend which has the _id
+          const savedEntry = resp.entry || entry;
+          dispatch(addEntry({ entry: savedEntry }));
         } catch (err) {
           console.warn("Failed to dispatch addEntry:", err);
         }

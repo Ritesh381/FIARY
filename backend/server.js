@@ -1,4 +1,5 @@
 const express = require("express");
+const http = require("http");
 require("dotenv").config();
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
@@ -16,9 +17,12 @@ const thoughtRoutes = require("./routes/Thoughts.routes.js")
 const commonRouter = require("./routes/Common.routes.js");
 const memoryRoutes = require("./routes/Memories.routes.js");
 const { shelfRouter, itemRouter } = require("./routes/Shelf.routes.js")
+const setupMurfProxy = require("./config/murfWS.js");
 
 const PORT = 8080;
 const app = express();
+
+const server = http.createServer(app);
 
 //connect to MongoDB
 connectDB();
@@ -49,7 +53,10 @@ app.use("/api/memories", memoryRoutes);
 app.use("/api/shelf", shelfRouter);
 app.use("/api/shelfitem", itemRouter);
 
+// WebSocket → Murf proxy
+setupMurfProxy(server);
+
 // Start server
-app.listen(PORT, () =>
-  console.log(`Server is running on: http://localhost:${PORT}`)
+server.listen(PORT, () =>
+  console.log(`Server running on http://localhost:${PORT}`)
 );

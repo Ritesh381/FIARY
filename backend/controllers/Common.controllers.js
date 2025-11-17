@@ -116,6 +116,18 @@ const saveAll = async (req, res) => {
       }
     }
 
+    // --- Mark Completed Todos ---
+    if (todos && todos.completed && todos.completed.length > 0) {
+      console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Marking ${todos.completed.length} todos as completed`);
+      for (const todo of todos.completed) {
+        if (!todo._id) continue;
+        await Todo.findOneAndUpdate(
+          { _id: todo._id, userId: userId },
+          { status: "completed" }
+        );
+      }
+    }
+
     // --- Create Finance Entries ---
     if (finance && finance.length > 0) {
       console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Creating ${finance.length} finance entries`);
@@ -163,12 +175,17 @@ const saveAll = async (req, res) => {
 
       await newEntry.save();
       console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Created entry id=${newEntry._id}`);
+      
+      console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] All saves complete`);
+      res
+        .status(200)
+        .json({ message: "All data saved successfully.", success: true, entry: newEntry });
+    } else {
+      console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] All saves complete`);
+      res
+        .status(200)
+        .json({ message: "All data saved successfully.", success: true });
     }
-
-    console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] All saves complete`);
-    res
-      .status(200)
-      .json({ message: "All data saved successfully.", success: true });
   } catch (error) {
     console.error(`[ERROR] [${FILE}] [saveAll] [${req.userId || "unknown"}]`, error && error.stack ? error.stack : error);
     res.status(500).json({
