@@ -16,10 +16,7 @@ const getCategoriesWithSubcategories = async (userId) => {
   const categories = await Category.aggregate([
     {
       $match: {
-        $or: [
-          { isGlobal: true },
-          { user: userObjectId }
-        ]
+        user: userObjectId // Only fetch user's own categories
       }
     },
     {
@@ -35,16 +32,13 @@ const getCategoriesWithSubcategories = async (userId) => {
         _id: 1,
         name: 1,
         isExpense: 1,
-        isGlobal: 1,
+        user: 1,
         subcategories: {
           $filter: {
             input: "$subcategories",
             as: "sub",
             cond: {
-              $or: [
-                { $eq: ["$$sub.isGlobal", true] },
-                { $eq: ["$$sub.user", userObjectId] }
-              ]
+              $eq: ["$$sub.user", userObjectId] // Only include user's own subcategories
             }
           }
         }
@@ -65,7 +59,7 @@ const createCategory = async (req, res) => {
     const functionName = "createCategory";
     console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Creating category`);
     try {
-        const { name, isExpense, isGlobal = false } = req.body;
+        const { name, isExpense } = req.body;
         if (!name || isExpense === undefined) {
             console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Missing name or isExpense`);
             return res.status(400).json({ message: "Name and isExpense are required." });
@@ -74,8 +68,7 @@ const createCategory = async (req, res) => {
         const category = new Category({
             name,
             isExpense,
-            user: isGlobal ? null : req.userId,
-            isGlobal: isGlobal,
+            user: req.userId, // Always user-owned
         });
 
         await category.save();
@@ -108,17 +101,14 @@ const updateCategory = async (req, res) => {
         const { id } = req.params;
         const { name, isExpense } = req.body;
 
-        const category = await Category.findOne({ _id: id, $or: [{ user: req.userId }, { isGlobal: true }] });
+        const category = await Category.findOne({ _id: id, user: req.userId });
 
         if (!category) {
             console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Category not found or access denied id=${id}`);
             return res.status(404).json({ message: "Category not found or access denied." });
         }
-        if (!category.isGlobal && category.user.toString() !== req.userId) {
-             console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Permission denied to update category id=${id}`);
-             return res.status(403).json({ message: "Permission denied to update this category." });
-        }
-        // Only allow updating name and isExpense
+
+        // Update name and isExpense
         if (name) category.name = name;
         if (isExpense !== undefined) category.isExpense = isExpense;
 
@@ -136,20 +126,14 @@ const deleteCategory = async (req, res) => {
     console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Deleting category id=${req.params.id}`);
     try {
         const { id } = req.params;
-        const category = await Category.findOne({ _id: id });
+        const category = await Category.findOne({ _id: id, user: req.userId });
 
         if (!category) {
-            console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Category not found id=${id}`);
-            return res.status(404).json({ message: "Category not found." });
+            console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Category not found or access denied id=${id}`);
+            return res.status(404).json({ message: "Category not found or access denied." });
         }
 
-        // Must be non-global and owned by the user to delete
-        if (category.isGlobal || category.user.toString() !== req.userId) {
-            console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Cannot delete global or unowned category id=${id}`);
-            return res.status(403).json({ message: "Cannot delete global or unowned categories." });
-        }
-
-        // Delete associated subcategories first
+        // Delete associated subcategories
         await SubCategory.deleteMany({ category: id, user: req.userId });
         await Category.deleteOne({ _id: id });
 
@@ -168,14 +152,14 @@ const createSubCategory = async (req, res) => {
     const functionName = "createSubCategory";
     console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Creating subcategory`);
     try {
-        const { name, categoryId, isGlobal = false } = req.body;
+        const { name, categoryId } = req.body;
         if (!name || !categoryId) {
             console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Missing name or categoryId`);
             return res.status(400).json({ message: "Name and Category ID are required." });
         }
 
-        // Verify the parent category exists and is accessible
-        const parentCategory = await Category.findOne({ _id: categoryId, $or: [{ user: req.userId }, { isGlobal: true }] });
+        // Verify the parent category exists and belongs to user
+        const parentCategory = await Category.findOne({ _id: categoryId, user: req.userId });
         if (!parentCategory) {
             console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Parent category not found or access denied id=${categoryId}`);
             return res.status(404).json({ message: "Parent category not found or access denied." });
@@ -184,8 +168,7 @@ const createSubCategory = async (req, res) => {
         const subCategory = new SubCategory({
             name,
             category: categoryId,
-            user: isGlobal ? null : req.userId,
-            isGlobal: isGlobal,
+            user: req.userId, // Always user-owned
         });
 
         await subCategory.save();
@@ -204,15 +187,11 @@ const updateSubCategory = async (req, res) => {
         const { id } = req.params;
         const { name } = req.body;
 
-        const subCategory = await SubCategory.findOne({ _id: id, $or: [{ user: req.userId }, { isGlobal: true }] });
+        const subCategory = await SubCategory.findOne({ _id: id, user: req.userId });
         
         if (!subCategory) {
             console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] SubCategory not found or access denied id=${id}`);
             return res.status(404).json({ message: "SubCategory not found or access denied." });
-        }
-        if (!subCategory.isGlobal && subCategory.user.toString() !== req.userId) {
-             console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Permission denied to update subcategory id=${id}`);
-             return res.status(403).json({ message: "Permission denied to update this subcategory." });
         }
 
         if (name) subCategory.name = name;
@@ -231,17 +210,11 @@ const deleteSubCategory = async (req, res) => {
     console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Deleting subcategory id=${req.params.id}`);
     try {
         const { id } = req.params;
-        const subCategory = await SubCategory.findOne({ _id: id });
+        const subCategory = await SubCategory.findOne({ _id: id, user: req.userId });
 
         if (!subCategory) {
-            console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] SubCategory not found id=${id}`);
-            return res.status(404).json({ message: "SubCategory not found." });
-        }
-
-        // Must be non-global and owned by the user to delete
-        if (subCategory.isGlobal || subCategory.user.toString() !== req.userId) {
-            console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Cannot delete global or unowned subcategory id=${id}`);
-            return res.status(403).json({ message: "Cannot delete global or unowned subcategories." });
+            console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] SubCategory not found or access denied id=${id}`);
+            return res.status(404).json({ message: "SubCategory not found or access denied." });
         }
 
         await SubCategory.deleteOne({ _id: id });

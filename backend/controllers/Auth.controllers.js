@@ -2,6 +2,7 @@ const User = require("../models/User.models");
 const bcrypt = require("bcrypt");
 const generateToken = require("../config/token")
 const UserShelf = require("../models/shelf/UserShelf.models")
+const { createFinCat } = require("../lib/initializeFinanceCategories");
 
 const FILE = "Auth.controllers.js";
 
@@ -110,6 +111,8 @@ const register = async (req, res) => {
 
         await user.save();
         console.log(`[LOG] [${FILE}] [${functionName}] [${user._id}] User created`);
+        
+        // Initialize default user shelves
         await UserShelf.create({
             userId: user._id,
             shelves: [
@@ -155,6 +158,14 @@ const register = async (req, res) => {
         });
         console.log(`[LOG] [${FILE}] [${functionName}] [${user._id}] Created default user shelves`);
 
+        // Initialize default finance categories
+        try {
+            const finCatResult = await createFinCat(user._id);
+            console.log(`[LOG] [${FILE}] [${functionName}] [${user._id}] ${finCatResult.message} - Created ${finCatResult.categoriesCount} categories and ${finCatResult.subcategoriesCount} subcategories`);
+        } catch (error) {
+            console.error(`[ERROR] [${FILE}] [${functionName}] [${user._id}] Failed to initialize finance categories:`, error.message);
+            // Continue registration even if finance category initialization fails
+        }
 
         const token = generateToken(user._id);
 
