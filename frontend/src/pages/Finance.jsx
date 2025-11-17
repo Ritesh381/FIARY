@@ -240,9 +240,6 @@ export default function FinancePage() {
   if (page === "1") {
     return (
       <div className="min-h-screen max-w-4xl mx-auto">
-        <h1 className="text-4xl font-extrabold text-white mb-6 flex items-center gap-3">
-          <IndianRupee size={32} className="text-green-400" /> Finance Stats
-        </h1>
         <FinanceStats entries={entries} currentDate={currentDate} />
       </div>
     );
@@ -251,9 +248,6 @@ export default function FinancePage() {
   if (page === "2") {
     return (
       <div className="min-h-screen max-w-4xl mx-auto">
-        <h1 className="text-4xl font-extrabold text-white mb-6 flex items-center gap-3">
-          <Tag size={32} className="text-indigo-400" /> Finance Configurations
-        </h1>
         <FinanceConfig
           categories={categories}
           onCategoriesUpdate={handleCategoriesUpdate}
