@@ -18,7 +18,6 @@ const apiFinanceConfig = {
       const data = {
         name: categoryData.name,
         isExpense: categoryData.isExpense ?? true,
-        isGlobal: categoryData.isGlobal ?? false,
       };
       const response = await apiClient.post("/fincat", data);
       return response.data;
@@ -54,7 +53,6 @@ const apiFinanceConfig = {
       const data = {
         name: subCategoryData.name,
         categoryId: subCategoryData.category_id || subCategoryData.categoryId,
-        isGlobal: subCategoryData.isGlobal ?? false,
       };
       const response = await apiClient.post("/fincat/sub", data);
       return response.data;

@@ -2,7 +2,7 @@ const User = require("../models/User.models");
 const bcrypt = require("bcrypt");
 const generateToken = require("../config/token")
 const UserShelf = require("../models/shelf/UserShelf.models")
-const { createFinCat } = require("../lib/initializeFinanceCategories");
+const { seedTemplateCategories } = require("../lib/initializeFinanceCategories");
 
 const FILE = "Auth.controllers.js";
 
@@ -158,13 +158,14 @@ const register = async (req, res) => {
         });
         console.log(`[LOG] [${FILE}] [${functionName}] [${user._id}] Created default user shelves`);
 
-        // Initialize default finance categories
+        // Ensure template categories exist (seed templates if empty)
         try {
-            const finCatResult = await createFinCat(user._id);
-            console.log(`[LOG] [${FILE}] [${functionName}] [${user._id}] ${finCatResult.message} - Created ${finCatResult.categoriesCount} categories and ${finCatResult.subcategoriesCount} subcategories`);
-        } catch (error) {
-            console.error(`[ERROR] [${FILE}] [${functionName}] [${user._id}] Failed to initialize finance categories:`, error.message);
-            // Continue registration even if finance category initialization fails
+            const seedRes = await seedTemplateCategories();
+            if (seedRes && seedRes.message) {
+                console.log(`[LOG] [${FILE}] [${functionName}] [${user._id}] Template seed: ${seedRes.message}`);
+            }
+        } catch (err) {
+            console.error(`[ERROR] [${FILE}] [${functionName}] [${user._id}] Failed to seed templates:`, err && err.message);
         }
 
         const token = generateToken(user._id);

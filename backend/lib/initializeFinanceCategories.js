@@ -1,4 +1,5 @@
 const { Category, SubCategory } = require("../models/Finance.Categories.models");
+const { TemplateCategory, TemplateSubCategory } = require("../models/Template.models");
 
 // Global template categories that will be cloned for each new user
 const GLOBAL_CATEGORY_TEMPLATE = [
@@ -197,4 +198,27 @@ const createFinCat = async (userId) => {
   }
 };
 
-module.exports = { createFinCat, GLOBAL_CATEGORY_TEMPLATE };
+// Seed template categories into TemplateCategory collection if empty
+const seedTemplateCategories = async () => {
+  const existing = await TemplateCategory.countDocuments();
+  if (existing > 0) {
+    return { success: true, message: "Templates already seeded", count: existing };
+  }
+
+  let catCount = 0;
+  let subCount = 0;
+  for (const tpl of GLOBAL_CATEGORY_TEMPLATE) {
+    const cat = new TemplateCategory({ name: tpl.name, isExpense: tpl.isExpense });
+    await cat.save();
+    catCount++;
+    if (tpl.subcategories && tpl.subcategories.length) {
+      const subs = tpl.subcategories.map((s) => ({ name: s, category: cat._id }));
+      await TemplateSubCategory.insertMany(subs);
+      subCount += subs.length;
+    }
+  }
+
+  return { success: true, message: "Templates seeded", categories: catCount, subcategories: subCount };
+};
+
+module.exports = { createFinCat, GLOBAL_CATEGORY_TEMPLATE, seedTemplateCategories };

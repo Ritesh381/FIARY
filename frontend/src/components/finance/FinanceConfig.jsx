@@ -80,12 +80,7 @@ export default function FinanceConfig({ categories, onCategoriesUpdate }) {
       showFeedback("success", "Category deleted successfully");
       onCategoriesUpdate();
     } catch (error) {
-      const errorMsg = error.response?.data?.message || "Failed to delete category";
-      if (error.response?.status === 403) {
-        showFeedback("error", "Cannot delete global categories. Only user-created categories can be deleted.");
-      } else {
-        showFeedback("error", errorMsg);
-      }
+      showFeedback("error", error.response?.data?.message || "Failed to delete category");
     } finally {
       setLoading(false);
     }
@@ -146,12 +141,7 @@ export default function FinanceConfig({ categories, onCategoriesUpdate }) {
       showFeedback("success", "Subcategory deleted successfully");
       onCategoriesUpdate();
     } catch (error) {
-      const errorMsg = error.response?.data?.message || "Failed to delete subcategory";
-      if (error.response?.status === 403) {
-        showFeedback("error", "Cannot delete global subcategories. Only user-created subcategories can be deleted.");
-      } else {
-        showFeedback("error", errorMsg);
-      }
+      showFeedback("error", error.response?.data?.message || "Failed to delete subcategory");
     } finally {
       setLoading(false);
     }
