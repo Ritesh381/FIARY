@@ -3,12 +3,15 @@ const {
   Category,
   SubCategory,
 } = require("../models/Finance.Categories.models");
+const mongoose = require("mongoose");
 
 const FILE = "Finance.controllers.js";
 
 const createFinance = async (req, res) => {
   const functionName = "createFinance";
   console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || req.user?._id || "unknown"}] Starting create finance`);
+  console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Request body:`, JSON.stringify(req.body));
+
   try {
     const {
       type,
@@ -22,21 +25,39 @@ const createFinance = async (req, res) => {
 
     console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Payload received: type=${type}, when=${when}, category_id=${category_id}, sub_category_id=${sub_category_id}, amount=${amount}`);
 
+    // Validate required category_id
+    if (!category_id) {
+      console.log(`[ERROR] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Missing category_id`);
+      return res.status(400).json({ message: "category_id is required" });
+    }
+
     let category_name = "";
     let sub_category_name = "";
 
-    if (category_id) {
-      console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Querying Category model for id: ${category_id}`);
-      const category = await Category.findById(category_id);
-      if (category) category_name = category.name;
-      console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Category lookup result: ${category ? category._id : "not found"}`);
+    // Always derive category name from ID
+    console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Querying Category model for id: ${category_id}`);
+    const category = await Category.findById(category_id);
+
+    if (!category) {
+      console.log(`[ERROR] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Category not found: ${category_id}`);
+      return res.status(400).json({ message: "Invalid category_id" });
     }
 
+    category_name = category.name;
+    console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Category found: ${category.name} (${category._id})`);
+
+    // Derive subcategory name from ID if provided
     if (sub_category_id) {
       console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Querying SubCategory model for id: ${sub_category_id}`);
       const subCategory = await SubCategory.findById(sub_category_id);
-      if (subCategory) sub_category_name = subCategory.name;
-      console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] SubCategory lookup result: ${subCategory ? subCategory._id : "not found"}`);
+
+      if (!subCategory) {
+        console.log(`[ERROR] [${FILE}] [${functionName}] [${req.userId || "unknown"}] SubCategory not found: ${sub_category_id}`);
+        return res.status(400).json({ message: "Invalid sub_category_id" });
+      }
+
+      sub_category_name = subCategory.name;
+      console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] SubCategory found: ${subCategory.name} (${subCategory._id})`);
     }
 
     const finance = new Finance({
@@ -45,7 +66,7 @@ const createFinance = async (req, res) => {
       when,
       category_id,
       category_name,
-      sub_category_id,
+      sub_category_id: sub_category_id || null,
       sub_category_name,
       amount,
       note,
@@ -53,7 +74,7 @@ const createFinance = async (req, res) => {
     });
 
     await finance.save();
-    console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Created finance id=${finance._id}`);
+    console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Created finance id=${finance._id} with category=${category_name} (${category_id}) and subcategory=${sub_category_name || 'none'}`);
     console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Responding with 201`);
     res.status(201).json(finance);
   } catch (err) {
@@ -109,6 +130,8 @@ const getFinanceById = async (req, res) => {
 const updateFinance = async (req, res) => {
   const functionName = "updateFinance";
   console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Starting update for id=${req.params.id}`);
+  console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Request body:`, JSON.stringify(req.body));
+
   try {
     const { id } = req.params;
 
@@ -119,25 +142,102 @@ const updateFinance = async (req, res) => {
       return res.status(404).json({ message: "Finance entry not found" });
     }
 
-    const updates = req.body;
+    console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Current finance before update:`, {
+      category_id: finance.category_id,
+      category_name: finance.category_name,
+      sub_category_id: finance.sub_category_id,
+      sub_category_name: finance.sub_category_name
+    });
 
-    // If category or subcategory is updated, update backup names
-    if (updates.category_id) {
-      console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Looking up new category ${updates.category_id}`);
-      const category = await Category.findById(updates.category_id);
-      updates.category_name = category ? category.name : "";
+    // Extract allowed fields from request body
+    // IMPORTANT: We don't accept category_name or sub_category_name from frontend
+    // These will be derived from the IDs
+    const {
+      type,
+      when,
+      amount,
+      note,
+      upload_link,
+      category_id,
+      sub_category_id
+    } = req.body;
+
+    // Build clean update object with only defined values
+    const updates = {};
+    if (type !== undefined) updates.type = type;
+    if (when !== undefined) updates.when = when;
+    if (amount !== undefined) updates.amount = amount;
+    if (note !== undefined) updates.note = note;
+    if (upload_link !== undefined) updates.upload_link = upload_link;
+
+    // Handle category_id: derive name from ID
+    if (category_id !== undefined) {
+      console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Category ID in request: "${category_id}" (type: ${typeof category_id})`);
+
+      if (!category_id) {
+        console.log(`[ERROR] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Cannot set category_id to null/empty`);
+        return res.status(400).json({ message: "category_id cannot be empty" });
+      }
+
+      // Check if it's a valid ObjectId format
+      if (!mongoose.Types.ObjectId.isValid(category_id)) {
+        console.log(`[ERROR] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Invalid ObjectId format: ${category_id}`);
+        return res.status(400).json({ message: "Invalid category_id format" });
+      }
+
+      console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Looking up category in Finance_Category collection...`);
+      const category = await Category.findById(category_id);
+
+      if (!category) {
+        console.log(`[ERROR] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Category not found in database: ${category_id}`);
+        // Log all categories to help debug
+        const allCategories = await Category.find({ user: req.userId }).limit(5);
+        console.log(`[DEBUG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Sample categories for this user:`, allCategories.map(c => ({ id: c._id, name: c.name })));
+        return res.status(400).json({ message: `Invalid category_id: ${category_id} not found` });
+      }
+
+      updates.category_id = category_id;
+      updates.category_name = category.name;
+      console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Set category: ${category.name} (${category_id})`);
     }
 
-    if (updates.sub_category_id) {
-      console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Looking up new subcategory ${updates.sub_category_id}`);
-      const subCategory = await SubCategory.findById(updates.sub_category_id);
-      updates.sub_category_name = subCategory ? subCategory.name : "";
+    // Handle sub_category_id: derive name from ID
+    // Allow null/empty for subcategory (it's optional)
+    if (sub_category_id !== undefined) {
+      console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] SubCategory ID in request: ${sub_category_id}`);
+
+      if (sub_category_id === null || sub_category_id === "") {
+        // User wants to clear the subcategory
+        updates.sub_category_id = null;
+        updates.sub_category_name = "";
+        console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Cleared subcategory`);
+      } else {
+        const subCategory = await SubCategory.findById(sub_category_id);
+        if (!subCategory) {
+          console.log(`[ERROR] [${FILE}] [${functionName}] [${req.userId || "unknown"}] SubCategory not found: ${sub_category_id}`);
+          return res.status(400).json({ message: "Invalid sub_category_id" });
+        }
+
+        updates.sub_category_id = sub_category_id;
+        updates.sub_category_name = subCategory.name;
+        console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Set subcategory: ${subCategory.name} (${sub_category_id})`);
+      }
     }
 
+    console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Applying updates:`, JSON.stringify(updates));
+
+    // Apply updates
     Object.assign(finance, updates);
     await finance.save();
 
     console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Updated finance id=${finance._id}`);
+    console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Finance after update:`, {
+      category_id: finance.category_id,
+      category_name: finance.category_name,
+      sub_category_id: finance.sub_category_id,
+      sub_category_name: finance.sub_category_name
+    });
+
     res.json(finance);
   } catch (err) {
     console.error(`[ERROR] [${FILE}] [${functionName}] [${req.userId || "unknown"}]`, err && err.stack ? err.stack : err);

@@ -30,7 +30,7 @@ export default function FinanceFormModal() {
     const dispatch = useDispatch();
     const { isAddModalOpen, categories } = useSelector(state => state.finance);
     const user = useSelector(state => state.user.user);
-    
+
     // Form state
     const [formData, setFormData] = useState({
         type: 'Expense',
@@ -49,18 +49,18 @@ export default function FinanceFormModal() {
         const isExpenseType = formData.type === 'Expense';
         return categories.filter(cat => cat.isExpense === isExpenseType);
     }, [categories, formData.type]);
-    
+
     // Auto-select first category in filtered list (Fix: only run on modal open/type change)
     useEffect(() => {
         if (isAddModalOpen && filteredCategories.length > 0) {
             const isValidCategory = filteredCategories.some(cat => cat._id === formData.category_id);
-            
+
             if (!isValidCategory) {
                 const firstCategory = filteredCategories[0];
                 const newCategoryId = firstCategory ? firstCategory._id : '';
 
-                setFormData(prev => ({ 
-                    ...prev, 
+                setFormData(prev => ({
+                    ...prev,
                     category_id: newCategoryId,
                     sub_category_id: '' // Reset subcategory when category list changes
                 }));
@@ -71,12 +71,12 @@ export default function FinanceFormModal() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        
+
         setFeedback({ type: null, message: null });
 
         if (name === 'category_id') {
-             // Standard category change, reset subcategory
-             setFormData(prev => ({
+            // Standard category change, reset subcategory
+            setFormData(prev => ({
                 ...prev,
                 category_id: value,
                 sub_category_id: '',
@@ -108,29 +108,27 @@ export default function FinanceFormModal() {
         }
 
         setSubmitting(true);
-        
-        // Find names for backend API consistency
-        const selectedCategory = categories.find(c => c._id === formData.category_id);
-        const selectedSubcategory = getSubcategories(categories, formData.category_id).find(s => s._id === formData.sub_category_id);
-        
+
         // Convert the 'when' datetime-local string back to ISO format for the backend
         const updatedWhenISO = new Date(formData.when).toISOString();
 
+        // Only send IDs, not names - backend will derive names from IDs
         const payload = {
-            ...formData,
-            when: updatedWhenISO, // Use the converted ISO string
+            type: formData.type,
+            category_id: formData.category_id,
+            sub_category_id: formData.sub_category_id || null,
+            when: updatedWhenISO,
             amount: parseFloat(formData.amount),
+            note: formData.note,
             created_by: user._id,
-            category_name: selectedCategory?.name,
-            sub_category_name: selectedSubcategory?.name,
         };
 
         try {
             await dispatch(createFinanceEntry(payload)).unwrap();
             setFeedback({ type: 'success', message: 'Entry saved successfully! Closing...' });
-            
+
             dispatch(fetchFinanceEntries());
-            
+
             // Reset form for next open/use
             const defaultExpenseCategory = categories.find(c => c.isExpense === true)?._id || '';
 
@@ -142,7 +140,7 @@ export default function FinanceFormModal() {
                 sub_category_id: '',
                 note: '',
             });
-            setTimeout(() => dispatch(toggleAddModal()), 1000); 
+            setTimeout(() => dispatch(toggleAddModal()), 1000);
 
         } catch (error) {
             setFeedback({ type: 'error', message: error.message || 'Failed to save entry.' });
@@ -150,7 +148,7 @@ export default function FinanceFormModal() {
             setSubmitting(false);
         }
     };
-    
+
     if (!isAddModalOpen) return null;
 
     const currentSubcategories = getSubcategories(categories, formData.category_id);
@@ -165,9 +163,9 @@ export default function FinanceFormModal() {
                 }
             }}
         >
-            <GlassCard 
+            <GlassCard
                 className="relative w-full max-w-xs p-4 sm:p-5 transform transition-transform scale-100 duration-300 max-h-[95vh] overflow-y-auto" // Reduced width and padding
-                onClick={(e) => e.stopPropagation()} 
+                onClick={(e) => e.stopPropagation()}
             >
                 <button
                     onClick={() => dispatch(toggleAddModal())}
@@ -188,21 +186,21 @@ export default function FinanceFormModal() {
                         feedback.type === 'success'
                             ? 'bg-green-900/50 text-green-300'
                             : 'bg-red-900/50 text-red-300'
-                    }`}>
+                        }`}>
                         {feedback.type === 'success' ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
                         <p>{feedback.message}</p>
                     </div>
                 )}
-                
+
                 <form onSubmit={handleFormSubmit} className="space-y-3"> {/* Reduced spacing */}
-                    
+
                     {/* Type Selector (Income/Expense) */}
                     <div>
                         <label className="block text-xs font-medium text-gray-300 mb-1">Transaction Type</label>
                         <div className="flex gap-2 p-1 rounded-lg border border-gray-700"> {/* Reduced gap and padding */}
-                            <button 
-                                type="button" 
-                                name="type" 
+                            <button
+                                type="button"
+                                name="type"
                                 onClick={() => handleChange({ target: { name: 'type', value: 'Income' } })}
                                 className={`flex-1 py-1.5 rounded-lg font-medium text-xs flex items-center justify-center gap-1 ${ // Reduced padding/font size
                                     formData.type === 'Income' ? 'bg-green-600 shadow-md text-white' : 'text-gray-300 hover:bg-gray-700/50'}`}
@@ -210,9 +208,9 @@ export default function FinanceFormModal() {
                             >
                                 <TrendingUp size={14} /> Income
                             </button>
-                            <button 
-                                type="button" 
-                                name="type" 
+                            <button
+                                type="button"
+                                name="type"
                                 onClick={() => handleChange({ target: { name: 'type', value: 'Expense' } })}
                                 className={`flex-1 py-1.5 rounded-lg font-medium text-xs flex items-center justify-center gap-1 ${ // Reduced padding/font size
                                     formData.type === 'Expense' ? 'bg-red-600 shadow-md text-white' : 'text-gray-300 hover:bg-gray-700/50'}`}
@@ -222,7 +220,7 @@ export default function FinanceFormModal() {
                             </button>
                         </div>
                     </div>
-                    
+
                     {/* Amount Input */}
                     <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">₹</span>
@@ -239,14 +237,14 @@ export default function FinanceFormModal() {
                             disabled={submitting}
                         />
                     </div>
-                    
+
                     {/* Date/Time Input */}
                     <div>
                         <label htmlFor="when" className="block text-xs font-medium text-gray-300 mb-1 flex items-center gap-1">
                             <Calendar size={14} /><Clock size={14} /> Date and Time
                         </label>
                         <input
-                            type="datetime-local" 
+                            type="datetime-local"
                             id="when"
                             name="when"
                             value={formData.when}
@@ -320,7 +318,7 @@ export default function FinanceFormModal() {
                             disabled={submitting}
                         />
                     </div>
-                    
+
                     {/* Submit Button */}
                     <button
                         type="submit"
@@ -329,7 +327,7 @@ export default function FinanceFormModal() {
                             submitting || feedback.type === 'success'
                                 ? "bg-teal-700/50 cursor-not-allowed"
                                 : "bg-teal-600 hover:bg-teal-500"
-                        }`}
+                            }`}
                     >
                         {submitting ? (
                             <>

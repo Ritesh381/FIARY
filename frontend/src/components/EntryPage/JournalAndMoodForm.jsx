@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { editEntry } from "../../redux/slices/entryEditSlice";
 import MoodSelector from "../MoodSelector.jsx";
 import { GlassCard } from "./GlassCard.jsx";
+import MicButton from "./MicButton.jsx";
 
 const JournalAndMoodForm = ({ entry, handleEntryChange }) => {
   const dispatch = useDispatch();
@@ -11,7 +12,7 @@ const JournalAndMoodForm = ({ entry, handleEntryChange }) => {
   const handleChange = useCallback((field, value) => {
     // Update visible form
     handleEntryChange("entry", field, value);
-    
+
     // Track entry edits if in edit mode
     if (isEditing) {
       dispatch(editEntry({ field, value }));
@@ -27,14 +28,20 @@ const JournalAndMoodForm = ({ entry, handleEntryChange }) => {
 
       <GlassCard className="p-4 space-y-4">
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-grow">
+          <div className="flex-grow relative">
             <textarea
               rows="3"
               placeholder="Achievement of the day"
-              className="w-full bg-gray-900/70 resize-none rounded-lg px-4 py-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 border border-gray-700/50 text-sm md:text-base"
+              className="w-full bg-gray-900/70 resize-none rounded-lg px-4 py-3 pb-12 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 border border-gray-700/50 text-sm md:text-base"
               value={entry.achievement}
               onChange={(e) => handleChange("achievement", e.target.value)}
             />
+            <div className="absolute bottom-2 right-2">
+              <MicButton
+                value={entry.achievement}
+                onChange={(newValue) => handleChange("achievement", newValue)}
+              />
+            </div>
           </div>
 
           <div className="space-y-3 flex-shrink-0">
@@ -78,13 +85,21 @@ const JournalAndMoodForm = ({ entry, handleEntryChange }) => {
           </div>
         </div>
 
-        <textarea
-          rows="10"
-          placeholder="Start writing your beautiful day's story...."
-          className="w-full bg-gray-900/70 rounded-lg resize-none px-4 py-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 border border-gray-700/50 text-sm md:text-base"
-          value={entry.diaryEntry}
-          onChange={(e) => handleChange("diaryEntry", e.target.value)}
-        />
+        <div className="relative">
+          <textarea
+            rows="10"
+            placeholder="Start writing your beautiful day's story...."
+            className="w-full bg-gray-900/70 rounded-lg resize-none px-4 py-3 pb-12 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 border border-gray-700/50 text-sm md:text-base"
+            value={entry.diaryEntry}
+            onChange={(e) => handleChange("diaryEntry", e.target.value)}
+          />
+          <div className="absolute bottom-2 right-2">
+            <MicButton
+              value={entry.diaryEntry}
+              onChange={(newValue) => handleChange("diaryEntry", newValue)}
+            />
+          </div>
+        </div>
       </GlassCard>
     </>
   );

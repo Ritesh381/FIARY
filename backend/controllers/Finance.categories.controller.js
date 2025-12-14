@@ -159,7 +159,7 @@ const updateCategory = async (req, res) => {
             await category.save();
             console.log(`[LOG] [${FILE}] [${functionName}] [${req.userId || "unknown"}] Updated category id=${category._id}`);
             return res.json(category);
-        }
+        } 
 
         // If not found, maybe it's a template id -> perform clone-on-write
         const tpl = await TemplateCategory.findById(id).lean();
@@ -254,6 +254,7 @@ const createSubCategory = async (req, res) => {
             parentCategory = new Category({ name: tpl.name, isExpense: tpl.isExpense, user: req.userId, templateRef: tpl._id });
             await parentCategory.save();
 
+            
             // clone template subcategories
             const tplSubs = await TemplateSubCategory.find({ category: tpl._id }).lean();
             if (tplSubs && tplSubs.length) {

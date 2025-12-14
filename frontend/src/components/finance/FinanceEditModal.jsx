@@ -51,7 +51,7 @@ const toDatetimeLocal = (isoString) => {
   const day = String(date.getDate()).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
-  
+
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
@@ -116,7 +116,7 @@ export default function FinanceEditModal() {
       setFormData({
         type: selectedEntry.type,
         amount: formatAmount(selectedEntry.amount),
-        when: toDatetimeLocal(selectedEntry.when), 
+        when: toDatetimeLocal(selectedEntry.when),
         category_id: entryCategoryId,
         sub_category_id: entrySubcategoryId,
         note: selectedEntry.note || "",
@@ -171,22 +171,13 @@ export default function FinanceEditModal() {
 
     setSubmitting(true);
 
-    const selectedCategory = categories.find(
-      (c) => c._id === formData.category_id
-    );
-    const selectedSubcategory = getSubcategories(
-      categories,
-      formData.category_id
-    ).find((s) => s._id === formData.sub_category_id);
-
     // Convert the 'when' datetime-local string back to ISO format for the backend
     const updatedWhenISO = new Date(formData.when).toISOString();
 
+    // Only send IDs, not names - backend will derive names from IDs
     const payload = {
       category_id: formData.category_id,
       sub_category_id: formData.sub_category_id || null,
-      category_name: selectedCategory?.name,
-      sub_category_name: selectedSubcategory?.name,
       type: formData.type,
       when: updatedWhenISO,
       amount: parseFloat(formData.amount),
@@ -253,7 +244,7 @@ export default function FinanceEditModal() {
 
   return (
     <div
-      id="finance-edit-modal-backdrop" 
+      id="finance-edit-modal-backdrop"
       className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-hidden z-50 transition-opacity duration-300"
       onClick={(e) => {
         if (e.target.id === "finance-edit-modal-backdrop") {
@@ -272,14 +263,14 @@ export default function FinanceEditModal() {
               <Trash2 size={20} /> Confirm Deletion
             </h3>
             <p className="text-gray-300 my-3 text-sm"> {/* Reduced padding and font size */}
-              You are about to permanently delete this transaction: 
-              <br/>
+              You are about to permanently delete this transaction:
+              <br />
               <span className="font-semibold text-white">
                 {formData.type} of ₹{formatAmount(formData.amount)}
               </span>.
               This action cannot be undone.
             </p>
-            
+
             <div className="flex justify-end space-x-3 mt-4"> {/* Reduced space and margin */}
               <button
                 onClick={() => {
@@ -333,7 +324,7 @@ export default function FinanceEditModal() {
               feedback.type === "success"
                 ? "bg-green-900/50 text-green-300"
                 : "bg-red-900/50 text-red-300"
-            }`}
+              }`}
           >
             {feedback.type === "success" ? (
               <CheckCircle size={16} />
@@ -356,7 +347,7 @@ export default function FinanceEditModal() {
                   formData.type === "Income"
                     ? "bg-green-600 text-white"
                     : "bg-gray-700 text-gray-300"
-                }`}
+                  }`}
               >
                 <TrendingUp size={14} /> Income
               </div>
@@ -365,7 +356,7 @@ export default function FinanceEditModal() {
                   formData.type === "Expense"
                     ? "bg-red-600 text-white"
                     : "bg-gray-700 text-gray-300"
-                }`}
+                  }`}
               >
                 <TrendingDown size={14} /> Expense
               </div>
@@ -408,7 +399,7 @@ export default function FinanceEditModal() {
               onChange={handleChange}
               className="w-full p-2 rounded-lg bg-gray-900/50 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-400 border border-gray-600 transition-colors" // Reduced padding
               required
-              max={getCurrentLocalDatetime()} 
+              max={getCurrentLocalDatetime()}
               disabled={submitting}
             />
           </div>
@@ -516,7 +507,7 @@ export default function FinanceEditModal() {
                   submitting || feedback.type === "success"
                     ? "bg-teal-700/50 cursor-not-allowed"
                     : "bg-teal-600 hover:bg-teal-500"
-                }`}
+                  }`}
                 disabled={submitting || feedback.type === "success"}
               >
                 {submitting ? (
