@@ -63,6 +63,30 @@ const apiHabits = {
       throw error;
     }
   },
+
+  deleteHabitEntry: async (habitId, date) => {
+    try {
+      const response = await apiClient.delete("/habit/entry", {
+        data: { habitId, date }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting habit entry:", error);
+      throw error;
+    }
+  },
+
+  getTodaysEntries: async (date) => {
+    try {
+      const response = await apiClient.get("/habit/entry/bydate", {
+        params: { date }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching today's habit entries:", error);
+      throw error;
+    }
+  },
 };
 
 export default apiHabits;

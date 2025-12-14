@@ -286,28 +286,50 @@ function EntryPage() {
     fetchData();
   }, [selDate, dispatch]);
 
-  // DRAFT SYSTEM: Fetch and store original data in edit mode
+  // DRAFT SYSTEM: Fetch and store original data in edit mode AND check for existing habits/finance in create mode
   useEffect(() => {
     const fetchEntryData = async () => {
-      if (isEditMode && selDate) {
+      if (selDate) {
         try {
           setOverlayState("loading");
           const data = await EntryPageCalls.getAll(selDate);
 
-          // Store original data
-          setOriginalData(data);
+          if (isEditMode) {
+            // Edit mode - Store original data
+            setOriginalData(data);
 
-          // Check if there's a localStorage draft
-          const draft = loadDraftForDate(selDate);
-          if (draft) {
-            // Draft exists - store it and show choice modal
-            setEditedData(draft);
-            setShowVersionChoice(true);
-            setOverlayState("hidden");
+            // Check if there's a localStorage draft
+            const draft = loadDraftForDate(selDate);
+            if (draft) {
+              // Draft exists - store it and show choice modal
+              setEditedData(draft);
+              setShowVersionChoice(true);
+              setOverlayState("hidden");
+            } else {
+              // No draft - load backend data directly
+              dispatch(loadEntryData(data));
+              dispatch(startEditing(data));
+              setOverlayState("hidden");
+            }
           } else {
-            // No draft - load backend data directly
-            dispatch(loadEntryData(data));
-            dispatch(startEditing(data));
+            // Create mode - check if there are existing habits/finance to load
+            const draft = loadDraftForDate(selDate);
+            
+            if (draft) {
+              // Use draft if it exists
+              console.log('Loading draft for new entry from localStorage:', selDate);
+              // Merge backend habits/finance with draft if they exist
+              const mergedData = {
+                ...draft,
+                habits: data.habits && data.habits.length > 0 ? data.habits : draft.habits,
+                finance: data.finance && data.finance.length > 0 ? data.finance : draft.finance,
+              };
+              dispatch(loadEntryData(mergedData));
+            } else if (data.habits?.length > 0 || data.finance?.length > 0) {
+              // No draft but existing habits/finance - load them
+              console.log('Loading existing habits/finance for new entry:', selDate);
+              dispatch(loadEntryData(data));
+            }
             setOverlayState("hidden");
           }
         } catch (error) {
@@ -319,17 +341,8 @@ function EntryPage() {
     fetchEntryData();
   }, [isEditMode, selDate, dispatch]);
 
-  // DRAFT SYSTEM: Load draft for new entries only
-  useEffect(() => {
-    if (!selDate || isEditMode) return;
-
-    // For new entries, check if draft exists and load it
-    const draft = loadDraftForDate(selDate);
-    if (draft) {
-      console.log('Loading draft for new entry from localStorage:', selDate);
-      dispatch(loadEntryData(draft));
-    }
-  }, [selDate, isEditMode, dispatch]);
+  // DRAFT SYSTEM: Load draft for new entries only (removed - now handled in main fetch effect)
+  // This useEffect is no longer needed as we handle draft loading in the main fetchEntryData effect
 
   // DRAFT SYSTEM: Autosave to localStorage (only when user has edited)
   useEffect(() => {

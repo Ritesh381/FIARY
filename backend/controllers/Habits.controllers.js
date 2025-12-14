@@ -217,14 +217,14 @@ const getHabitEntriesForOneDay = async (req,res) => {
 
     const localDay = new Date(date); 
     const startDate = new Date(localDay);
-    startDate.setHours(0, 0, 0, 0);
+    startDate.setUTCHours(0, 0, 0, 0);
 
     const endDate = new Date(localDay);
-    endDate.setHours(23, 59, 59, 999);
+    endDate.setUTCHours(23, 59, 59, 999);
 
     console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Querying HabitEntry from ${startDate.toISOString()} to ${endDate.toISOString()}`);
     const habits = await HabitEntry.find({
-      user: userId,
+      userId: userId,
       date: { $gte: startDate, $lte: endDate },
     });
 
@@ -237,6 +237,47 @@ const getHabitEntriesForOneDay = async (req,res) => {
   }
 }
 
+const deleteHabitEntry = async (req, res) => {
+  const functionName = "deleteHabitEntry";
+  const { habitId, date } = req.body;
+  const userId = req.userId;
+
+  console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Deleting habit entry for habitId=${habitId} date=${date}`);
+
+  if (!habitId || !date) {
+    console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Validation failed`);
+    return res.status(400).json({ message: "habitId and date are required." });
+  }
+
+  try {
+    // Normalize date to the start of the day
+    const entryDate = new Date(date);
+    entryDate.setUTCHours(0, 0, 0, 0);
+
+    console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Deleting HabitEntry from DB`);
+    
+    const deletedEntry = await HabitEntry.findOneAndDelete({
+      habitId: new mongoose.Types.ObjectId(habitId),
+      userId: new mongoose.Types.ObjectId(userId),
+      date: entryDate,
+    });
+
+    if (!deletedEntry) {
+      console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] No entry found to delete`);
+      return res.status(404).json({ message: "Habit entry not found" });
+    }
+
+    console.log(`[LOG] [${FILE}] [${functionName}] [${userId || "unknown"}] Delete successful id=${deletedEntry._id}`);
+    res.status(200).json({ message: "Habit entry deleted", entry: deletedEntry });
+  } catch (error) {
+    console.error(`[ERROR] [${FILE}] [${functionName}] [${userId || "unknown"}]`, error && error.stack ? error.stack : error);
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid ID format.", details: error.message });
+    }
+    res.status(500).json({ message: "Server error while deleting habit entry." });
+  }
+};
+
 
 module.exports = { 
     createHabit, 
@@ -245,5 +286,6 @@ module.exports = {
     getAllHabits, 
     getEntriesOfOneHabit, 
     upsertHabitEntry,
-    getHabitEntriesForOneDay
+    getHabitEntriesForOneDay,
+    deleteHabitEntry
 };

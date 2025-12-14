@@ -7,10 +7,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Trash2,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 import apiHabits from "../api/HabitCalls";
 import AddHabitModal from "../components/habits/AddHabit";
 import EditHabitModal from "../components/habits/EditHabit";
+import LogTodayHabits from "../components/habits/LogTodayHabits";
 import { useHabitAnalytics } from "../hooks/useHabitAnalytics";
 import OverallDashboard from "../components/habits/OverallDashboard";
 import HabitAnalytics from "../components/habits/HabitAnalytics";
@@ -101,14 +103,22 @@ const GlobalStyles = () => (
 
 // --- Page Components ---
 
-const HeaderControls = ({ onAddNew, currentDate, onMonthChange }) => (
+const HeaderControls = ({ onAddNew, onLogToday, currentDate, onMonthChange }) => (
   <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-    <button
-      onClick={onAddNew}
-      className="glass-button w-full md:w-auto text-green-300 font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2"
-    >
-      <Plus size={20} /> Add New Habit
-    </button>
+    <div className="flex gap-3 w-full md:w-auto">
+      <button
+        onClick={onAddNew}
+        className="glass-button flex-1 md:flex-none text-green-300 font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2"
+      >
+        <Plus size={20} /> Add New Habit
+      </button>
+      <button
+        onClick={onLogToday}
+        className="glass-button flex-1 md:flex-none text-blue-300 font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2"
+      >
+        <CalendarIcon size={20} /> Log Today's Habits
+      </button>
+    </div>
     <div className="flex items-center gap-2 glass-select p-1 rounded-lg">
       <button
         onClick={() => onMonthChange(-1)}
@@ -138,6 +148,7 @@ const HabitGrid = ({
   entries,
   currentDate,
   isQuitHabit = false,
+  onDateClick,
 }) => {
   const daysInMonth = new Date(
     currentDate.getFullYear(),
@@ -172,7 +183,15 @@ const HabitGrid = ({
             Habit
           </div>
           {daysArray.map((day) => (
-            <div key={day} className="p-2 w-8 flex items-center justify-center">
+            <div 
+              key={day} 
+              className="p-2 w-8 flex items-center justify-center cursor-pointer hover:bg-gray-700/50 rounded transition-colors"
+              onClick={() => {
+                const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                onDateClick(clickedDate);
+              }}
+              title="Click to log habits for this date"
+            >
               {day}
             </div>
           ))}
@@ -254,7 +273,9 @@ export default function HabitTracker() {
 
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [isLogTodayOpen, setLogTodayOpen] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState(null);
+  const [selectedLogDate, setSelectedLogDate] = useState(null);
 
   const dispatch = useDispatch();
 
@@ -357,6 +378,21 @@ export default function HabitTracker() {
     setEditModalOpen(true);
   };
 
+  const handleEntriesUpdated = () => {
+    // Refresh entries when today's habits are logged
+    fetchAllEntries();
+  };
+
+  const handleDateClick = (date) => {
+    setSelectedLogDate(date);
+    setLogTodayOpen(true);
+  };
+
+  const handleLogTodayClose = () => {
+    setLogTodayOpen(false);
+    setSelectedLogDate(null);
+  };
+
   const developHabits = useMemo(
     () => habits.filter((h) => h.habitType === "develop" && !h.isDeleted),
     [habits]
@@ -372,6 +408,7 @@ export default function HabitTracker() {
       <GlobalStyles />
       <HeaderControls
         onAddNew={() => setAddModalOpen(true)}
+        onLogToday={() => setLogTodayOpen(true)}
         currentDate={currentDate}
         onMonthChange={handleMonthChange}
       />
@@ -394,6 +431,7 @@ export default function HabitTracker() {
             habits={developHabits}
             entries={entries}
             currentDate={currentDate}
+            onDateClick={handleDateClick}
           />
           <HabitGrid
             title="Quit Habits"
@@ -401,6 +439,7 @@ export default function HabitTracker() {
             entries={entries}
             currentDate={currentDate}
             isQuitHabit={true}
+            onDateClick={handleDateClick}
           />
 
           {/* --- NEW ANALYTICS CARDS (Replaces old list) --- */}
@@ -455,6 +494,13 @@ export default function HabitTracker() {
         habit={selectedHabit}
         onHabitUpdated={handleHabitUpdated}
         onHabitDeleted={handleHabitDeleted}
+      />
+      <LogTodayHabits
+        isOpen={isLogTodayOpen}
+        onClose={handleLogTodayClose}
+        habits={habits.filter((h) => !h.isDeleted)}
+        onEntriesUpdated={handleEntriesUpdated}
+        selectedDate={selectedLogDate}
       />
     </div>
   );
